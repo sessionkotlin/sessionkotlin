@@ -8,6 +8,4 @@
  */
 
 rootProject.name = "sessionkotlin"
-include(":annotations")
-include(":processor")
-include(":demo")
+include("lib")
