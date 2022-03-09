@@ -1,7 +1,8 @@
 import sessionkotlin.dsl.globalProtocol
 import org.junit.jupiter.api.Test
 import sessionkotlin.dsl.Role
-import sessionkotlin.dsl.RoleNotEnabledException
+import sessionkotlin.dsl.exception.InconsistentExternalChoiceException
+import sessionkotlin.dsl.exception.RoleNotEnabledException
 import kotlin.test.assertFailsWith
 
 class BranchTest {
@@ -53,9 +54,6 @@ class BranchTest {
 
         assertFailsWith<RoleNotEnabledException> {
             globalProtocol {
-                send<Int>(a, b)
-                send<Int>(b, a)
-
                 choice(b) {
                     case("Case1") {
                         send<String>(b, a)
@@ -73,9 +71,6 @@ class BranchTest {
 
         assertFailsWith<RoleNotEnabledException> {
             globalProtocol {
-                send<Int>(a, b)
-                send<Int>(b, a)
-
                 choice(b) {
                     case("Case1") {
                         choice(a) {
@@ -112,7 +107,7 @@ class BranchTest {
         globalProtocol {
             choice(b) {
                 case("Case1") {
-                    send<String>(b, a)
+                    send<String>(b, c)
                 }
                 case("Case2") {
                     send<Int>(b, c)
@@ -141,4 +136,87 @@ class BranchTest {
             }
         }
     }
+
+    @Test
+    fun `role enabled by different roles`() {
+
+        assertFailsWith<InconsistentExternalChoiceException> {
+            globalProtocol {
+                choice(b) {
+                    case("Case1") {
+                        send<String>(b, c)
+                    }
+                    case("Case2") {
+                        send<String>(b, a)
+                        send<String>(a, c)
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `role enabled in only one case`() {
+
+        assertFailsWith<InconsistentExternalChoiceException> {
+            globalProtocol {
+                choice(b) {
+                    case("Case1") {
+                        send<String>(b, c)
+                        send<String>(b, c)
+                    }
+                    case("Case2") {
+                        send<String>(b, a)
+                        send<String>(a, c)
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `two buyers`() {
+        val s = Role("S")
+
+        globalProtocol {
+            send<String>(a, s)
+            send<Int>(s, a)
+            send<Int>(s, b)
+            send<Int>(a, b)
+            choice(b) {
+                case("Ok") {
+                    send<String>(b, s)
+                    send<String>(s, b)
+                }
+                case("Quit") {
+                    send<String>(b, s)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `two buyers inconsistent`() {
+        val s = Role("S")
+
+        assertFailsWith<InconsistentExternalChoiceException> {
+            globalProtocol {
+                send<String>(a, s)
+                send<Int>(s, a)
+                send<Int>(s, b)
+                send<Int>(a, b)
+                choice(b) {
+                    case("Ok") {
+                        send<String>(b, s)
+                        send<String>(s, a)
+                    }
+                    case("Quit") {
+                        send<String>(b, a)
+                    }
+                }
+            }
+        }
+
+    }
+
 }

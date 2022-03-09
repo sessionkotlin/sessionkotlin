@@ -1,5 +1,8 @@
 package sessionkotlin.dsl
 
+import sessionkotlin.dsl.exception.InconsistentExternalChoiceException
+import sessionkotlin.dsl.exception.RoleNotEnabledException
+
 
 abstract class Interaction(
     internal val initiator: Role,
@@ -25,20 +28,37 @@ class Branch(
 ) : Interaction(at, null) {
 
     init {
-        for ((_, cases) in caseMap) {
-            val activatedRoles = mutableSetOf(at)
+        val activators = mutableMapOf<Role, Set<Role>>()
 
-            for (interaction in cases.interactions) {
+        for (case in caseMap.values) {
+
+            val activatedRoles = mutableSetOf(at)
+            for (interaction in case.interactions) {
+
+                // Verify that only activated roles intiate interactions
                 if (interaction.initiator in activatedRoles) {
                     if (interaction.target != null) {
-                        activatedRoles.add(interaction.target)
+                        val added = activatedRoles.add(interaction.target)
+
+                        if (added) {
+                            // [interaction.target] was activated by [interaction.initiator]
+                            activators.merge(interaction.target, setOf(interaction.initiator), Set<Role>::plus)
+                        }
                     }
                 } else {
                     throw RoleNotEnabledException(interaction.initiator)
                 }
             }
         }
-
+        // Verify that external choices are consistent
+        for ((role, actv) in activators) {
+            if (actv.isEmpty()) {
+                throw RoleNotEnabledException(role)
+            }
+            if (actv.size > 1) {
+                throw InconsistentExternalChoiceException(role, actv)
+            }
+        }
     }
 
     override fun dump() {

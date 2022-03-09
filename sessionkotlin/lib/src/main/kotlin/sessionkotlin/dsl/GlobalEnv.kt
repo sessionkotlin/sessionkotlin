@@ -3,12 +3,13 @@
  */
 package sessionkotlin.dsl
 
+import sessionkotlin.dsl.exception.SendingtoSelfException
 import java.io.Serializable
 
 @DslMarker
-annotation class SKDSL
+annotation class SessionKotlinDSL
 
-@SKDSL
+@SessionKotlinDSL
 class GlobalEnv {
     internal val interactions = mutableListOf<Interaction>()
     private val roles = mutableSetOf<Role>()
@@ -21,7 +22,8 @@ class GlobalEnv {
      * @param [from] role that sends the message
      * @param [to] role that receives the message
      *
-     * @throws [SendingtoSelfException] if [from] and [to] are the same.
+     * @throws [sessionkotlin.dsl.exception.SendingtoSelfException]
+     * if [from] and [to] are the same.
      *
      * @sample [sessionkotlin.dsl.Examples.send]
      *
@@ -45,7 +47,7 @@ class GlobalEnv {
      * @param [at] role that makes the decision
      * @param [cases] block that defines the choices
      *
-     * @throws [RoleNotEnabledException] if a role that is not enabled initiates an interaction.
+     * @throws [sessionkotlin.dsl.exception.RoleNotEnabledException] if a role that is not enabled initiates an interaction.
      *
      * @sample [sessionkotlin.dsl.Examples.choice]
      *
@@ -71,7 +73,7 @@ class GlobalEnv {
     }
 }
 
-@SKDSL
+@SessionKotlinDSL
 class ChoiceEnv {
     internal val caseMap = mutableMapOf<String, GlobalEnv>()
 
