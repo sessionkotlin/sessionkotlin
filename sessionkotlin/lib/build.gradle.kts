@@ -10,11 +10,10 @@ plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
     kotlin("jvm") version "1.6.10"
 
-
     // Apply the java-library plugin for API and implementation separation.
     `java-library`
-
     `maven-publish`
+    jacoco
 }
 
 group = "org.david"
@@ -68,5 +67,21 @@ tasks.jar {
     }
     archiveBaseName.set(rootProject.name)
 }
+
+
+tasks.test {
+    finalizedBy(tasks.jacocoTestReport) // report is always generated after tests run
+}
+tasks.jacocoTestReport {
+    dependsOn(tasks.test) // tests are required to run before generating the report
+}
+
+tasks.jacocoTestReport {
+    reports {
+        csv.required.set(true)
+//        html.outputLocation.set(layout.buildDirectory.dir("jacocoHtml"))
+    }
+}
+
 
 
