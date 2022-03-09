@@ -13,6 +13,19 @@ class GlobalEnv {
     internal val interactions = mutableListOf<Interaction>()
     private val roles = mutableSetOf<Role>()
 
+
+    /**
+     *
+     * Declares that [from] should send a message of type [T] to [to].
+     *
+     * @param [from] role that sends the message
+     * @param [to] role that receives the message
+     *
+     * @throws [SendingtoSelfException] if [from] and [to] are the same.
+     *
+     * @sample [sessionkotlin.dsl.Examples.send]
+     *
+     */
     fun <T: Serializable> send(from: Role, to: Role) {
         if (from == to) {
             throw SendingtoSelfException(from)
@@ -25,6 +38,18 @@ class GlobalEnv {
         interactions.add(msg)
     }
 
+    /**
+     *
+     * Declares an internal choice at [at].
+     *
+     * @param [at] role that makes the decision
+     * @param [cases] block that defines the choices
+     *
+     * @throws [RoleNotEnabledException] if a role that is not enabled initiates an interaction.
+     *
+     * @sample [sessionkotlin.dsl.Examples.choice]
+     *
+     */
     fun choice(at: Role, cases: ChoiceEnv.() -> Unit) {
         val bEnv = ChoiceEnv()
         bEnv.cases()

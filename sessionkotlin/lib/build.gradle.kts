@@ -17,7 +17,7 @@ plugins {
     `maven-publish`
 }
 
-group = "com.david"
+group = "org.david"
 version = "0.0.1"
 //sourceCompatibility = '11'
 
@@ -36,14 +36,13 @@ tasks.test {
     useJUnitPlatform()
 }
 
-
 publishing {
     publications {
 
         create<MavenPublication>("maven") {
-            groupId = "org.david"
+            groupId = project.group as String
             artifactId = "sessionkotlin"
-            version = "0.1"
+            version = project.version as String
 
             from(components["java"])
 

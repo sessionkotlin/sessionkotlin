@@ -22,7 +22,7 @@ repositories {
 
 dependencies {
     // Get latest version
-    implementation("org.david:sessionkotlin:+")
+    implementation("org.david:sessionkotlin:0.0.1")
 }
 
 application {

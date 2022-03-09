@@ -1,14 +1,19 @@
 import sessionkotlin.dsl.globalProtocol
 import org.junit.jupiter.api.Test
 import sessionkotlin.dsl.Role
-import sessionkotlin.dsl.RoleInCaseNotEnabledException
+import sessionkotlin.dsl.RoleNotEnabledException
 import kotlin.test.assertFailsWith
 
 class BranchTest {
-    @Test
-    fun `normal branch`() {
+
+    companion object {
         val a = Role("A")
         val b = Role("B")
+        val c = Role("C")
+    }
+
+    @Test
+    fun `normal branch`() {
 
         globalProtocol {
             choice(b) {
@@ -28,10 +33,8 @@ class BranchTest {
 
     @Test
     fun `role not enabled to send`() {
-        val a = Role("A")
-        val b = Role("B")
 
-        assertFailsWith<RoleInCaseNotEnabledException> {
+        assertFailsWith<RoleNotEnabledException> {
             globalProtocol {
                 send<Int>(a, b)
                 send<Int>(b, a)
@@ -41,18 +44,34 @@ class BranchTest {
                         send<String>(a, b)
                     }
                 }
-
             }
         }
     }
 
+    @Test
+    fun `role not enabled to send 2`() {
+
+        assertFailsWith<RoleNotEnabledException> {
+            globalProtocol {
+                send<Int>(a, b)
+                send<Int>(b, a)
+
+                choice(b) {
+                    case("Case1") {
+                        send<String>(b, a)
+                    }
+                    case("Case2") {
+                        send<String>(c, b)
+                    }
+                }
+            }
+        }
+    }
 
     @Test
     fun `role not enabled to choose`() {
-        val a = Role("A")
-        val b = Role("B")
 
-        assertFailsWith<RoleInCaseNotEnabledException> {
+        assertFailsWith<RoleNotEnabledException> {
             globalProtocol {
                 send<Int>(a, b)
                 send<Int>(b, a)
@@ -73,8 +92,6 @@ class BranchTest {
 
     @Test
     fun `role activated`() {
-        val a = Role("A")
-        val b = Role("B")
 
         globalProtocol {
             choice(b) {
@@ -83,10 +100,42 @@ class BranchTest {
                 }
                 case("Case2") {
                     send<Int>(b, a)
-                    choice(a) {
-                        case("SubCase1") {
-                            send<Long>(a, b)
-                        }
+                    send<Long>(a, b)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `role activated 2`() {
+
+        globalProtocol {
+            choice(b) {
+                case("Case1") {
+                    send<String>(b, a)
+                }
+                case("Case2") {
+                    send<Int>(b, c)
+                    send<Int>(c, a)
+                    send<Int>(a, b)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `role not activated in case`() {
+
+        assertFailsWith<RoleNotEnabledException> {
+            globalProtocol {
+                choice(b) {
+                    case("Case1") {
+                        send<String>(b, a)
+                        send<String>(a, c)
+                    }
+                    case("Case2") {
+                        send<Int>(a, c)
+                        send<Int>(c, a)
                     }
                 }
             }

@@ -5,10 +5,15 @@ import sessionkotlin.dsl.SendingtoSelfException
 import kotlin.test.assertFailsWith
 
 class SendTest {
-    @Test
-    fun `normal send`() {
+
+    companion object {
         val a = Role("A")
         val b = Role("B")
+        val c = Role("C")
+    }
+
+    @Test
+    fun `normal send`() {
 
         globalProtocol {
             send<Int>(a, b)
@@ -18,7 +23,6 @@ class SendTest {
 
     @Test
     fun `same role sending and receiving`() {
-        val a = Role("A")
 
         assertFailsWith<SendingtoSelfException> {
             globalProtocol {
@@ -29,9 +33,6 @@ class SendTest {
 
     @Test
     fun `three roles`() {
-        val a = Role("A")
-        val b = Role("B")
-        val c = Role("C")
 
         globalProtocol {
             send<Int>(a, b)

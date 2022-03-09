@@ -1,37 +1,42 @@
 package sessionkotlin.dsl
 
 
-open class Interaction(internal val initiator: Role) {
-    open fun dump() {
-        throw NotImplementedError()
-    }
-
+abstract class Interaction(
+    internal val initiator: Role,
+    internal val target: Role?,
+) {
+    abstract fun dump()
 }
 
 class Send<T>(
     private val from: Role,
-    private val to: Role
-): Interaction(from) {
+    private val to: Role,
+) : Interaction(from, to) {
+
     override fun dump() {
         println("Send[$from -> $to]")
     }
+
 }
 
 class Branch(
     private val at: Role,
-    private val cases: MutableMap<String, GlobalEnv>
-): Interaction(at) {
+    private val caseMap: MutableMap<String, GlobalEnv>,
+) : Interaction(at, null) {
 
     init {
-        for (c in cases) {
-            val interactions = c.value.interactions
-            if (interactions.isNotEmpty()) {
-                val caseInitiator = interactions.first().initiator
-                if (caseInitiator != at) {
-                    throw RoleInCaseNotEnabledException(c.key, caseInitiator)
+        for ((_, cases) in caseMap) {
+            val activatedRoles = mutableSetOf(at)
+
+            for (interaction in cases.interactions) {
+                if (interaction.initiator in activatedRoles) {
+                    if (interaction.target != null) {
+                        activatedRoles.add(interaction.target)
+                    }
+                } else {
+                    throw RoleNotEnabledException(interaction.initiator)
                 }
             }
-
         }
 
     }
@@ -39,7 +44,7 @@ class Branch(
     override fun dump() {
         println("Branch[$at, cases: ")
 
-        for (c in cases) {
+        for (c in caseMap) {
             println("${c.key}:")
             c.value.debug()
         }
