@@ -14,11 +14,11 @@ plugins {
     `java-library`
     `maven-publish`
     jacoco
+    id("org.jetbrains.dokka") version "1.6.10"
 }
 
 group = "org.david"
 version = "0.0.1"
-//sourceCompatibility = '11'
 
 repositories {
     mavenLocal()
@@ -35,12 +35,46 @@ tasks.test {
     useJUnitPlatform()
 }
 
+
+java {
+    withJavadocJar()
+}
+
+tasks.test {
+    finalizedBy(tasks.jacocoTestReport) // report is always generated after tests run
+}
+tasks.jacocoTestReport {
+    dependsOn(tasks.test) // tests are required to run before generating the report
+}
+
+tasks.jacocoTestReport {
+    reports {
+        csv.required.set(true)
+    }
+}
+
+tasks.dokkaHtml {
+    moduleName.set(rootProject.name)
+    dokkaSourceSets {
+        configureEach {
+            pluginsMapConfiguration.set(
+                mapOf("org.jetbrains.dokka.base.DokkaBase" to """{ "separateInheritedMembers": true}""")
+            )
+        }
+    }
+}
+
+// This task is added by Gradle when we use java.withJavadocJar()
+val javadocJar = tasks.named<Jar>("javadocJar") {
+    from(tasks.named("dokkaJavadoc"))
+}
+
 publishing {
     publications {
 
         create<MavenPublication>("maven") {
             groupId = project.group as String
-            artifactId = "sessionkotlin"
+            artifactId = rootProject.name
             version = project.version as String
 
             from(components["java"])
@@ -59,29 +93,3 @@ publishing {
 
     }
 }
-
-tasks.jar {
-    manifest {
-        attributes(mapOf("Implementation-Title" to rootProject.name,
-            "Implementation-Version" to project.version))
-    }
-    archiveBaseName.set(rootProject.name)
-}
-
-
-tasks.test {
-    finalizedBy(tasks.jacocoTestReport) // report is always generated after tests run
-}
-tasks.jacocoTestReport {
-    dependsOn(tasks.test) // tests are required to run before generating the report
-}
-
-tasks.jacocoTestReport {
-    reports {
-        csv.required.set(true)
-//        html.outputLocation.set(layout.buildDirectory.dir("jacocoHtml"))
-    }
-}
-
-
-

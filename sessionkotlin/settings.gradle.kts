@@ -8,4 +8,3 @@
  */
 
 rootProject.name = "sessionkotlin"
-include("lib")

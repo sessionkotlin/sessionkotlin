@@ -3,17 +3,15 @@
  */
 package sessionkotlin.dsl
 
-import sessionkotlin.dsl.exception.SendingtoSelfException
 import java.io.Serializable
 
 @DslMarker
-annotation class SessionKotlinDSL
+private annotation class SessionKotlinDSL
 
 @SessionKotlinDSL
-class GlobalEnv {
+class GlobalEnv(declaredRoles: Set<Role>) {
     internal val interactions = mutableListOf<Interaction>()
-    private val roles = mutableSetOf<Role>()
-
+    private val roles = declaredRoles.toMutableSet()
 
     /**
      *
@@ -28,11 +26,7 @@ class GlobalEnv {
      * @sample [sessionkotlin.dsl.Examples.send]
      *
      */
-    fun <T: Serializable> send(from: Role, to: Role) {
-        if (from == to) {
-            throw SendingtoSelfException(from)
-        }
-
+    fun <T : Serializable> send(from: Role, to: Role) {
         val msg = Send<T>(from, to)
         roles.add(from)
         roles.add(to)
@@ -53,39 +47,51 @@ class GlobalEnv {
      *
      */
     fun choice(at: Role, cases: ChoiceEnv.() -> Unit) {
-        val bEnv = ChoiceEnv()
+        val bEnv = ChoiceEnv(roles)
         bEnv.cases()
         val b = Branch(at, bEnv.caseMap)
 
         interactions.add(b)
+        roles.add(at)
     }
 
-    fun debug() {
-//        println("Roles:")
-//        for (r in roles) {
-//            println(r)
-//        }
+    /**
+     *
+     * Appends a global protocol.
+     *
+     * @param [protocolBuilder] protocol to append
+     * @param [mapping] mapping of roles to replace (optional)
+     *
+     * @sample [sessionkotlin.dsl.Examples.exec]
+     *
+     */
+    fun exec(protocolBuilder: GlobalEnv, mapping: Map<Role, Role> = emptyMap()) {
+        for (i in protocolBuilder.interactions) {
+            interactions.add(i.with(mapping))
+        }
 
-//        println("Interactions:")
+    }
+
+    fun dump(indent: Int = 0) {
         for (i in interactions) {
-            i.dump()
+            i.dump(indent)
         }
     }
 }
 
 @SessionKotlinDSL
-class ChoiceEnv {
+class ChoiceEnv(private val declaredRoles: Set<Role>) {
     internal val caseMap = mutableMapOf<String, GlobalEnv>()
 
     fun case(label: String, protocolBuilder: GlobalEnv.() -> Unit) {
-        val p = GlobalEnv()
+        val p = GlobalEnv(declaredRoles)
         p.protocolBuilder()
         caseMap[label] = p
     }
 }
 
 fun globalProtocol(protocolBuilder: GlobalEnv.() -> Unit): GlobalEnv {
-    val p = GlobalEnv()
+    val p = GlobalEnv(emptySet())
     p.protocolBuilder()
     return p
 }

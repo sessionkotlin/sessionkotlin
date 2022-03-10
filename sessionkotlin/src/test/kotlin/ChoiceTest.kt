@@ -1,11 +1,12 @@
 import sessionkotlin.dsl.globalProtocol
 import org.junit.jupiter.api.Test
+import sessionkotlin.dsl.Examples
 import sessionkotlin.dsl.Role
 import sessionkotlin.dsl.exception.InconsistentExternalChoiceException
 import sessionkotlin.dsl.exception.RoleNotEnabledException
 import kotlin.test.assertFailsWith
 
-class BranchTest {
+class ChoiceTest {
 
     companion object {
         val a = Role("A")
@@ -14,7 +15,7 @@ class BranchTest {
     }
 
     @Test
-    fun `normal branch`() {
+    fun `normal choice`() {
 
         globalProtocol {
             choice(b) {
@@ -217,6 +218,11 @@ class BranchTest {
             }
         }
 
+    }
+
+    @Test
+    fun `test choice example`() {
+        Examples().choice()
     }
 
 }

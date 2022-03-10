@@ -1,5 +1,7 @@
 package sessionkotlin.dsl
 
+import sessionkotlin.dsl.exception.InconsistentExternalChoiceException
+
 class Examples {
 
     fun send() {
@@ -28,6 +30,34 @@ class Examples {
                     send<Long>(b, a)
                 }
             }
+        }
+    }
+
+    fun exec() {
+        val a = Role("A")
+        val b = Role("B")
+        val c = Role("C")
+
+        val case1 = globalProtocol {
+            send<Int>(b, a)
+            send<Int>(a, c)
+        }
+
+        val case2 = globalProtocol {
+            send<String>(b, a)
+        }
+
+        globalProtocol {
+            choice(b) {
+
+                case("Case 1") {
+                    exec(case1, mapOf(c to b))
+                }
+                case("Case 2") {
+                    exec(case2)
+                }
+            }
+            
         }
     }
 }

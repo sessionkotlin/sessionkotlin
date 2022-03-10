@@ -11,22 +11,37 @@ import sessionkotlin.dsl.globalProtocol
 fun main() {
     val a = Role("A")
     val b = Role("B")
+    val c = Role("C")
 
-    val g: GlobalEnv = globalProtocol {
-        send<Int>(a, b)
-        send<Int>(b, a)
 
+    val case3 = globalProtocol {
         choice(b) {
-            case("Case1") {
-                send<String>(b, a)
+            case("sub1") {
+                send<Int>(b, c)
+//                send<Int>(c, a)
+                send<Int>(c, b)
+
             }
-            case("Case2") {
+            case("sub2") {
                 send<Int>(b, a)
             }
         }
-
     }
-    g.debug()
 
-//    val localA = LocalProtocol(g, a)
+    val case2 = globalProtocol {
+        send<String>(b, c)
+    }
+
+    globalProtocol {
+        choice(b) {
+
+            case("Case 1") {
+                exec(case3)
+            }
+            case("Case 2") {
+                exec(case2)
+            }
+        }
+    }.dump()
+
 }

@@ -2,27 +2,41 @@ package sessionkotlin.dsl
 
 import sessionkotlin.dsl.exception.InconsistentExternalChoiceException
 import sessionkotlin.dsl.exception.RoleNotEnabledException
+import sessionkotlin.dsl.exception.SendingtoSelfException
 
 
-abstract class Interaction(
+internal abstract class Interaction(
     internal val initiator: Role,
     internal val target: Role?,
 ) {
-    abstract fun dump()
+    abstract fun dump(indent: Int)
+    abstract fun with(mapping: Map<Role, Role>): Interaction
 }
 
-class Send<T>(
+internal class Send<T>(
     private val from: Role,
     private val to: Role,
 ) : Interaction(from, to) {
 
-    override fun dump() {
-        println("Send[$from -> $to]")
+    init {
+        if (from == to) {
+            throw SendingtoSelfException(from)
+        }
+    }
+
+    override fun dump(indent: Int) {
+        printlnIndent(indent, "Send[$from -> $to]")
+    }
+
+    override fun with(mapping: Map<Role, Role>): Interaction {
+        val newFrom = mapping[from] ?: from
+        val newTo = mapping[to] ?: to
+        return Send<T>(newFrom, newTo)
     }
 
 }
 
-class Branch(
+internal class Branch(
     private val at: Role,
     private val caseMap: MutableMap<String, GlobalEnv>,
 ) : Interaction(at, null) {
@@ -61,14 +75,23 @@ class Branch(
         }
     }
 
-    override fun dump() {
-        println("Branch[$at, cases: ")
+    override fun dump(indent: Int) {
 
+        printlnIndent(indent, "Choice[$at, cases: ")
         for (c in caseMap) {
-            println("${c.key}:")
-            c.value.debug()
+            printlnIndent(indent, "${c.key}:")
+            c.value.dump(indent + 2)
         }
 
-        println("]")
+        printlnIndent(indent, "]")
     }
+
+    override fun with(mapping: Map<Role, Role>): Interaction {
+        val newAt = mapping[at] ?: at
+        return Branch(newAt, caseMap)
+    }
+}
+
+private fun printlnIndent(indent: Int, message: Any?) {
+    println(" ".repeat(indent) + message)
 }
