@@ -51,13 +51,33 @@ class Examples {
             choice(b) {
 
                 case("Case 1") {
-                    exec(case1, mapOf(c to b))
+                    exec(case1)
                 }
                 case("Case 2") {
                     exec(case2)
                 }
             }
             
+        }
+    }
+
+    fun rec() {
+        val server = Role("Server")
+        val client = Role("Client")
+
+        globalProtocol {
+            choice(client) {
+
+                case("Add") {
+                    send<Int>(client, server)
+                    rec()
+                }
+                case("Result") {
+                    send<String>(client, server)
+                    send<Int>(server, client)
+                }
+            }
+
         }
     }
 }

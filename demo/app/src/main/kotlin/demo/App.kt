@@ -5,6 +5,7 @@ package demo
 
 import sessionkotlin.dsl.GlobalEnv
 import sessionkotlin.dsl.Role
+import sessionkotlin.dsl.exception.InconsistentExternalChoiceException
 import sessionkotlin.dsl.globalProtocol
 
 
@@ -14,29 +15,21 @@ fun main() {
     val c = Role("C")
 
 
-    val case3 = globalProtocol {
-        choice(b) {
-            case("sub1") {
-                send<Int>(b, c)
-//                send<Int>(c, a)
-                send<Int>(c, b)
-
-            }
-            case("sub2") {
-                send<Int>(b, a)
-            }
-        }
+    val case1 = globalProtocol {
+        send<Int>(b, c)
+        send<Int>(b, a)
     }
 
     val case2 = globalProtocol {
-        send<String>(b, c)
+        send<String>(b, a)
     }
 
     globalProtocol {
         choice(b) {
 
             case("Case 1") {
-                exec(case3)
+                exec(case1)
+                rec()
             }
             case("Case 2") {
                 exec(case2)

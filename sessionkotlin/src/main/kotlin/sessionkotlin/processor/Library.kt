@@ -3,8 +3,4 @@
  */
 package sessionkotlin.processor
 
-class Library {
-    fun someLibraryMethod(): Boolean {
-        return true
-    }
-}
+class Library

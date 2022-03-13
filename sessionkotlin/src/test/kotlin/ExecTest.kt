@@ -3,6 +3,8 @@ import org.junit.jupiter.api.Test
 import sessionkotlin.dsl.Examples
 import sessionkotlin.dsl.Role
 import sessionkotlin.dsl.exception.InconsistentExternalChoiceException
+import sessionkotlin.dsl.exception.RecursiveProtocolException
+import sessionkotlin.dsl.exception.RoleNotEnabledException
 import kotlin.test.assertFailsWith
 
 class ExecTest {
@@ -20,12 +22,40 @@ class ExecTest {
             send<Int>(b, c)
         }
 
-        val complex = globalProtocol {
+        globalProtocol {
             send<Int>(a, b)
-            exec(x, mapOf(c to a))
+            exec(x)
+        }
+    }
+
+    @Test
+    fun `normal exec 2`() {
+
+        val x = globalProtocol {
+            send<Int>(c, a)
         }
 
-        complex.dump()
+        globalProtocol {
+            send<Int>(a, b)
+            exec(x)
+        }
+    }
+
+    @Test
+    fun `exec not enabled`() {
+        val x = globalProtocol {
+            send<Int>(c, b)
+        }
+        assertFailsWith<RoleNotEnabledException> {
+            globalProtocol {
+                send<Int>(a, b)
+                choice(b) {
+                    case("Case1") {
+                        exec(x)
+                    }
+                }
+            }
+        }
     }
 
     @Test
@@ -52,12 +82,67 @@ class ExecTest {
                 }
             }
         }
+    }
 
-        @Test
-        fun `test exec example`() {
-            Examples().exec()
+    @Test
+    fun `activated in exec`() {
+
+        val case1 = globalProtocol {
+            send<Int>(b, c)
+            send<Int>(c, a)
+        }
+
+        globalProtocol {
+            choice(b) {
+                case("Case 1") {
+                    exec(case1)
+                    send<Int>(c, a)
+                }
+            }
         }
     }
 
+    @Test
+    fun `rec inside exec`() {
 
+        val case1 = globalProtocol {
+            send<Int>(b, c)
+            rec()
+        }
+
+        assertFailsWith<RecursiveProtocolException> {
+            globalProtocol {
+                choice(b) {
+
+                    case("Case 1") {
+                        exec(case1)
+                        send<Int>(b, c)
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `test exec example`() {
+        Examples().exec()
+    }
+
+    @Test
+    fun `exec dump`() {
+
+        val case1 = globalProtocol {
+            send<Int>(b, c)
+            send<Int>(c, a)
+        }
+
+        globalProtocol {
+            choice(b) {
+                case("Case 1") {
+                    exec(case1)
+                    send<Int>(c, a)
+                }
+            }
+        }.dump()
+    }
 }
