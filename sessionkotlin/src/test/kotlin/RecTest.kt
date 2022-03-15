@@ -1,6 +1,6 @@
 import sessionkotlin.dsl.globalProtocol
 import org.junit.jupiter.api.Test
-import sessionkotlin.dsl.Examples
+import sessionkotlin.dsl.Samples
 import sessionkotlin.dsl.Role
 import sessionkotlin.dsl.exception.RecursiveProtocolException
 import sessionkotlin.dsl.exception.RoleNotEnabledException
@@ -108,7 +108,7 @@ class RecTest {
 
     @Test
     fun `test rec example`() {
-        Examples().rec()
+        Samples().rec()
     }
 
 

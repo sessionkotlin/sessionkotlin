@@ -3,11 +3,7 @@
  */
 package sessionkotlin.dsl
 
-import sessionkotlin.dsl.exception.InconsistentExternalChoiceException
-import sessionkotlin.dsl.exception.RecursiveProtocolException
-import sessionkotlin.dsl.exception.RoleNotEnabledException
-import sessionkotlin.dsl.exception.SendingtoSelfException
-import java.io.Serializable
+import sessionkotlin.dsl.exception.*
 
 @DslMarker
 private annotation class SessionKotlinDSL
@@ -21,6 +17,11 @@ abstract class GlobalEnv(
     internal val roles = roles.toMutableSet()
     internal val enabledRoles = enabledRoles.toMutableSet()
     private var recursiveCall = false
+
+    /**
+     * key = role activated
+     * value = role that activatated the key
+     */
     internal val activations = mutableMapOf<Role, Role>()
 
     /**
@@ -36,10 +37,10 @@ abstract class GlobalEnv(
      * @throws [sessionkotlin.dsl.exception.RecursiveProtocolException]
      * if used after a recursive call.
      *
-     * @sample [sessionkotlin.dsl.Examples.send]
+     * @sample [sessionkotlin.dsl.Samples.send]
      *
      */
-    open fun <T : Serializable> send(from: Role, to: Role) {
+    open fun <T> send(from: Role, to: Role) {
         if (recursiveCall) {
             throw RecursiveProtocolException()
         }
@@ -50,12 +51,12 @@ abstract class GlobalEnv(
         val msg = Send<T>(from, to)
         roles.add(from)
         roles.add(to)
-        enabledRoles.add(to)
 
-        if (activations[to] == null) {
+        if (!enabledRoles.contains(to)) {
             activations[to] = from
         }
 
+        enabledRoles.add(to)
         instructions.add(msg)
     }
 
@@ -71,7 +72,7 @@ abstract class GlobalEnv(
      * @throws [sessionkotlin.dsl.exception.RecursiveProtocolException]
      * if used after a recursive call.
      *
-     * @sample [sessionkotlin.dsl.Examples.choice]
+     * @sample [sessionkotlin.dsl.Samples.choice]
      *
      */
     open fun choice(at: Role, cases: ChoiceEnv.() -> Unit) {
@@ -85,6 +86,21 @@ abstract class GlobalEnv(
         bEnv.cases()
         val b = Branch(at, bEnv.caseMap)
 
+        // If a role is enabled in every case:
+        bEnv.caseMap.values.forEach { activations.putAll(it.activations) }
+        val counters = mutableMapOf<Role, Int>()
+
+        for (globalEnv in bEnv.caseMap.values) {
+            for (role in globalEnv.activations.keys)
+                counters.merge(role, 1, Int::plus)
+        }
+        val enabledInEveryCase =
+            counters
+                .filterValues { it == bEnv.caseMap.size }
+                .keys
+        enabledRoles.addAll(enabledInEveryCase)
+
+
         instructions.add(b)
         roles.add(at)
     }
@@ -94,9 +110,8 @@ abstract class GlobalEnv(
      * Appends a global protocol.
      *
      * @param [protocolBuilder] protocol to append
-     * @param [mapping] mapping of roles to replace (optional)
      *
-     * @sample [sessionkotlin.dsl.Examples.exec]
+     * @sample [sessionkotlin.dsl.Samples.exec]
      *
      */
     open fun exec(protocolBuilder: GlobalEnv) {
@@ -109,8 +124,8 @@ abstract class GlobalEnv(
         enabledRoles.addAll(protocolBuilder.enabledRoles)
         instructions.addAll(protocolBuilder.instructions)
 
-        for ((k,v) in protocolBuilder.activations) {
-            activations.putIfAbsent(k,v)
+        for ((k, v) in protocolBuilder.activations) {
+            activations.putIfAbsent(k, v)
         }
     }
 
@@ -121,7 +136,7 @@ abstract class GlobalEnv(
      * @throws [sessionkotlin.dsl.exception.RecursiveProtocolException]
      * if used after a recursive call.
      *
-     * @sample [sessionkotlin.dsl.Examples.rec]
+     * @sample [sessionkotlin.dsl.Samples.rec]
      *
      */
     open fun rec() {
@@ -151,7 +166,7 @@ class NonRootEnv(
     enabledRoles: Set<Role>,
 ) : GlobalEnv(roles, enabledRoles) {
 
-    override fun <T : Serializable> send(from: Role, to: Role) {
+    override fun <T> send(from: Role, to: Role) {
         if (from !in enabledRoles) {
             throw RoleNotEnabledException(from)
         }

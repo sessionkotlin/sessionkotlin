@@ -1,9 +1,10 @@
 import sessionkotlin.dsl.globalProtocol
 import org.junit.jupiter.api.Test
-import sessionkotlin.dsl.Examples
+import sessionkotlin.dsl.Samples
 import sessionkotlin.dsl.Role
 import sessionkotlin.dsl.exception.InconsistentExternalChoiceException
 import sessionkotlin.dsl.exception.RoleNotEnabledException
+import sessionkotlin.dsl.exception.UnfinishedRolesException
 import kotlin.test.assertFailsWith
 
 class ChoiceTest {
@@ -109,6 +110,7 @@ class ChoiceTest {
             choice(b) {
                 case("Case1") {
                     send<String>(b, c)
+                    send<String>(c, a)
                 }
                 case("Case2") {
                     send<Int>(b, c)
@@ -222,7 +224,44 @@ class ChoiceTest {
 
     @Test
     fun `test choice example`() {
-        Examples().choice()
+        Samples().choice()
     }
 
+    @Test
+    fun `unfinished roles`() {
+        assertFailsWith<UnfinishedRolesException> {
+            globalProtocol {
+                choice(a) {
+                    case("Case1") {
+                        send<Unit>(a, b)
+                    }
+                    case("Case2") {
+                        send<Unit>(a, c)
+                    }
+                }
+            }
+        }
+
+    }
+
+    @Test
+    fun `role activated 3`() {
+
+        globalProtocol {
+            choice(b) {
+                case("Case1") {
+                    choice(b) {
+                        case("SubCase1") {
+                            send<String>(b, c)
+                        }
+                        case("SubCase2") {
+                            send<Int>(b, c)
+                        }
+                    }
+                    send<Int>(c, b)
+                }
+            }
+
+        }
+    }
 }

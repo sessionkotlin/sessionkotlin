@@ -1,8 +1,6 @@
 package sessionkotlin.dsl
 
-import sessionkotlin.dsl.exception.InconsistentExternalChoiceException
-
-class Examples {
+class Samples {
 
     fun send() {
         val a = Role("A")
@@ -45,6 +43,7 @@ class Examples {
 
         val case2 = globalProtocol {
             send<String>(b, a)
+            send<String>(a, c)
         }
 
         globalProtocol {

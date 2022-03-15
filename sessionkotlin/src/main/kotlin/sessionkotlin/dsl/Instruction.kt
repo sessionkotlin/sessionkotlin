@@ -1,10 +1,6 @@
 package sessionkotlin.dsl
 
-import sessionkotlin.dsl.exception.InconsistentExternalChoiceException
-import sessionkotlin.dsl.exception.RoleNotEnabledException
-import sessionkotlin.dsl.exception.SendingtoSelfException
-import java.util.*
-import javax.swing.text.html.Option
+import sessionkotlin.dsl.exception.UnfinishedRolesException
 
 
 internal abstract class Instruction {
@@ -13,7 +9,7 @@ internal abstract class Instruction {
 
 internal class Send<T>(
     private val from: Role,
-    private val to: Role
+    private val to: Role,
 ) : Instruction() {
 
     override fun dump(indent: Int) {
@@ -23,8 +19,26 @@ internal class Send<T>(
 
 internal class Branch(
     private val at: Role,
-    private val caseMap: MutableMap<String, GlobalEnv>
+    private val caseMap: MutableMap<String, GlobalEnv>,
 ) : Instruction() {
+
+    init {
+        val counters = mutableMapOf<Role, Int>()
+        for (c in caseMap.values) {
+            for (r in c.activations.keys)
+                if (r != at) {
+                    counters.merge(r, 1, Int::plus)
+                }
+        }
+        val unfinishedRoles =
+            counters
+                .filterValues { it != 0 && it != caseMap.size }
+                .keys
+        if (unfinishedRoles.isNotEmpty()) {
+            throw UnfinishedRolesException(unfinishedRoles)
+        }
+
+    }
 
     override fun dump(indent: Int) {
 
@@ -42,7 +56,7 @@ private fun printlnIndent(indent: Int, message: Any?) {
     println(" ".repeat(indent) + message)
 }
 
-internal class Rec: Instruction() {
+internal class Rec : Instruction() {
     override fun dump(indent: Int) {
         printlnIndent(indent, "Recursive call")
     }

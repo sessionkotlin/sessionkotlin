@@ -1,6 +1,6 @@
 import sessionkotlin.dsl.globalProtocol
 import org.junit.jupiter.api.Test
-import sessionkotlin.dsl.Examples
+import sessionkotlin.dsl.Samples
 import sessionkotlin.dsl.Role
 import sessionkotlin.dsl.exception.InconsistentExternalChoiceException
 import sessionkotlin.dsl.exception.RecursiveProtocolException
@@ -125,7 +125,7 @@ class ExecTest {
 
     @Test
     fun `test exec example`() {
-        Examples().exec()
+        Samples().exec()
     }
 
     @Test

@@ -1,6 +1,6 @@
 import sessionkotlin.dsl.globalProtocol
 import org.junit.jupiter.api.Test
-import sessionkotlin.dsl.Examples
+import sessionkotlin.dsl.Samples
 import sessionkotlin.dsl.Role
 import sessionkotlin.dsl.exception.SendingtoSelfException
 import kotlin.test.assertFailsWith
@@ -44,6 +44,6 @@ class SendTest {
 
     @Test
     fun `test send example`() {
-        Examples().send()
+        Samples().send()
     }
 }

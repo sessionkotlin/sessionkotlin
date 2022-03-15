@@ -30,6 +30,7 @@ fun main() {
             case("Case 1") {
                 exec(case1)
                 rec()
+                send<String>(b, a)
             }
             case("Case 2") {
                 exec(case2)
