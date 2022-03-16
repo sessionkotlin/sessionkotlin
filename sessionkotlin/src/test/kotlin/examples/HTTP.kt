@@ -5,7 +5,7 @@ import sessionkotlin.dsl.Role
 import sessionkotlin.dsl.globalProtocol
 import java.util.*
 
-class HTTPExample {
+class HTTP {
 
     @Test
     fun main() {

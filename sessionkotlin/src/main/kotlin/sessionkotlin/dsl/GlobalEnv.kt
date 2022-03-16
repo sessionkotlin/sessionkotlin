@@ -161,9 +161,9 @@ abstract class GlobalEnv(
     }
 }
 
-class RootEnv() : GlobalEnv(emptySet(), emptySet())
+internal class RootEnv : GlobalEnv(emptySet(), emptySet())
 
-class NonRootEnv(
+internal class NonRootEnv(
     roles: Set<Role>,
     enabledRoles: Set<Role>,
 ) : GlobalEnv(roles, enabledRoles) {

@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test
 import sessionkotlin.dsl.Role
 import sessionkotlin.dsl.globalProtocol
 
-class AdderExample {
+class Adder {
 
     @Test
     fun main() {
