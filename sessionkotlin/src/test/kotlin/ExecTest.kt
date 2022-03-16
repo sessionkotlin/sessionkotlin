@@ -145,4 +145,19 @@ class ExecTest {
             }
         }.dump()
     }
+
+    @Test
+    fun `exec after rec`() {
+        val aux = globalProtocol {
+
+        }
+        assertFailsWith<RecursiveProtocolException> {
+            globalProtocol {
+                send<Int>(a, b)
+                rec()
+                exec(aux)
+
+            }
+        }
+    }
 }
