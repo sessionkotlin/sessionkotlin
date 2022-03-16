@@ -3,7 +3,6 @@ package examples
 import org.junit.jupiter.api.Test
 import sessionkotlin.dsl.Role
 import sessionkotlin.dsl.globalProtocol
-import java.util.*
 
 class ProxyExample {
 
@@ -31,13 +30,15 @@ class ProxyExample {
     }
 
     data class Request(
-        val content: String
+        val content: String,
     )
+
     data class Error(
-        val reason: String
+        val reason: String,
     )
+
     data class Response(
         val code: Int,
-        val content: String
+        val content: String,
     )
 }

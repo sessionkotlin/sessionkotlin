@@ -22,13 +22,13 @@ class HTTPExample {
         val method: String,
         val host: String,
         val body: Optional<String>,
-        val accept: Optional<String>
+        val accept: Optional<String>,
     )
 
     data class HttpResponse(
         val code: Int,
         val body: String,
-        val contentType: String
+        val contentType: String,
     )
 
 

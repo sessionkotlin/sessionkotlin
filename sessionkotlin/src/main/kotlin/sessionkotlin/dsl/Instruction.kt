@@ -52,7 +52,7 @@ internal class Branch(
     }
 }
 
-private fun printlnIndent(indent: Int, message: Any?) {
+internal fun printlnIndent(indent: Int, message: Any?) {
     println(" ".repeat(indent) + message)
 }
 

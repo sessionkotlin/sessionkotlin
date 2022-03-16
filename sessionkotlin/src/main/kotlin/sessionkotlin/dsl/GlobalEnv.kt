@@ -153,9 +153,11 @@ abstract class GlobalEnv(
      * Prints the protocol to the standard output.
      */
     fun dump(indent: Int = 0) {
+        printlnIndent(indent, "{")
         for (i in instructions) {
             i.dump(indent)
         }
+        printlnIndent(indent, "}")
     }
 }
 

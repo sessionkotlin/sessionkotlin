@@ -1,10 +1,10 @@
-import sessionkotlin.dsl.globalProtocol
 import org.junit.jupiter.api.Test
-import sessionkotlin.dsl.Samples
 import sessionkotlin.dsl.Role
+import sessionkotlin.dsl.Samples
 import sessionkotlin.dsl.exception.InconsistentExternalChoiceException
 import sessionkotlin.dsl.exception.RoleNotEnabledException
 import sessionkotlin.dsl.exception.UnfinishedRolesException
+import sessionkotlin.dsl.globalProtocol
 import kotlin.test.assertFailsWith
 
 class ChoiceTest {

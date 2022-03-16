@@ -3,7 +3,6 @@ package examples
 import org.junit.jupiter.api.Test
 import sessionkotlin.dsl.Role
 import sessionkotlin.dsl.globalProtocol
-import java.util.*
 
 class Negotiation {
 

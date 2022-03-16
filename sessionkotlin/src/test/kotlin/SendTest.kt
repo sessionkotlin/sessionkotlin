@@ -1,8 +1,8 @@
-import sessionkotlin.dsl.globalProtocol
 import org.junit.jupiter.api.Test
-import sessionkotlin.dsl.Samples
 import sessionkotlin.dsl.Role
+import sessionkotlin.dsl.Samples
 import sessionkotlin.dsl.exception.SendingtoSelfException
+import sessionkotlin.dsl.globalProtocol
 import kotlin.test.assertFailsWith
 
 class SendTest {

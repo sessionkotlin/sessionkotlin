@@ -56,7 +56,6 @@ class Samples {
                     exec(case2)
                 }
             }
-            
         }
     }
 

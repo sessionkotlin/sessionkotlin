@@ -39,6 +39,6 @@ class BuyerBrokerSupplier {
     data class Application(
         val name: String,
         val dateOfBirth: Date,
-        val salary: Int
+        val salary: Int,
     )
 }
