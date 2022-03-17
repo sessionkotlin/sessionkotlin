@@ -183,6 +183,7 @@ internal class NonRootEnv(
     }
 
     override fun exec(protocolBuilder: GlobalEnv) {
+        // calculate the roles that should be enabled before the exec()
         val r = protocolBuilder.roles
             .minus(protocolBuilder.enabledRoles)
             .minus(enabledRoles)
