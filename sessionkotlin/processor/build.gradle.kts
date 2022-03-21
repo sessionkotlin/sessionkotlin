@@ -1,16 +1,49 @@
+group = "org.david"
+version = "0.0.1"
+
 plugins {
     kotlin("jvm")
-    `java-library`
-    id("com.google.devtools.ksp") version "1.6.10-1.0.2"
+    `maven-publish`
 }
+
+// Versions are declared in 'gradle.properties' file
 val kspVersion: String by project
+val kotlinPoetVersion: String by project
+val kotlinPoetInteropKSPVersion: String by project
+
+
+kotlin.sourceSets.all {
+    languageSettings.optIn("com.squareup.kotlinpoet.ksp.KotlinPoetKspPreview")
+}
 
 dependencies {
+    implementation("com.squareup:kotlinpoet:$kotlinPoetVersion")
+    implementation("com.squareup:kotlinpoet-ksp:$kotlinPoetInteropKSPVersion")
     implementation("com.google.devtools.ksp:symbol-processing-api:$kspVersion")
 }
 
-ksp {
-    // Passing an argument to the symbol processor.
-    // Change value to "true" in order to apply the argument.
-    arg("ignoreGenericArgs", "false")
+
+publishing {
+    publications {
+
+        create<MavenPublication>("maven") {
+            groupId = project.group as String
+            artifactId = "${rootProject.name}_${project.name}"
+            version = project.version as String
+
+            from(components["java"])
+
+            pom {
+                name.set("SessionKotlin")
+                description.set("Multiparty Session Types in Kotlin")
+                licenses {
+                    license {
+                        name.set("MIT License")
+                        url.set("https://opensource.org/licenses/MIT")
+                    }
+                }
+            }
+        }
+
+    }
 }

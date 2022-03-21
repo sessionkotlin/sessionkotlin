@@ -23,4 +23,5 @@ dependencyResolutionManagement {
 rootProject.name = "sessionkotlin"
 
 include(":processor")
-include(":dsl")
+include(":lib")
+include(":assemble")
