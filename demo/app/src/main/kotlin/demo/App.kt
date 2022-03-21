@@ -3,7 +3,9 @@
  */
 package demo
 
+import sessionkotlin.annotations.Project
 import sessionkotlin.dsl.GlobalEnv
+import sessionkotlin.dsl.LocalProtocol
 import sessionkotlin.dsl.Role
 import sessionkotlin.dsl.exception.InconsistentExternalChoiceException
 import sessionkotlin.dsl.globalProtocol
@@ -22,20 +24,23 @@ fun main() {
 
     val case2 = globalProtocol {
         send<String>(b, a)
+        send<Int>(b, c)
     }
 
-    globalProtocol {
+    val g = globalProtocol {
         choice(b) {
 
             case("Case 1") {
                 exec(case1)
-                rec()
-                send<String>(b, a)
             }
             case("Case 2") {
                 exec(case2)
             }
         }
-    }.dump()
+    }
+
+    @Project
+    class LocalB(): LocalProtocol(g, b)
+
 
 }
