@@ -15,6 +15,19 @@ class Samples {
         }
     }
 
+    fun sendTypes() {
+        val a = Role("A")
+        val b = Role("B")
+        val s = Role("C")
+
+        globalProtocol {
+            send(a, s, String::class.java)
+            send(s, a, Long::class.java)
+            send(s, b, Long::class.java)
+            send(b, s, Long::class.java)
+        }
+    }
+
     fun choice() {
         val a = Role("A")
         val b = Role("B")

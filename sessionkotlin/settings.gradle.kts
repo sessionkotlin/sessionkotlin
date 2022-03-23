@@ -1,9 +1,8 @@
 pluginManagement {
     // Versions are declared in 'gradle.properties' file
     val kotlinVersion: String by settings
-    val kspVersion: String by settings
+
     plugins {
-        id("com.google.devtools.ksp") version kspVersion
         kotlin("jvm") version kotlinVersion
     }
     repositories {
@@ -15,6 +14,7 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
+        mavenLocal()
         google()
         mavenCentral()
     }

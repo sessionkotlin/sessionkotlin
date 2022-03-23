@@ -1,12 +1,10 @@
 package dsl
 
-import org.david.sessionkotlin_lib.annotation.Project
-import org.david.sessionkotlin_lib.dsl.LocalProtocol
 import org.david.sessionkotlin_lib.dsl.Role
+import org.david.sessionkotlin_lib.dsl.Samples
 import org.david.sessionkotlin_lib.dsl.exception.InconsistentExternalChoiceException
 import org.david.sessionkotlin_lib.dsl.exception.RoleNotEnabledException
 import org.david.sessionkotlin_lib.dsl.exception.UnfinishedRolesException
-import org.david.sessionkotlin_lib.dsl.Samples
 import org.david.sessionkotlin_lib.dsl.globalProtocol
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFailsWith
@@ -21,13 +19,11 @@ class ChoiceTest {
 
     @Test
     fun `normal choice`() {
-
-        val g = globalProtocol {
+        globalProtocol {
             choice(b) {
                 case("Case1") {
                     send<String>(b, a)
                     send<String>(b, a)
-
                 }
                 case("Case2") {
                     choice(b) {
@@ -38,8 +34,6 @@ class ChoiceTest {
                 }
             }
         }
-        @Project
-        class C: LocalProtocol(g, b)
     }
 
     @Test

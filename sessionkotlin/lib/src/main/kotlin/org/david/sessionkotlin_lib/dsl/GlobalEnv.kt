@@ -7,30 +7,57 @@ import org.david.sessionkotlin_lib.dsl.exception.SendingtoSelfException
 private annotation class SessionKotlinDSL
 
 @SessionKotlinDSL
-abstract class GlobalEnv(
-    roles: Set<Role>
+sealed class GlobalEnv(
+    roles: Set<Role>,
 ) {
-    internal val instructions = mutableListOf<Instruction>()
+    private val instructions = mutableListOf<Instruction>()
     private val roles = roles.toMutableSet()
     private var recursiveCall = false
 
+
     /**
      *
-     * Declares that [from] should send a message of type [T] to [to].
+     * Declares that [from] should send a message of type [type] to [to].
+     *
+     * As this function uses a reified type, it is not callable from Java.
+     * If you are using Java, use the alternative declaration:
+     *
+     * <nobr>`send(from, to, type)`<nobr>
      *
      * @param [from] role that sends the message
      * @param [to] role that receives the message
      *
-     * @throws [dsl.exception.SendingtoSelfException]
+     * @throws [org.david.sessionkotlin_lib.dsl.exception.SendingtoSelfException]
      * if [from] and [to] are the same.
      *
-     * @throws [dsl.exception.RecursiveProtocolException]
+     * @throws [org.david.sessionkotlin_lib.dsl.exception.RecursiveProtocolException]
      * if used after a recursive call.
      *
-     * @sample [dsl.Samples.send]
+     * @sample [org.david.sessionkotlin_lib.dsl.Samples.send]
      *
      */
-    open fun <T> send(from: Role, to: Role) {
+    inline fun <reified T> send(from: Role, to: Role) {
+        send(from, to, T::class.java)
+    }
+
+    /**
+     *
+     * Declares that [from] should send a message of type [type] to [to].
+     *
+     * @param [from] role that sends the message
+     * @param [to] role that receives the message
+     *
+     * @throws [org.david.sessionkotlin_lib.dsl.exception.SendingtoSelfException]
+     * if [from] and [to] are the same.
+     *
+     * @throws [org.david.sessionkotlin_lib.dsl.exception.RecursiveProtocolException]
+     * if used after a recursive call.
+     *
+     * @sample [org.david.sessionkotlin_lib.dsl.Samples.sendTypes]
+     *
+     */
+    open fun send(from: Role, to: Role, type: Class<*>) {
+        println(type)
         if (recursiveCall) {
             throw RecursiveProtocolException()
         }
@@ -38,7 +65,7 @@ abstract class GlobalEnv(
             throw SendingtoSelfException(from)
         }
 
-        val msg = Send<T>(from, to)
+        val msg = Send(from, to, type)
         roles.add(from)
         roles.add(to)
 
@@ -52,10 +79,10 @@ abstract class GlobalEnv(
      * @param [at] role that makes the decision
      * @param [cases] block that defines the choices
      *
-     * @throws [dsl.exception.RecursiveProtocolException]
+     * @throws [org.david.sessionkotlin_lib.dsl.exception.RecursiveProtocolException]
      * if used after a recursive call.
      *
-     * @sample [dsl.Samples.choice]
+     * @sample [org.david.sessionkotlin_lib.dsl.Samples.choice]
      *
      */
     open fun choice(at: Role, cases: ChoiceEnv.() -> Unit) {
@@ -63,7 +90,7 @@ abstract class GlobalEnv(
             throw RecursiveProtocolException()
         }
 
-        val bEnv = ChoiceEnv(roles, setOf(at))
+        val bEnv = ChoiceEnv(roles)
         bEnv.cases()
         val b = Branch(at, bEnv.caseMap)
         instructions.add(b)
@@ -76,7 +103,7 @@ abstract class GlobalEnv(
      *
      * @param [protocolBuilder] protocol to append
      *
-     * @sample [dsl.Samples.exec]
+     * @sample [org.david.sessionkotlin_lib.dsl.Samples.exec]
      *
      */
     open fun exec(protocolBuilder: GlobalEnv) {
@@ -93,10 +120,10 @@ abstract class GlobalEnv(
      *
      * Declares a recursive call.
      *
-     * @throws [dsl.exception.RecursiveProtocolException]
+     * @throws [org.david.sessionkotlin_lib.dsl.exception.RecursiveProtocolException]
      * if used after a recursive call.
      *
-     * @sample [dsl.Samples.rec]
+     * @sample [org.david.sessionkotlin_lib.dsl.Samples.rec]
      *
      */
     open fun rec() {
@@ -130,7 +157,6 @@ internal class NonRootEnv(
 @SessionKotlinDSL
 class ChoiceEnv(
     private val roles: Set<Role>,
-    private val enabledRoles: Set<Role>,
 ) {
     internal val caseMap = mutableMapOf<String, GlobalEnv>()
 

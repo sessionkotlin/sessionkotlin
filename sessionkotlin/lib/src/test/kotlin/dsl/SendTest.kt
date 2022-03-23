@@ -1,8 +1,8 @@
 package dsl
 
 import org.david.sessionkotlin_lib.dsl.Role
-import org.david.sessionkotlin_lib.dsl.exception.SendingtoSelfException
 import org.david.sessionkotlin_lib.dsl.Samples
+import org.david.sessionkotlin_lib.dsl.exception.SendingtoSelfException
 import org.david.sessionkotlin_lib.dsl.globalProtocol
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFailsWith
@@ -47,5 +47,10 @@ class SendTest {
     @Test
     fun `test send example`() {
         Samples().send()
+    }
+
+    @Test
+    fun `test send types example`() {
+        Samples().sendTypes()
     }
 }

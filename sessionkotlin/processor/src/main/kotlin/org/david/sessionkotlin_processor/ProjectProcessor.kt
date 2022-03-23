@@ -3,22 +3,25 @@
  */
 package org.david.sessionkotlin_processor
 
-import com.google.devtools.ksp.processing.*
+import com.google.devtools.ksp.processing.CodeGenerator
+import com.google.devtools.ksp.processing.KSPLogger
+import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.symbol.ClassKind
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.squareup.kotlinpoet.FileSpec
-import com.squareup.kotlinpoet.ksp.writeTo
+import com.google.devtools.ksp.symbol.KSVisitorVoid
 
 class ProjectProcessor(
     private val logger: KSPLogger,
     private val codeGenerator: CodeGenerator,
 ) : SymbolProcessor {
+    private val packageName = "org.david.sessionkotlin_lib.annotation"
+    val filename = "GeneratedSources"
+    val annotationName = "Project"
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val packageName = "org.david.sessionkotlin_lib.annotation"
-        val filename = "GeneratedSources"
-        val annotationName = "Project"
-        logger.warn("-------I SAID HEY-----------")
+
 
         val symbols = resolver
             .getSymbolsWithAnnotation(
@@ -26,22 +29,37 @@ class ProjectProcessor(
                 inDepth = true
             )
             .filterIsInstance<KSClassDeclaration>()
-        logger.warn(symbols.joinToString(prefix = "Symbols:"))
 
         // Exit from the processor in case nothing is annotated
         if (!symbols.iterator().hasNext()) return emptyList()
 
-        logger.error("-------SYMBOLS-----------")
-        logger.error(symbols.joinToString())
+        symbols.forEach { it.accept(Visitor(), Unit) }
 
 
-        val fileSpecBuilder = FileSpec.builder(
-            packageName = packageName,
-            fileName = filename
-        )
-        fileSpecBuilder.addComment("This is a generated file. Do not change it.")
-        fileSpecBuilder.build().writeTo(codeGenerator, Dependencies(false)) // TODO
+//        val fileSpecBuilder = FileSpec.builder(
+//            packageName = packageName,
+//            fileName = filename
+//        )
+//        fileSpecBuilder.addComment("This is a generated file. Do not change it.")
+//        fileSpecBuilder.build().writeTo(codeGenerator, Dependencies(false)) // TODO
 
         return emptyList()
+    }
+
+    inner class Visitor() : KSVisitorVoid() {
+        override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
+            if (classDeclaration.classKind != ClassKind.CLASS) {
+                logger.error("Only classes can be annotated with @$annotationName", classDeclaration)
+                return
+            }
+
+            // Getting the list of member properties of the annotated interface.
+            val properties = classDeclaration
+                .superTypes
+
+            properties.forEach { prop ->
+                logger.error(prop.toString())
+            }
+        }
     }
 }

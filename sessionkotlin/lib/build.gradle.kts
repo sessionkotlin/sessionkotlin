@@ -11,7 +11,6 @@ plugins {
 }
 
 dependencies {
-    ksp(project(":processor"))
     testImplementation(kotlin("test"))
 }
 

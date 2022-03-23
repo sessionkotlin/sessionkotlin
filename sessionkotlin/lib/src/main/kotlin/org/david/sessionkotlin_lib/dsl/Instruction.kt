@@ -5,13 +5,14 @@ internal abstract class Instruction {
     abstract fun dump(indent: Int)
 }
 
-internal class Send<T>(
+internal class Send(
     private val from: Role,
     private val to: Role,
+    private val type: Class<*>,
 ) : Instruction() {
 
     override fun dump(indent: Int) {
-        printlnIndent(indent, "Send[$from -> $to]")
+        printlnIndent(indent, "Send<$type>[$from -> $to]")
     }
 }
 
