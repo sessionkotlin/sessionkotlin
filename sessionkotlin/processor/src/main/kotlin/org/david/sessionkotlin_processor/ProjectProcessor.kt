@@ -16,8 +16,8 @@ class ProjectProcessor(
     private val logger: KSPLogger,
     private val codeGenerator: CodeGenerator,
 ) : SymbolProcessor {
-    private val packageName = "org.david.sessionkotlin_lib.annotation"
-    val filename = "GeneratedSources"
+    private val annotationPackage = "org.david.sessionkotlin_lib.annotation"
+    private val dslPackage = "org.david.sessionkotlin_lib.dsl"
     val annotationName = "Project"
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -25,7 +25,7 @@ class ProjectProcessor(
 
         val symbols = resolver
             .getSymbolsWithAnnotation(
-                listOf(packageName, annotationName).joinToString("."),
+                listOf(annotationPackage, annotationName).joinToString("."),
                 inDepth = true
             )
             .filterIsInstance<KSClassDeclaration>()
@@ -41,7 +41,7 @@ class ProjectProcessor(
 //            fileName = filename
 //        )
 //        fileSpecBuilder.addComment("This is a generated file. Do not change it.")
-//        fileSpecBuilder.build().writeTo(codeGenerator, Dependencies(false)) // TODO
+//        fileSpecBuilder.build().writeTo(codeGenerator, Dependencies(false))
 
         return emptyList()
     }
@@ -52,14 +52,37 @@ class ProjectProcessor(
                 logger.error("Only classes can be annotated with @$annotationName", classDeclaration)
                 return
             }
+            val className = classDeclaration.simpleName
 
-            // Getting the list of member properties of the annotated interface.
-            val properties = classDeclaration
-                .superTypes
-
-            properties.forEach { prop ->
-                logger.error(prop.toString())
+            val inherits = classDeclaration.superTypes.any {
+                it.resolve().declaration.let { d ->
+                    (d.qualifiedName?.asString()
+                        ?: d.simpleName.asString()) == "$dslPackage.LocalProtocol"
+                }
             }
+
+            if (!inherits) {
+                logger.error("${className.asString()} should extend LocalProtocol", classDeclaration)
+            }
+
+            val properties = classDeclaration.getAllProperties()
+
+//            val gTypeDeclaration = properties.first { it.simpleName.asString() == "globalType" }
+//            val roleDeclaration = properties.first {  it.simpleName.asString() == "role" }
+
+//            logger.error(roleDeclaration.)
+
+//
+//            logger.error(gProtocol.simpleName.asString())
+//            logger.error(role.simpleName.asString())
+//            // Getting the list of member properties of the annotated interface.
+//            val properties = classDeclaration
+//                .getAllSuperTypes()
+
+
+//            properties.forEach { prop ->
+//                logger.error(prop.toString())
+//            }
         }
     }
 }

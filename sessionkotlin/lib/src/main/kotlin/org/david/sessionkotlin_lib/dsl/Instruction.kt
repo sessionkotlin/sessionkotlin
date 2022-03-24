@@ -1,24 +1,39 @@
 package org.david.sessionkotlin_lib.dsl
 
 
-internal abstract class Instruction {
+internal sealed class Instruction {
     abstract fun dump(indent: Int)
 }
 
 internal class Send(
-    private val from: Role,
-    private val to: Role,
-    private val type: Class<*>,
+    internal val from: Role,
+    internal val to: Role,
+    internal val type: Class<*>,
 ) : Instruction() {
 
     override fun dump(indent: Int) {
-        printlnIndent(indent, "Send<$type>[$from -> $to]")
+        printlnIndent(indent, "Send<${type.simpleName}>[$from -> $to]")
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (other is Send) {
+            return from == other.from && to == other.to && type == other.type
+        }
+        return false
+    }
+
+    override fun hashCode(): Int {
+        // auto generated
+        var result = from.hashCode()
+        result = 31 * result + to.hashCode()
+        result = 31 * result + type.hashCode()
+        return result
     }
 }
 
 internal class Branch(
-    private val at: Role,
-    private val caseMap: MutableMap<String, GlobalEnv>,
+    internal val at: Role,
+    internal val caseMap: MutableMap<String, GlobalEnv>,
 ) : Instruction() {
 
     override fun dump(indent: Int) {
@@ -31,10 +46,6 @@ internal class Branch(
 
         printlnIndent(indent, "]")
     }
-}
-
-internal fun printlnIndent(indent: Int, message: Any?) {
-    println(" ".repeat(indent) + message)
 }
 
 internal class Rec : Instruction() {

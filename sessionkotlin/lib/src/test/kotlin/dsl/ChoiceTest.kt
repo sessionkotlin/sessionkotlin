@@ -92,7 +92,7 @@ class ChoiceTest {
     @Test
     fun `role activated`() {
 
-        globalProtocol {
+        val g = globalProtocol {
             choice(b) {
                 case("Case1") {
                     send<String>(b, a)

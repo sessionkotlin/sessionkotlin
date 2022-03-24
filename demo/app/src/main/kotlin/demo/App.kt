@@ -1,6 +1,5 @@
 package demo
 
-import org.david.sessionkotlin_lib.annotation.Project
 import org.david.sessionkotlin_lib.dsl.*
 
 
@@ -32,7 +31,8 @@ fun main() {
         }
     }
 
-    @Project
-    class LocalB(): LocalProtocol(g, b)
+    for (i in g.project(a))
+        i.dump(0)
+
 
 }

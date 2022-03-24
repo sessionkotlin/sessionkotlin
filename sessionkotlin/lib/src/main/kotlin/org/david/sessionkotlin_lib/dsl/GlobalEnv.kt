@@ -1,7 +1,9 @@
 package org.david.sessionkotlin_lib.dsl
 
+import org.david.sessionkotlin_lib.dsl.exception.BranchingException
 import org.david.sessionkotlin_lib.dsl.exception.RecursiveProtocolException
 import org.david.sessionkotlin_lib.dsl.exception.SendingtoSelfException
+import org.david.sessionkotlin_lib.dsl.types.*
 
 @DslMarker
 private annotation class SessionKotlinDSL
@@ -10,14 +12,14 @@ private annotation class SessionKotlinDSL
 sealed class GlobalEnv(
     roles: Set<Role>,
 ) {
-    private val instructions = mutableListOf<Instruction>()
+    internal val instructions = mutableListOf<Instruction>()
     private val roles = roles.toMutableSet()
     private var recursiveCall = false
 
 
     /**
      *
-     * Declares that [from] should send a message of type [type] to [to].
+     * Declares that [from] should send a message of type [T] to [to].
      *
      * As this function uses a reified type, it is not callable from Java.
      * If you are using Java, use the alternative declaration:
@@ -57,7 +59,6 @@ sealed class GlobalEnv(
      *
      */
     open fun send(from: Role, to: Role, type: Class<*>) {
-        println(type)
         if (recursiveCall) {
             throw RecursiveProtocolException()
         }
@@ -146,12 +147,42 @@ sealed class GlobalEnv(
         }
         printlnIndent(indent, "}")
     }
+
+    internal fun project(role: Role): LocalType {
+//        for (i in instructions)
+//            i.dump(0)
+        return buildGlobalType(instructions)
+            .project(role)
+    }
+
+    fun validate() {
+        roles.forEach { project(it) }
+    }
 }
+
+
+internal fun buildGlobalType(instructions: MutableList<Instruction>): GlobalType =
+    if (instructions.isEmpty()) {
+        GlobalTypeEnd
+    } else {
+        val head = instructions.first()
+        val tail = instructions.subList(1, instructions.size)
+
+        if (head is Branch && tail.isNotEmpty()) {
+            throw BranchingException()
+        }
+
+        when (head) {
+            is Send -> GlobalTypeSend(head.from, head.to, head.type, buildGlobalType(tail))
+            is Rec -> GlobalTypeRec
+            is Branch -> GlobalTypeBranch(head.at, head.caseMap.mapValues { buildGlobalType(it.value.instructions) })
+        }
+    }
 
 internal class RootEnv : GlobalEnv(emptySet())
 
 internal class NonRootEnv(
-    roles: Set<Role>
+    roles: Set<Role>,
 ) : GlobalEnv(roles)
 
 @SessionKotlinDSL
@@ -170,5 +201,6 @@ class ChoiceEnv(
 fun globalProtocol(protocolBuilder: GlobalEnv.() -> Unit): GlobalEnv {
     val p = RootEnv()
     p.protocolBuilder()
+//    p.validate()
     return p
 }

@@ -11,17 +11,21 @@ val kspVersion: String by project
 val kotlinPoetVersion: String by project
 val kotlinPoetInteropKSPVersion: String by project
 
-
-kotlin.sourceSets.all {
-    languageSettings.optIn("com.squareup.kotlinpoet.ksp.KotlinPoetKspPreview")
-}
-
 dependencies {
     implementation("com.squareup:kotlinpoet:$kotlinPoetVersion")
     implementation("com.squareup:kotlinpoet-ksp:$kotlinPoetInteropKSPVersion")
     implementation("com.google.devtools.ksp:symbol-processing-api:$kspVersion")
+    implementation("org.david:sessionkotlin_lib:0.0.1")
+    testImplementation(kotlin("test"))
 }
 
+tasks.test {
+    useJUnitPlatform()
+}
+
+kotlin.sourceSets.all {
+    languageSettings.optIn("com.squareup.kotlinpoet.ksp.KotlinPoetKspPreview")
+}
 
 publishing {
     publications {

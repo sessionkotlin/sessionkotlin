@@ -6,6 +6,8 @@ pluginManagement {
         kotlin("jvm") version kotlinVersion
     }
     repositories {
+        mavenLocal()
+
         gradlePluginPortal()
         google()
     }
@@ -22,6 +24,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "sessionkotlin"
 
-include(":processor")
 include(":lib")
-include(":assemble")
+include(":processor")
+include(":tester")
