@@ -37,24 +37,41 @@ class ChoiceTest {
     }
 
     @Test
-    fun `role not enabled to send`() {
+    fun `role not enabled but is ignorable`() {
+        globalProtocol {
+            send<Int>(a, b)
+            send<Int>(b, a)
 
-        assertFailsWith<RoleNotEnabledException> {
-            globalProtocol {
-                send<Int>(a, b)
-                send<Int>(b, a)
+            choice(b) {
+                case("Case1") {
+                    send<String>(a, b)
+                }
+            }
+        }
+    }
 
-                choice(b) {
-                    case("Case1") {
-                        send<String>(a, b)
-                    }
+
+    @Test
+    fun `role not enabled but is ignorable 2 cases`() {
+        globalProtocol {
+            send<Int>(a, b)
+            send<Int>(b, a)
+
+            choice(b) {
+                case("Case1") {
+                    send<String>(b, c)
+                    send<String>(a, b)
+                }
+                case("Case1") {
+                    send<String>(a, b)
+                    send<String>(b, c)
                 }
             }
         }
     }
 
     @Test
-    fun `role not enabled to send 2`() {
+    fun `role not enabled to send`() {
 
         assertFailsWith<RoleNotEnabledException> {
             globalProtocol {
@@ -63,6 +80,7 @@ class ChoiceTest {
                         send<String>(b, a)
                     }
                     case("Case2") {
+                        send<String>(b, a)
                         send<String>(c, b)
                     }
                 }
@@ -79,12 +97,28 @@ class ChoiceTest {
                     case("Case1") {
                         choice(a) {
                             case("SubCase1") {
-
                             }
                         }
                     }
+                    case("Case 2") {
+                        send<Int>(b, a)
+                    }
                 }
+            }
+        }
+    }
 
+    @Test
+    fun `internal choice while ignoring external choice`() {
+        globalProtocol {
+            choice(b) {
+                case("Case1") {
+                    choice(a) {
+                        case("SubCase1") {
+
+                        }
+                    }
+                }
             }
         }
     }
@@ -92,7 +126,7 @@ class ChoiceTest {
     @Test
     fun `role activated`() {
 
-        val g = globalProtocol {
+        globalProtocol {
             choice(b) {
                 case("Case1") {
                     send<String>(b, a)
@@ -126,7 +160,7 @@ class ChoiceTest {
     @Test
     fun `role not activated in case`() {
 
-        assertFailsWith<RoleNotEnabledException> {
+        assertFailsWith<InconsistentExternalChoiceException> {
             globalProtocol {
                 choice(b) {
                     case("Case1") {
@@ -141,6 +175,26 @@ class ChoiceTest {
             }
         }
     }
+
+    @Test
+    fun `role not activated in case 2`() {
+
+        assertFailsWith<InconsistentExternalChoiceException> {
+            globalProtocol {
+                choice(b) {
+                    case("Case1") {
+                        send<Int>(b, c)
+                        send<Int>(c, a)
+                    }
+                    case("Case2") {
+                        send<Int>(b, c)
+                        send<String>(b, a)
+                    }
+                }
+            }
+        }
+    }
+
 
     @Test
     fun `role enabled by different roles`() {
@@ -240,27 +294,6 @@ class ChoiceTest {
                     case("Case2") {
                         send<Unit>(a, c)
                     }
-                }
-            }
-        }
-
-    }
-
-    @Test
-    fun `role activated 3`() {
-
-        globalProtocol {
-            choice(b) {
-                case("Case1") {
-                    choice(b) {
-                        case("SubCase1") {
-                            send<String>(b, c)
-                        }
-                        case("SubCase2") {
-                            send<Int>(b, c)
-                        }
-                    }
-                    send<Int>(c, b)
                 }
             }
         }

@@ -1,9 +1,9 @@
 package dsl
 
 import org.david.sessionkotlin_lib.dsl.Role
+import org.david.sessionkotlin_lib.dsl.Samples
 import org.david.sessionkotlin_lib.dsl.exception.RecursiveProtocolException
 import org.david.sessionkotlin_lib.dsl.exception.RoleNotEnabledException
-import org.david.sessionkotlin_lib.dsl.Samples
 import org.david.sessionkotlin_lib.dsl.globalProtocol
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFailsWith
@@ -126,6 +126,7 @@ class RecTest {
                         rec()
                     }
                     case("2") {
+                        send<Int>(b, c)
                     }
                 }
             }

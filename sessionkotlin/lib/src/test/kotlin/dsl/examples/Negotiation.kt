@@ -15,26 +15,30 @@ class Negotiation {
             choice(seller) {
                 case("Accept1") {
                     send<Unit>(seller, buyer)
+                    rec()
                 }
                 case("Reject1") {
                     send<Unit>(seller, buyer)
+                    rec()
                 }
                 case("Haggle1") {
                     send<Int>(seller, buyer)
                     choice(buyer) {
                         case("Accept2") {
                             send<Unit>(buyer, seller)
+                            rec()
                         }
                         case("Reject2") {
                             send<Unit>(buyer, seller)
+                            rec()
                         }
                         case("Haggle2") {
                             send<Unit>(buyer, seller)
+                            rec()
                         }
                     }
                 }
             }
-            rec()
         }
 
         globalProtocol {

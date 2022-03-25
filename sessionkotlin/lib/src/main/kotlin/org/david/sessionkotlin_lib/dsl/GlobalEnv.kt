@@ -3,6 +3,7 @@ package org.david.sessionkotlin_lib.dsl
 import org.david.sessionkotlin_lib.dsl.exception.BranchingException
 import org.david.sessionkotlin_lib.dsl.exception.RecursiveProtocolException
 import org.david.sessionkotlin_lib.dsl.exception.SendingtoSelfException
+import org.david.sessionkotlin_lib.dsl.exception.SessionKotlinException
 import org.david.sessionkotlin_lib.dsl.types.*
 
 @DslMarker
@@ -94,8 +95,12 @@ sealed class GlobalEnv(
         val bEnv = ChoiceEnv(roles)
         bEnv.cases()
         val b = Branch(at, bEnv.caseMap)
-        instructions.add(b)
+
         roles.add(at)
+        for (g in b.caseMap.values) {
+            roles.addAll(g.roles)
+        }
+        instructions.add(b)
     }
 
     /**
@@ -115,6 +120,7 @@ sealed class GlobalEnv(
         // We must merge the protocols
         recursiveCall = protocolBuilder.recursiveCall
         instructions.addAll(protocolBuilder.instructions)
+        roles.addAll(protocolBuilder.roles)
     }
 
     /**
@@ -152,11 +158,18 @@ sealed class GlobalEnv(
 //        for (i in instructions)
 //            i.dump(0)
         return buildGlobalType(instructions)
-            .project(role)
+            .project(role, State())
     }
 
     fun validate() {
-        roles.forEach { project(it) }
+        roles.forEach {
+            try {
+                project(it)
+            } catch (e: SessionKotlinException) {
+                System.err.println("Exception while projecting $it:")
+                throw e
+            }
+        }
     }
 }
 
@@ -201,6 +214,6 @@ class ChoiceEnv(
 fun globalProtocol(protocolBuilder: GlobalEnv.() -> Unit): GlobalEnv {
     val p = RootEnv()
     p.protocolBuilder()
-//    p.validate()
+    p.validate()
     return p
 }

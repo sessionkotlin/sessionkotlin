@@ -1,10 +1,10 @@
 package dsl
 
 import org.david.sessionkotlin_lib.dsl.Role
+import org.david.sessionkotlin_lib.dsl.Samples
 import org.david.sessionkotlin_lib.dsl.exception.InconsistentExternalChoiceException
 import org.david.sessionkotlin_lib.dsl.exception.RecursiveProtocolException
-import org.david.sessionkotlin_lib.dsl.exception.RoleNotEnabledException
-import org.david.sessionkotlin_lib.dsl.Samples
+import org.david.sessionkotlin_lib.dsl.exception.UnfinishedRolesException
 import org.david.sessionkotlin_lib.dsl.globalProtocol
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFailsWith
@@ -48,12 +48,16 @@ class ExecTest {
         val x = globalProtocol {
             send<Int>(c, b)
         }
-        assertFailsWith<RoleNotEnabledException> {
+        assertFailsWith<UnfinishedRolesException> {
             globalProtocol {
                 send<Int>(a, b)
                 choice(b) {
                     case("Case1") {
                         exec(x)
+                    }
+                    case("Case 2") {
+                        send<Int>(b, c)
+                        send<Int>(c, b)
                     }
                 }
             }
@@ -68,11 +72,12 @@ class ExecTest {
         }
 
         val case2 = globalProtocol {
+            send<Int>(b, c)
             send<String>(b, a)
         }
 
         assertFailsWith<InconsistentExternalChoiceException> {
-            globalProtocol {
+            val g = globalProtocol {
                 choice(b) {
 
                     case("Case 1") {
@@ -83,6 +88,8 @@ class ExecTest {
                     }
                 }
             }
+
+            g.dump(0)
         }
     }
 
