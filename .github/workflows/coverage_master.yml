@@ -29,7 +29,7 @@ jobs:
 
 
       - name: Generate report
-        run: cd sessionkotlin && gradle wrapper && ./gradlew clean check jacocoTestReport
+        run: cd sessionkotlin && gradle wrapper && ./gradlew clean check build jacocoTestReport
 
       - name: Generate Jacoco Badge
         id: jacoco
@@ -37,7 +37,7 @@ jobs:
         with:
           badges-directory: badges
           generate-branches-badge: true
-          jacoco-csv-file: sessionkotlin/dsl/build/reports/jacoco/test/jacocoTestReport.csv
+          jacoco-csv-file: sessionkotlin/lib/build/reports/jacoco/test/jacocoTestReport.csv
 
       - name: Log coverage percentage
         run: |
@@ -60,4 +60,4 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: jacoco-report
-          path: sessionkotlin/dsl/build/reports/jacoco/test
+          path: sessionkotlin/lib/build/reports/jacoco/test

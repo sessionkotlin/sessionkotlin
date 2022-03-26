@@ -65,7 +65,7 @@ class ProjectProcessor(
                 logger.error("${className.asString()} should extend LocalProtocol", classDeclaration)
             }
 
-            val properties = classDeclaration.getAllProperties()
+//            val properties = classDeclaration.getAllProperties()
 
 //            val gTypeDeclaration = properties.first { it.simpleName.asString() == "globalType" }
 //            val roleDeclaration = properties.first {  it.simpleName.asString() == "role" }

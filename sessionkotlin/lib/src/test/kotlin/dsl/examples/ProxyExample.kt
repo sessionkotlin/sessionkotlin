@@ -1,4 +1,4 @@
-package examples
+package dsl.examples
 
 import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.globalProtocol

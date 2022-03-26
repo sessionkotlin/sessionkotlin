@@ -1,16 +1,12 @@
 # Global Type Validation
 
-## Choice
-
-- In a choice branch, a role can be enabled or disabled.
-- The choice target is the only enabled role at the start.
-- Only enabled roles can initiate an interaction.
-- Roles that receive messages become enabled.
-- For every role that is not the choice target, the peer of the enabling action must be the same in all cases.
-- A role that is enabled in every case becomes enabled when the choice concludes.
-- A role can either be enabled in every case or no case at all (no unfinished roles).
- 
-## Recursion
-
-- All roles must be enabled when calling rec().
-- A rec() call cannot be followed by any instruction.
+- A message sender must be different from the receiver;
+- Branching and recursion (goto) are terminal operations;
+- In a branch, when a role is not the choice subject, it becomes "enabled" upon receiving a message;
+- In a choice, the choice subject starts as enabled;
+- In a choice, a role must always be enabled by the same role (consistent external choice);
+- In a choice, a role must be enabled exactly zero or in every branch (no unfinished roles);
+- In a choice, if a disabled role sends a message or is the subject of a choice in some branch, if its behaviour (local
+  type) must be the same for all branches;
+- In a choice, if a branch has a recursive call and a role is disabled, that role's behaviour (local type) must be the
+  same for all branches.

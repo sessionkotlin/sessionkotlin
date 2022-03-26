@@ -1,8 +1,8 @@
-package examples
+package dsl.examples
 
-import org.david.sessionkotlin_lib.dsl.GlobalEnv
 import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.globalProtocol
+import org.david.sessionkotlin_lib.dsl.types.asString
 import org.junit.jupiter.api.Test
 
 class SMPT {
@@ -14,57 +14,16 @@ class SMPT {
 
     @Test
     fun main() {
-        globalProtocol {
+        val g = globalProtocol {
             send<Code220>(s, c)
             exec(ehlo)
         }
+        g.project(s).asString()
+        g.project(c).asString()
     }
 
-    private fun ehloAux(continuation: GlobalEnv) =
-        globalProtocol {
-            choice(s) {
-                case("250") {
-                    send<Code250d>(s, c)
-                    rec()
-                }
-                case("250d") {
-                    send<Code250>(s, c)
-                    exec(continuation)
-                }
-            }
-        }
-
-    private val mailAuxInner = globalProtocol {
-        choice(c) {
-            case("Data") {
-                send<Dataline>(c, s)
-                rec()
-            }
-            case("Subject") {
-                send<Subject>(c, s)
-                rec()
-            }
-            case("End") {
-                send<EndOfData>(c, s)
-                send<Code250>(s, c)
-            }
-        }
-    }
-    private val mailAux = globalProtocol {
-        choice(c) {
-            case("Recipient") {
-                send<Recipient>(c, s)
-                send<Code250>(s, c)
-                rec()
-            }
-            case("Data") {
-                send<Data>(c, s)
-                send<Code354>(s, c)
-                exec(mailAuxInner)
-            }
-        }
-    }
     private val mail = globalProtocol {
+        val tMail = miu("tMail")
 
         choice(c) {
             case("") {
@@ -72,11 +31,38 @@ class SMPT {
                 choice(s) {
                     case("501") {
                         send<Code501>(s, c)
-                        rec()
+                        goto(tMail)
                     }
                     case("250") {
                         send<Code250>(s, c)
-                        exec(mailAux)
+                        val tMailAux = miu("tMailAux")
+                        choice(c) {
+                            case("Recipient") {
+                                send<Recipient>(c, s)
+                                send<Code250>(s, c)
+                                goto(tMailAux)
+                            }
+                            case("Data") {
+                                send<Data>(c, s)
+                                send<Code354>(s, c)
+                                val tMailAuxInner = miu("tMailAuxInner")
+
+                                choice(c) {
+                                    case("Data") {
+                                        send<Dataline>(c, s)
+                                        goto(tMailAuxInner)
+                                    }
+                                    case("Subject") {
+                                        send<Subject>(c, s)
+                                        goto(tMailAuxInner)
+                                    }
+                                    case("End") {
+                                        send<EndOfData>(c, s)
+                                        send<Code250>(s, c)
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -87,6 +73,7 @@ class SMPT {
         }
     }
     private val auth = globalProtocol {
+        val tAuth = miu("tAuth")
         choice(c) {
             case("Continue") {
                 send<Auth>(c, s)
@@ -97,7 +84,7 @@ class SMPT {
                     }
                     case("535") {
                         send<Code535>(s, c)
-                        rec()
+                        goto(tAuth)
                     }
                 }
             }
@@ -110,13 +97,25 @@ class SMPT {
         choice(c) {
             case("Continue") {
                 send<Ehlo>(c, s)
-                exec(ehloAux(auth))
+                val tEhloAux = miu("tEhloAux")
+
+                choice(s) {
+                    case("250") {
+                        send<Code250d>(s, c)
+                        goto(tEhloAux)
+                    }
+                    case("250d") {
+                        send<Code250>(s, c)
+                        exec(auth)
+                    }
+                }
             }
             case("Quit") {
                 send<Unit>(c, s)
             }
         }
     }
+
     private val startTLS = globalProtocol {
         choice(c) {
             case("Continue") {
@@ -133,8 +132,18 @@ class SMPT {
         choice(c) {
             case("Continue") {
                 send<Ehlo>(c, s)
-                exec(ehloAux(startTLS))
+                val tEhloAux = miu("tEhloAux")
 
+                choice(s) {
+                    case("250") {
+                        send<Code250d>(s, c)
+                        goto(tEhloAux)
+                    }
+                    case("250d") {
+                        send<Code250>(s, c)
+                        exec(startTLS)
+                    }
+                }
             }
             case("Quit") {
                 send<Unit>(c, s)

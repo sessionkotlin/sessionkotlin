@@ -1,9 +1,7 @@
 package tester
 
-import org.david.sessionkotlin_lib.dsl.LocalProtocol
 import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.globalProtocol
-import org.david.sessionkotlin_processor.Project
 import org.junit.jupiter.api.Test
 
 class Test {
@@ -15,20 +13,15 @@ class Test {
 
     @Test
     fun `test annotation`() {
-        val g = globalProtocol {
+        globalProtocol {
             send<Int>(a, b)
         }
-
-        @Project
-        class LocalA : LocalProtocol(g, a)
     }
 
     @Test
     fun `basic projection`() {
-        val g = globalProtocol {
+        globalProtocol {
             send<Int>(a, b)
         }
-        for (i in g.project(a))
-            i.dump(0)
     }
 }

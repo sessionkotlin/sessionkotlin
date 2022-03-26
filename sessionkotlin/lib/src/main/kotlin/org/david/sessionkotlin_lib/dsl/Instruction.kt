@@ -1,40 +1,30 @@
 package org.david.sessionkotlin_lib.dsl
 
 
-internal sealed class Instruction {
-    abstract fun dump(indent: Int)
+internal sealed interface Instruction {
+    fun dump(indent: Int)
 }
 
-internal class Send(
+internal sealed interface TerminalInstruction : Instruction {
+    fun simpleName(): String
+}
+
+internal data class Send(
     internal val from: Role,
     internal val to: Role,
     internal val type: Class<*>,
-) : Instruction() {
+) : Instruction {
 
     override fun dump(indent: Int) {
         printlnIndent(indent, "Send<${type.simpleName}>[$from -> $to]")
     }
-
-    override fun equals(other: Any?): Boolean {
-        if (other is Send) {
-            return from == other.from && to == other.to && type == other.type
-        }
-        return false
-    }
-
-    override fun hashCode(): Int {
-        // auto generated
-        var result = from.hashCode()
-        result = 31 * result + to.hashCode()
-        result = 31 * result + type.hashCode()
-        return result
-    }
 }
 
-internal class Branch(
+internal class Choice(
     internal val at: Role,
     internal val caseMap: MutableMap<String, GlobalEnv>,
-) : Instruction() {
+) : TerminalInstruction {
+    override fun simpleName(): String = "Choice at $at"
 
     override fun dump(indent: Int) {
 
@@ -48,8 +38,15 @@ internal class Branch(
     }
 }
 
-internal class Rec : Instruction() {
+internal class RecursionDefinition(internal val tag: RecursionTag) : Instruction {
     override fun dump(indent: Int) {
-        printlnIndent(indent, "Recursive call")
+        printlnIndent(indent, "miu_$tag")
+    }
+}
+
+internal class Recursion(internal val tag: RecursionTag) : TerminalInstruction {
+    override fun simpleName(): String = "Recursion($tag)"
+    override fun dump(indent: Int) {
+        printlnIndent(indent, "$tag")
     }
 }

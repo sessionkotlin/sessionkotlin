@@ -1,14 +1,16 @@
 package org.david.sessionkotlin_lib.dsl.types
 
+import org.david.sessionkotlin_lib.dsl.RecursionTag
 import org.david.sessionkotlin_lib.dsl.Role
 
 internal sealed class LocalType
-internal class LocalTypeSend(val to: Role, val type: Class<*>, val cont: LocalType) : LocalType()
-internal class LocalTypeReceive(val from: Role, val type: Class<*>, val cont: LocalType) : LocalType()
-internal class LocalTypeInternalChoice(val cases: Map<String, LocalType>) : LocalType()
-internal class LocalTypeExternalChoice(val to: Role, val cases: Map<String, LocalType>) : LocalType()
+internal data class LocalTypeSend(val to: Role, val type: Class<*>, val cont: LocalType) : LocalType()
+internal data class LocalTypeReceive(val from: Role, val type: Class<*>, val cont: LocalType) : LocalType()
+internal data class LocalTypeInternalChoice(val cases: Map<String, LocalType>) : LocalType()
+internal data class LocalTypeExternalChoice(var to: Role, val cases: Map<String, LocalType>) : LocalType()
+internal data class LocalTypeRecursionDefinition(val tag: RecursionTag, val cont: LocalType) : LocalType()
+internal data class LocalTypeRecursion(val tag: RecursionTag) : LocalType()
 internal object LocalTypeEnd : LocalType()
-internal object LocalTypeRec : LocalType()
 
 
 internal fun LocalType.asString(): String =
@@ -17,6 +19,7 @@ internal fun LocalType.asString(): String =
         is LocalTypeReceive -> "$from?<${type.simpleName}> . ${cont.asString()}"
         is LocalTypeExternalChoice -> "&$to ${cases.map { (k, v) -> "$k: ${v.asString()}" }}"
         is LocalTypeInternalChoice -> "+ ${cases.map { (k, v) -> "$k: ${v.asString()}" }}"
-        LocalTypeRec -> "rec"
+        is LocalTypeRecursion -> "$tag"
+        is LocalTypeRecursionDefinition -> "miu_$tag . ${cont.asString()}"
         LocalTypeEnd -> "end"
     }

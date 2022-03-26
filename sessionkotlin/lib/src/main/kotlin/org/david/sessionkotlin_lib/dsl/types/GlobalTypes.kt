@@ -1,5 +1,6 @@
 package org.david.sessionkotlin_lib.dsl.types
 
+import org.david.sessionkotlin_lib.dsl.RecursionTag
 import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.exception.InconsistentExternalChoiceException
 import org.david.sessionkotlin_lib.dsl.exception.RoleNotEnabledException
@@ -45,7 +46,7 @@ internal class GlobalTypeBranch(
     private val at: Role,
     private val cases: Map<String, GlobalType>,
 ) : GlobalType() {
-    override fun project(role: Role, state: State): LocalType =
+    override fun project(role: Role, state: State): LocalType {
         when (role) {
             at -> {
                 if (!state.enabled) {
@@ -53,7 +54,7 @@ internal class GlobalTypeBranch(
                     state.enabled = true
                 }
                 val states = cases.mapValues { state.copy() }
-                LocalTypeInternalChoice(cases.mapValues { it.value.project(role, states.getValue(it.key)) })
+                return LocalTypeInternalChoice(cases.mapValues { it.value.project(role, states.getValue(it.key)) })
             }
             else -> {
                 val newState = State(enabled = false)
@@ -67,6 +68,8 @@ internal class GlobalTypeBranch(
                 // Check if the role was enabled by different roles in different cases
                 if (states.values.mapNotNull { it.enabledBy }.toSet().size > 1) {
                     throw InconsistentExternalChoiceException(role, enabledBy)
+                } else if (enabledBy.isNotEmpty()) {
+                    localType.to = enabledBy.first()
                 }
 
                 val c = states.values.count { it.enabled }
@@ -75,20 +78,23 @@ internal class GlobalTypeBranch(
                     throw UnfinishedRolesException(role)
                 }
 
-                // Role is enabled it is enabled in all cases
+                // Role becomes enabled if enabled in all cases
                 state.enabled = states.values.all { it.enabled }
 
+                // Erase empty choice
+                if (localType.cases.values.all { it is LocalTypeEnd }) {
+                    return LocalTypeEnd
+                }
+
                 // Check if the role sent a message without knowing the outcome of the decision
-                if (states.any { it.value.sentWhileDisabled }) {
+                return if (states.any { it.value.sentWhileDisabled }) {
                     // Then the projection must be the same for every case
 
                     val projectedCases = localType.cases.values.toSet()
+
                     if (projectedCases.size > 1) {
                         // The role's behaviour is not the same in all cases.
                         throw RoleNotEnabledException(role)
-                    } else if (projectedCases.isEmpty()) {
-                        // This "role"s behaviour *is* the same in all cases.
-                        LocalTypeEnd
                     } else {
                         projectedCases.first()
                     }
@@ -96,15 +102,38 @@ internal class GlobalTypeBranch(
                     localType
                 }
             }
-
-
         }
+    }
 }
 
 internal object GlobalTypeEnd : GlobalType() {
     override fun project(role: Role, state: State) = LocalTypeEnd
 }
 
-internal object GlobalTypeRec : GlobalType() {
-    override fun project(role: Role, state: State) = LocalTypeRec
+internal class GlobalTypeRecursionDefinition(
+    private val tag: RecursionTag,
+    private val cont: GlobalType,
+) : GlobalType() {
+    override fun project(role: Role, state: State): LocalType {
+        val projectedContinuation = cont.project(role, state)
+        return if (projectedContinuation is LocalTypeRecursion) {
+            // Empty loop
+            LocalTypeEnd
+        } else {
+            LocalTypeRecursionDefinition(tag, projectedContinuation)
+        }
+    }
 }
+
+
+internal class GlobalTypeRecursion(
+    private val tag: RecursionTag,
+) : GlobalType() {
+    override fun project(role: Role, state: State): LocalType {
+        if (!state.enabled) {
+            state.sentWhileDisabled = true
+        }
+        return LocalTypeRecursion(tag)
+    }
+}
+

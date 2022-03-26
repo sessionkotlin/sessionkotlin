@@ -1,4 +1,4 @@
-package examples
+package dsl.examples
 
 import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.globalProtocol
@@ -11,41 +11,35 @@ class Negotiation {
         val buyer = Role("Buyer")
         val seller = Role("Seller")
 
-        val aux = globalProtocol {
+        globalProtocol {
+            send<Int>(buyer, seller)
+            val t = miu("X")
+
             choice(seller) {
                 case("Accept1") {
                     send<Unit>(seller, buyer)
-                    rec()
+                    send<Unit>(buyer, seller)
                 }
                 case("Reject1") {
                     send<Unit>(seller, buyer)
-                    rec()
                 }
                 case("Haggle1") {
                     send<Int>(seller, buyer)
                     choice(buyer) {
                         case("Accept2") {
                             send<Unit>(buyer, seller)
-                            rec()
+                            send<Unit>(seller, buyer)
                         }
                         case("Reject2") {
                             send<Unit>(buyer, seller)
-                            rec()
                         }
                         case("Haggle2") {
-                            send<Unit>(buyer, seller)
-                            rec()
+                            send<Int>(buyer, seller)
+                            goto(t)
                         }
                     }
                 }
             }
-        }
-
-        globalProtocol {
-            send<Int>(buyer, seller)
-            exec(aux)
         }.dump()
-
-
     }
 }

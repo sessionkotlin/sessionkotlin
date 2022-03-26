@@ -1,22 +1,28 @@
 package org.david.sessionkotlin_lib.dsl
 
-import org.david.sessionkotlin_lib.dsl.exception.BranchingException
-import org.david.sessionkotlin_lib.dsl.exception.RecursiveProtocolException
 import org.david.sessionkotlin_lib.dsl.exception.SendingtoSelfException
 import org.david.sessionkotlin_lib.dsl.exception.SessionKotlinException
+import org.david.sessionkotlin_lib.dsl.exception.TerminalInstructionException
+import org.david.sessionkotlin_lib.dsl.exception.UndefinedRecursionVariableException
 import org.david.sessionkotlin_lib.dsl.types.*
 
 @DslMarker
 private annotation class SessionKotlinDSL
 
+class RecursionTag internal constructor(
+    private val name: String,
+) {
+    override fun toString(): String = name
+}
+
 @SessionKotlinDSL
 sealed class GlobalEnv(
     roles: Set<Role>,
+    recursionVariables: Set<RecursionTag>,
 ) {
     internal val instructions = mutableListOf<Instruction>()
     private val roles = roles.toMutableSet()
-    private var recursiveCall = false
-
+    private val recursionVariables = recursionVariables.toMutableSet()
 
     /**
      *
@@ -33,8 +39,6 @@ sealed class GlobalEnv(
      * @throws [org.david.sessionkotlin_lib.dsl.exception.SendingtoSelfException]
      * if [from] and [to] are the same.
      *
-     * @throws [org.david.sessionkotlin_lib.dsl.exception.RecursiveProtocolException]
-     * if used after a recursive call.
      *
      * @sample [org.david.sessionkotlin_lib.dsl.Samples.send]
      *
@@ -53,16 +57,11 @@ sealed class GlobalEnv(
      * @throws [org.david.sessionkotlin_lib.dsl.exception.SendingtoSelfException]
      * if [from] and [to] are the same.
      *
-     * @throws [org.david.sessionkotlin_lib.dsl.exception.RecursiveProtocolException]
-     * if used after a recursive call.
      *
      * @sample [org.david.sessionkotlin_lib.dsl.Samples.sendTypes]
      *
      */
     open fun send(from: Role, to: Role, type: Class<*>) {
-        if (recursiveCall) {
-            throw RecursiveProtocolException()
-        }
         if (from == to) {
             throw SendingtoSelfException(from)
         }
@@ -81,20 +80,14 @@ sealed class GlobalEnv(
      * @param [at] role that makes the decision
      * @param [cases] block that defines the choices
      *
-     * @throws [org.david.sessionkotlin_lib.dsl.exception.RecursiveProtocolException]
-     * if used after a recursive call.
      *
      * @sample [org.david.sessionkotlin_lib.dsl.Samples.choice]
      *
      */
     open fun choice(at: Role, cases: ChoiceEnv.() -> Unit) {
-        if (recursiveCall) {
-            throw RecursiveProtocolException()
-        }
-
-        val bEnv = ChoiceEnv(roles)
+        val bEnv = ChoiceEnv(roles, recursionVariables)
         bEnv.cases()
-        val b = Branch(at, bEnv.caseMap)
+        val b = Choice(at, bEnv.caseMap)
 
         roles.add(at)
         for (g in b.caseMap.values) {
@@ -113,34 +106,44 @@ sealed class GlobalEnv(
      *
      */
     open fun exec(protocolBuilder: GlobalEnv) {
-        if (recursiveCall) {
-            throw RecursiveProtocolException()
-        }
-
         // We must merge the protocols
-        recursiveCall = protocolBuilder.recursiveCall
         instructions.addAll(protocolBuilder.instructions)
         roles.addAll(protocolBuilder.roles)
     }
 
     /**
      *
-     * Declares a recursive call.
+     * Recursion definition.
      *
-     * @throws [org.david.sessionkotlin_lib.dsl.exception.RecursiveProtocolException]
-     * if used after a recursive call.
      *
-     * @sample [org.david.sessionkotlin_lib.dsl.Samples.rec]
+     * @sample [org.david.sessionkotlin_lib.dsl.Samples.goto]
+     *
+     * @return a [RecursionTag] to be used in [goto] calls.
      *
      */
-    open fun rec() {
-        if (recursiveCall) {
-            throw RecursiveProtocolException()
-        }
-
-        val msg = Rec()
+    open fun miu(name: String): RecursionTag {
+        val tag = RecursionTag(name)
+        val msg = RecursionDefinition(tag)
         instructions.add(msg)
-        recursiveCall = true
+        recursionVariables.add(tag)
+        return tag
+    }
+
+    /**
+     *
+     * Recursion point.
+     *
+     * @param [tag] the tag of the recursion point to go to.
+     *
+     * @sample [org.david.sessionkotlin_lib.dsl.Samples.goto]
+     *
+     */
+    open fun goto(tag: RecursionTag) {
+        if (!recursionVariables.contains(tag)) {
+            throw UndefinedRecursionVariableException(tag)
+        }
+        val msg = Recursion(tag)
+        instructions.add(msg)
     }
 
     /**
@@ -174,38 +177,42 @@ sealed class GlobalEnv(
 }
 
 
-internal fun buildGlobalType(instructions: MutableList<Instruction>): GlobalType =
+internal fun buildGlobalType(
+    instructions: MutableList<Instruction>,
+): GlobalType =
     if (instructions.isEmpty()) {
         GlobalTypeEnd
     } else {
         val head = instructions.first()
         val tail = instructions.subList(1, instructions.size)
 
-        if (head is Branch && tail.isNotEmpty()) {
-            throw BranchingException()
+        if (head is TerminalInstruction && tail.isNotEmpty()) {
+            throw TerminalInstructionException(head)
         }
 
         when (head) {
             is Send -> GlobalTypeSend(head.from, head.to, head.type, buildGlobalType(tail))
-            is Rec -> GlobalTypeRec
-            is Branch -> GlobalTypeBranch(head.at, head.caseMap.mapValues { buildGlobalType(it.value.instructions) })
+            is Choice -> GlobalTypeBranch(head.at, head.caseMap.mapValues { buildGlobalType(it.value.instructions) })
+            is Recursion -> GlobalTypeRecursion(head.tag)
+            is RecursionDefinition -> GlobalTypeRecursionDefinition(head.tag, buildGlobalType(tail))
         }
     }
 
-internal class RootEnv : GlobalEnv(emptySet())
+internal class RootEnv : GlobalEnv(emptySet(), emptySet())
 
 internal class NonRootEnv(
-    roles: Set<Role>,
-) : GlobalEnv(roles)
+    roles: Set<Role>, recursionVariables: Set<RecursionTag>,
+) : GlobalEnv(roles, recursionVariables)
 
 @SessionKotlinDSL
 class ChoiceEnv(
     private val roles: Set<Role>,
+    private val recursionVariables: Set<RecursionTag>,
 ) {
     internal val caseMap = mutableMapOf<String, GlobalEnv>()
 
     fun case(label: String, protocolBuilder: GlobalEnv.() -> Unit) {
-        val p = NonRootEnv(roles)
+        val p = NonRootEnv(roles, recursionVariables)
         p.protocolBuilder()
         caseMap[label] = p
     }

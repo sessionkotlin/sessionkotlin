@@ -15,7 +15,7 @@ dependencies {
     implementation("com.squareup:kotlinpoet:$kotlinPoetVersion")
     implementation("com.squareup:kotlinpoet-ksp:$kotlinPoetInteropKSPVersion")
     implementation("com.google.devtools.ksp:symbol-processing-api:$kspVersion")
-    implementation("org.david:sessionkotlin_lib:0.0.1")
+    implementation(project(":lib"))
     testImplementation(kotlin("test"))
 }
 

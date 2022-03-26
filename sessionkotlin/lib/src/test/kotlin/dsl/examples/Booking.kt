@@ -1,4 +1,4 @@
-package examples
+package dsl.examples
 
 import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.globalProtocol
@@ -14,12 +14,13 @@ class Booking {
         val company = Role("Some company")
 
         globalProtocol {
+            val t = miu("X")
             choice(client) {
                 case("Book") {
                     send<String>(client, agency)
                     send<Int>(agency, client)
                     send<Unit>(agency, company)  // dummy message
-                    rec()
+                    goto(t)
                 }
                 case("Terminate") {
                     choice(client) {

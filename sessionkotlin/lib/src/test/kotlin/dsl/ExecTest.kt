@@ -3,7 +3,7 @@ package dsl
 import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.Samples
 import org.david.sessionkotlin_lib.dsl.exception.InconsistentExternalChoiceException
-import org.david.sessionkotlin_lib.dsl.exception.RecursiveProtocolException
+import org.david.sessionkotlin_lib.dsl.exception.TerminalInstructionException
 import org.david.sessionkotlin_lib.dsl.exception.UnfinishedRolesException
 import org.david.sessionkotlin_lib.dsl.globalProtocol
 import org.junit.jupiter.api.Test
@@ -112,27 +112,6 @@ class ExecTest {
     }
 
     @Test
-    fun `rec inside exec`() {
-
-        val case1 = globalProtocol {
-            send<Int>(b, c)
-            rec()
-        }
-
-        assertFailsWith<RecursiveProtocolException> {
-            globalProtocol {
-                choice(b) {
-
-                    case("Case 1") {
-                        exec(case1)
-                        send<Int>(b, c)
-                    }
-                }
-            }
-        }
-    }
-
-    @Test
     fun `test exec example`() {
         Samples().exec()
     }
@@ -158,14 +137,14 @@ class ExecTest {
     @Test
     fun `exec after rec`() {
         val aux = globalProtocol {
-
+            send<Int>(a, b)
         }
-        assertFailsWith<RecursiveProtocolException> {
+        assertFailsWith<TerminalInstructionException> {
             globalProtocol {
+                val t = miu("X")
                 send<Int>(a, b)
-                rec()
+                goto(t)
                 exec(aux)
-
             }
         }
     }

@@ -72,16 +72,17 @@ class Samples {
         }
     }
 
-    fun rec() {
+    fun goto() {
         val server = Role("Server")
         val client = Role("Client")
 
         globalProtocol {
+            val t = miu("X")
             choice(client) {
 
                 case("Add") {
                     send<Int>(client, server)
-                    rec()
+                    goto(t)
                 }
                 case("Result") {
                     send<String>(client, server)

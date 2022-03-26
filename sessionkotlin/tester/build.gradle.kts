@@ -4,8 +4,8 @@ plugins {
 }
 
 dependencies {
-    implementation("org.david:sessionkotlin_lib:0.0.1")
-    implementation("org.david:sessionkotlin_processor:0.0.1")
+    implementation(project(":lib"))
+    implementation(project(":processor"))
 //    ksp("org.david:sessionkotlin_processor:0.0.1")
     ksp(project(":processor"))
     testImplementation(kotlin("test"))

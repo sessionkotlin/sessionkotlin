@@ -1,4 +1,4 @@
-package examples
+package dsl.examples
 
 import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.globalProtocol
@@ -12,12 +12,13 @@ class Adder {
         val s = Role("Server")
 
         globalProtocol {
+            val t = miu("X")
             choice(c) {
                 case("Continue") {
                     send<Int>(c, s)
                     send<Int>(c, s)
                     send<Int>(s, c)
-                    rec()
+                    goto(t)
                 }
                 case("Quit") {
                     send<Unit>(c, s)
