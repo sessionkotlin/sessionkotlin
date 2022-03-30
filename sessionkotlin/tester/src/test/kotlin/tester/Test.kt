@@ -20,8 +20,11 @@ class Test {
 
     @Test
     fun `basic projection`() {
-        globalProtocol {
+        val g = globalProtocol {
             send<Int>(a, b)
         }
+
+//        @ABC()
+//        class C(g)
     }
 }

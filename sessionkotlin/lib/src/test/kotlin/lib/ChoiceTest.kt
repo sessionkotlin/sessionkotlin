@@ -1,11 +1,8 @@
-package dsl
+package lib
 
 import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.Samples
-import org.david.sessionkotlin_lib.dsl.exception.InconsistentExternalChoiceException
-import org.david.sessionkotlin_lib.dsl.exception.RoleNotEnabledException
-import org.david.sessionkotlin_lib.dsl.exception.TerminalInstructionException
-import org.david.sessionkotlin_lib.dsl.exception.UnfinishedRolesException
+import org.david.sessionkotlin_lib.dsl.exception.*
 import org.david.sessionkotlin_lib.dsl.globalProtocol
 import org.david.sessionkotlin_lib.dsl.types.asString
 import org.junit.jupiter.api.Test
@@ -374,4 +371,73 @@ class ChoiceTest {
 
         }
     }
+
+    @Test
+    fun `dupe case labels`() {
+        assertFailsWith<DuplicateCaseLabelException> {
+            globalProtocol {
+                choice(b) {
+                    case("Case1") {
+                        send<String>(b, a)
+                    }
+                    case("Case1") {
+                        send<Int>(b, a)
+                        send<Long>(a, b)
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `order does not matter`() {
+        globalProtocol {
+            choice(b) {
+                case("Case1") {
+                    send<Int>(b, c)
+                    send<String>(b, a)
+                }
+                case("Case 2") {
+                    send<String>(b, a)
+                    send<Int>(b, c)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `c chooses to a`() {
+        globalProtocol {
+            choice(b) {
+                case("Case1") {
+                    send<String>(b, c)
+                    send<String>(c, a)
+                }
+                case("Case 2") {
+                    send<Int>(b, c)
+                    send<Int>(c, a)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `choice agnostic`() {
+        val aux = globalProtocol {
+            send<String>(b, c)
+            send<Int>(a, b)
+            send<Long>(b, c)
+        }
+        globalProtocol {
+            choice(a) {
+                case("1") {
+                    exec(aux)
+                }
+                case("2") {
+                    exec(aux)
+                }
+            }
+        }
+    }
+
 }

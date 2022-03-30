@@ -1,4 +1,4 @@
-package dsl
+package lib
 
 import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.Samples

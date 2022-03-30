@@ -1,10 +1,9 @@
 package org.david.sessionkotlin_lib.dsl
 
-import org.david.sessionkotlin_lib.dsl.exception.SendingtoSelfException
-import org.david.sessionkotlin_lib.dsl.exception.SessionKotlinException
-import org.david.sessionkotlin_lib.dsl.exception.TerminalInstructionException
-import org.david.sessionkotlin_lib.dsl.exception.UndefinedRecursionVariableException
+import org.david.sessionkotlin_lib.dsl.exception.*
 import org.david.sessionkotlin_lib.dsl.types.*
+import org.david.sessionkotlin_lib.dsl.util.getOrKey
+import org.david.sessionkotlin_lib.dsl.util.printlnIndent
 
 @DslMarker
 private annotation class SessionKotlinDSL
@@ -20,9 +19,9 @@ sealed class GlobalEnv(
     roles: Set<Role>,
     recursionVariables: Set<RecursionTag>,
 ) {
-    internal val instructions = mutableListOf<Instruction>()
-    private val roles = roles.toMutableSet()
-    private val recursionVariables = recursionVariables.toMutableSet()
+    internal var instructions = mutableListOf<Instruction>()
+    internal val roles = roles.toMutableSet()
+    internal val recursionVariables = recursionVariables.toMutableSet()
 
     /**
      *
@@ -62,10 +61,6 @@ sealed class GlobalEnv(
      *
      */
     open fun send(from: Role, to: Role, type: Class<*>) {
-        if (from == to) {
-            throw SendingtoSelfException(from)
-        }
-
         val msg = Send(from, to, type)
         roles.add(from)
         roles.add(to)
@@ -98,31 +93,34 @@ sealed class GlobalEnv(
 
     /**
      *
-     * Appends a global protocol.
+     * Inlines a global protocol.
      *
-     * @param [protocolBuilder] protocol to append
+     * @param [protocolBuilder] protocol to inline
+     * @param [roleMapper] optional map to replace roles in the protocol
      *
      * @sample [org.david.sessionkotlin_lib.dsl.Samples.exec]
      *
      */
-    open fun exec(protocolBuilder: GlobalEnv) {
+    open fun exec(protocolBuilder: GlobalEnv, roleMapper: Map<Role, Role> = emptyMap()) {
         // We must merge the protocols
-        instructions.addAll(protocolBuilder.instructions)
-        roles.addAll(protocolBuilder.roles)
+        val cleanMap = roleMapper.filterKeys { protocolBuilder.roles.contains(it) }
+        instructions.addAll(protocolBuilder.instructions.map { it.mapped(cleanMap) })
+        roles.addAll(protocolBuilder.roles.map { cleanMap.getOrKey(it) })
     }
 
     /**
      *
      * Recursion definition.
      *
+     * @param label unique recursion label
      *
      * @sample [org.david.sessionkotlin_lib.dsl.Samples.goto]
      *
      * @return a [RecursionTag] to be used in [goto] calls.
      *
      */
-    open fun miu(name: String): RecursionTag {
-        val tag = RecursionTag(name)
+    open fun miu(label: String): RecursionTag {
+        val tag = RecursionTag(label)
         val msg = RecursionDefinition(tag)
         instructions.add(msg)
         recursionVariables.add(tag)
@@ -160,6 +158,9 @@ sealed class GlobalEnv(
     internal fun project(role: Role): LocalType {
 //        for (i in instructions)
 //            i.dump(0)
+        if (!roles.contains(role)) {
+            throw ProjectionTargetException(role)
+        }
         return buildGlobalType(instructions)
             .project(role, State())
     }
@@ -214,6 +215,9 @@ class ChoiceEnv(
     fun case(label: String, protocolBuilder: GlobalEnv.() -> Unit) {
         val p = NonRootEnv(roles, recursionVariables)
         p.protocolBuilder()
+        if (caseMap.containsKey(label)) {
+            throw DuplicateCaseLabelException(label)
+        }
         caseMap[label] = p
     }
 }

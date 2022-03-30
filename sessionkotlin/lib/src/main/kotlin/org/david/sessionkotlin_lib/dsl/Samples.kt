@@ -49,6 +49,8 @@ class Samples {
         val b = Role("B")
         val c = Role("C")
 
+        val z = Role("Z")
+
         val case1 = globalProtocol {
             send<Int>(b, a)
             send<Int>(a, c)
@@ -56,7 +58,7 @@ class Samples {
 
         val case2 = globalProtocol {
             send<String>(b, a)
-            send<String>(a, c)
+            send<String>(a, z)
         }
 
         globalProtocol {
@@ -66,7 +68,7 @@ class Samples {
                     exec(case1)
                 }
                 case("Case 2") {
-                    exec(case2)
+                    exec(case2, mapOf(z to c))
                 }
             }
         }
