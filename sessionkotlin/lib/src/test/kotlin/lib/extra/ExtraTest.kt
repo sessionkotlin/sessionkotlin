@@ -1,11 +1,14 @@
 package lib.extra
 
+import org.david.sessionkotlin_lib.dsl.RecursionTag
 import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.exception.InconsistentExternalChoiceException
 import org.david.sessionkotlin_lib.dsl.exception.RoleNotEnabledException
 import org.david.sessionkotlin_lib.dsl.exception.UnfinishedRolesException
 import org.david.sessionkotlin_lib.dsl.globalProtocol
+import org.david.sessionkotlin_lib.dsl.types.*
 import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class ExtraTest {
@@ -222,4 +225,68 @@ class ExtraTest {
         }
     }
 
+    @Test
+    fun `test enabled by`() {
+        // scribble-java good.efsm.gchoice.Test11
+        val g = globalProtocol {
+            choice(a) {
+                case("1") {
+                    send<Unit>(a, b)
+
+                    choice(b) {
+                        case("1.1") {
+                            send<Unit>(b, c)
+                        }
+                    }
+                }
+            }
+        }
+        val lC = LocalTypeExternalChoice(
+            b,
+            mapOf("1" to LocalTypeExternalChoice(
+                b,
+                mapOf("1.1" to LocalTypeReceive(b, Unit::class.java, LocalTypeEnd))
+            ))
+        )
+        assertEquals(g.project(c), lC)
+    }
+
+    @Test
+    fun `collapsable recs`() {
+        lateinit var t: RecursionTag
+        val g = globalProtocol {
+            t = miu("X")
+            send<Unit>(a, b)
+
+            choice(a) {
+                case("1") {
+                    goto(t)
+                }
+                case("2") {
+                    goto(t)
+                }
+            }
+        }
+        val lB = LocalTypeRecursionDefinition(t,
+            LocalTypeReceive(a, Unit::class.java,
+                LocalTypeRecursion(t)
+            )
+        )
+        assertEquals(g.project(b), lB)
+    }
+
+    @Test
+    fun `unguarded recursion`() {
+        // scribble-java good.efsm.gcontinue.choiceunguarded.Test01c
+        globalProtocol {
+            val t = miu("X")
+            send<Unit>(a, b)
+
+            choice(a) {
+                case("1") {
+                    goto(t)
+                }
+            }
+        }
+    }
 }

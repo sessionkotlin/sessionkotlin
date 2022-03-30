@@ -8,7 +8,9 @@ import org.david.sessionkotlin_lib.dsl.exception.TerminalInstructionException
 import org.david.sessionkotlin_lib.dsl.exception.UndefinedRecursionVariableException
 import org.david.sessionkotlin_lib.dsl.exception.UnfinishedRolesException
 import org.david.sessionkotlin_lib.dsl.globalProtocol
+import org.david.sessionkotlin_lib.dsl.types.*
 import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class RecTest {
@@ -388,5 +390,45 @@ class RecTest {
         }
     }
 
+
+    @Test
+    fun `unused recursion variable`() {
+        lateinit var x: RecursionTag
+
+        val g = globalProtocol {
+            x = miu("X")
+            send<Int>(a, b)
+            choice(a) {
+                case("1") {
+                    miu("Y")
+                    send<Long>(a, b)
+                    goto(x)
+                }
+                case("2") {
+                    send<String>(a, b)
+                }
+            }
+        }
+        val lA = LocalTypeRecursionDefinition(x,
+            LocalTypeSend(b, Int::class.javaObjectType,
+                LocalTypeInternalChoice(mapOf(
+                    "1" to LocalTypeSend(b, Long::class.javaObjectType, LocalTypeRecursion(x)),
+                    "2" to LocalTypeSend(b, String::class.java, LocalTypeEnd)
+                )
+                )
+            )
+        )
+        val lB = LocalTypeRecursionDefinition(x,
+            LocalTypeReceive(a, Int::class.javaObjectType,
+                LocalTypeExternalChoice(a, mapOf(
+                    "1" to LocalTypeReceive(a, Long::class.javaObjectType, LocalTypeRecursion(x)),
+                    "2" to LocalTypeReceive(a, String::class.java, LocalTypeEnd)
+                )
+                )
+            )
+        )
+        assertEquals(g.project(a), lA)
+        assertEquals(g.project(b), lB)
+    }
 
 }

@@ -440,4 +440,20 @@ class ChoiceTest {
         }
     }
 
+    @Test
+    fun `merge inlined and non inlined`() {
+        globalProtocol {
+            choice(b) {
+                case("1") {
+                    send<String>(a, b)
+                    send(a, b, Boolean::class.javaObjectType)
+                }
+                case("2") {
+                    send(a, b, String::class.java)
+                    send<Boolean>(a, b)
+                }
+            }
+        }
+    }
+
 }

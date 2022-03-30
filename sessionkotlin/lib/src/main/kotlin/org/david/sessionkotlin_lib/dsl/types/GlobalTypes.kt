@@ -66,10 +66,11 @@ internal class GlobalTypeBranch(
                 val enabledBy: List<Role> = states.values.mapNotNull { it.enabledBy }
 
                 // Check if the role was enabled by different roles in different cases
-                if (states.values.mapNotNull { it.enabledBy }.toSet().size > 1) {
+                if (enabledBy.toSet().size > 1) {
                     throw InconsistentExternalChoiceException(role, enabledBy)
                 } else if (enabledBy.isNotEmpty()) {
                     localType.to = enabledBy.first()
+                    state.enabledBy = enabledBy.first()
                 }
 
                 val c = states.values.count { it.enabled }
@@ -90,13 +91,13 @@ internal class GlobalTypeBranch(
                 return if (states.any { it.value.sentWhileDisabled }) {
                     // Then the projection must be the same for every case
 
-                    val projectedCases = localType.cases.values.toSet()
+                    val uniqueProjectedCases = localType.cases.values.toSet()
 
-                    if (projectedCases.size > 1) {
+                    if (uniqueProjectedCases.size > 1) {
                         // The role's behaviour is not the same in all cases.
                         throw RoleNotEnabledException(role)
                     } else {
-                        projectedCases.first()
+                        uniqueProjectedCases.first()
                     }
                 } else {
                     localType
@@ -119,6 +120,8 @@ internal class GlobalTypeRecursionDefinition(
         return if (projectedContinuation is LocalTypeRecursion) {
             // Empty loop
             LocalTypeEnd
+        } else if (!projectedContinuation.containsTag(tag)) {
+            projectedContinuation
         } else {
             LocalTypeRecursionDefinition(tag, projectedContinuation)
         }

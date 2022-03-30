@@ -12,6 +12,16 @@ internal data class LocalTypeRecursionDefinition(val tag: RecursionTag, val cont
 internal data class LocalTypeRecursion(val tag: RecursionTag) : LocalType()
 internal object LocalTypeEnd : LocalType()
 
+internal fun LocalType.containsTag(tag: RecursionTag): Boolean =
+    when (this) {
+        is LocalTypeSend -> cont.containsTag(tag)
+        is LocalTypeReceive -> cont.containsTag(tag)
+        is LocalTypeExternalChoice -> cases.any { it.value.containsTag(tag) }
+        is LocalTypeInternalChoice -> cases.any { it.value.containsTag(tag) }
+        is LocalTypeRecursion -> this.tag == tag
+        is LocalTypeRecursionDefinition -> cont.containsTag(tag)
+        LocalTypeEnd -> false
+    }
 
 internal fun LocalType.asString(): String =
     when (this) {

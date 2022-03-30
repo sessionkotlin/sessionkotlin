@@ -4,7 +4,9 @@ import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.Samples
 import org.david.sessionkotlin_lib.dsl.exception.*
 import org.david.sessionkotlin_lib.dsl.globalProtocol
+import org.david.sessionkotlin_lib.dsl.types.*
 import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class ExecTest {
@@ -294,4 +296,38 @@ class ExecTest {
         }
     }
 
+
+    @Test
+    fun `reversed roles`() {
+        val subprotocol = globalProtocol {
+            choice(a) {
+                case("1") {
+                    send<String>(a, b)
+                    send<String>(b, a)
+                }
+                case("2") {
+                    send<Unit>(a, b)
+                }
+            }
+
+        }
+        val g = globalProtocol {
+            exec(subprotocol, mapOf(a to b, b to a)) // reverse roles
+        }
+
+        val lB = LocalTypeInternalChoice(
+            mapOf(
+                "1" to LocalTypeSend(a, String::class.java,
+                    LocalTypeReceive(a, String::class.java, LocalTypeEnd)),
+                "2" to LocalTypeSend(a, Unit::class.java, LocalTypeEnd)
+            ))
+        val lA = LocalTypeExternalChoice(b,
+            mapOf(
+                "1" to LocalTypeReceive(b, String::class.java,
+                    LocalTypeSend(b, String::class.java, LocalTypeEnd)),
+                "2" to LocalTypeReceive(b, Unit::class.java, LocalTypeEnd)
+            ))
+        assertEquals(g.project(a), lA)
+        assertEquals(g.project(b), lB)
+    }
 }
