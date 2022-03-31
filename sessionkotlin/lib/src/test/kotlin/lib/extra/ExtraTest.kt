@@ -17,7 +17,6 @@ class ExtraTest {
         val a = Role("A")
         val b = Role("B")
         val c = Role("C")
-        val d = Role("D")
     }
 
     @Test
@@ -289,4 +288,6 @@ class ExtraTest {
             }
         }
     }
+
+
 }

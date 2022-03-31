@@ -106,6 +106,7 @@ sealed class GlobalEnv(
         val cleanMap = roleMapper.filterKeys { protocolBuilder.roles.contains(it) }
         instructions.addAll(protocolBuilder.instructions.map { it.mapped(cleanMap) })
         roles.addAll(protocolBuilder.roles.map { cleanMap.getOrKey(it) })
+        recursionVariables.addAll(protocolBuilder.recursionVariables)
     }
 
     /**

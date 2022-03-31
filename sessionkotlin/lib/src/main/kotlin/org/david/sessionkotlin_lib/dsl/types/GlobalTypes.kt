@@ -70,7 +70,10 @@ internal class GlobalTypeBranch(
                     throw InconsistentExternalChoiceException(role, enabledBy)
                 } else if (enabledBy.isNotEmpty()) {
                     localType.to = enabledBy.first()
-                    state.enabledBy = enabledBy.first()
+
+                    if (state.enabledBy == null) {
+                        state.enabledBy = enabledBy.first()
+                    }
                 }
 
                 val c = states.values.count { it.enabled }
@@ -80,7 +83,9 @@ internal class GlobalTypeBranch(
                 }
 
                 // Role becomes enabled if enabled in all cases
-                state.enabled = states.values.all { it.enabled }
+                if (!state.enabled) {
+                    state.enabled = states.values.all { it.enabled }
+                }
 
                 // Erase empty choice
                 if (localType.cases.values.all { it is LocalTypeEnd }) {
