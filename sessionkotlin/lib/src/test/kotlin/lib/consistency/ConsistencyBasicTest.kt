@@ -1,5 +1,9 @@
 package lib.consistency
 
+import lib.util.BoolClass
+import lib.util.IntClass
+import lib.util.LongClass
+import lib.util.StringClass
 import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.exception.InconsistentExternalChoiceException
 import org.david.sessionkotlin_lib.dsl.globalProtocol
@@ -127,19 +131,36 @@ class ConsistencyBasicTest {
                 // 'a' is not enabled in any branch
                 case("1") {
                     send<String>(a, b)
-                    send(a, b, Boolean::class.javaObjectType)
+                    send(a, b, BoolClass)
                 }
                 case("2") {
-                    send(a, b, String::class.java)
+                    send(a, b, StringClass)
                     send<Boolean>(a, b)
                 }
             }
         }
+        val lA = LocalTypeSend(b, StringClass, LocalTypeSend(b, BoolClass, LocalTypeEnd))
+        val lB = LocalTypeInternalChoice(
+            mapOf(
+                "1" to LocalTypeReceive(
+                    a,
+                    StringClass,
+                    LocalTypeReceive(a, BoolClass, LocalTypeEnd)
+                ),
+                "2" to LocalTypeReceive(
+                    a,
+                    StringClass,
+                    LocalTypeReceive(a, BoolClass, LocalTypeEnd)
+                )
+            )
+        )
+        assertEquals(g.project(a), lA)
+        assertEquals(g.project(b), lB)
     }
 
     @Test
     fun `test enabled by`() {
-        globalProtocol {
+        val g = globalProtocol {
             choice(a) {
                 case("1") {
                     send<Long>(a, b)
@@ -161,5 +182,65 @@ class ConsistencyBasicTest {
                 }
             }
         }
+        val lA = LocalTypeInternalChoice(
+            mapOf(
+                "1" to LocalTypeSend(
+                    b,
+                    LongClass,
+                    LocalTypeSend(
+                        c, LongClass, LEnd
+                    )
+                ),
+                "2" to LocalTypeSend(
+                    b,
+                    IntClass,
+                    LocalTypeSend(
+                        c, BoolClass, LEnd
+                    )
+                ),
+            )
+        )
+        val lB = LocalTypeExternalChoice(
+            a,
+            mapOf(
+                "1" to LocalTypeReceive(
+                    a,
+                    LongClass,
+                    LocalTypeExternalChoice(
+                        c,
+                        mapOf(
+                            "1.1" to LocalTypeReceive(c, IntClass, LEnd),
+                            "1.2" to LocalTypeReceive(c, StringClass, LEnd)
+                        )
+                    )
+                ),
+                "2" to LocalTypeReceive(
+                    a,
+                    IntClass, LEnd
+                )
+            )
+        )
+        val lC = LocalTypeExternalChoice(
+            a,
+            mapOf(
+                "1" to LocalTypeReceive(
+                    a,
+                    LongClass,
+                    LocalTypeInternalChoice(
+                        mapOf(
+                            "1.1" to LocalTypeSend(b, IntClass, LEnd),
+                            "1.2" to LocalTypeSend(b, StringClass, LEnd)
+                        )
+                    )
+                ),
+                "2" to LocalTypeReceive(
+                    a,
+                    BoolClass, LEnd
+                )
+            )
+        )
+        assertEquals(g.project(a), lA)
+        assertEquals(g.project(b), lB)
+        assertEquals(g.project(c), lC)
     }
 }

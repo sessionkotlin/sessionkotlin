@@ -1,9 +1,16 @@
 package lib.unfinished
 
+import lib.util.IntClass
+import lib.util.LongClass
+import lib.util.StringClass
 import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.exception.UnfinishedRolesException
 import org.david.sessionkotlin_lib.dsl.globalProtocol
+import org.david.sessionkotlin_lib.dsl.types.LEnd
+import org.david.sessionkotlin_lib.dsl.types.LocalTypeReceive
+import org.david.sessionkotlin_lib.dsl.types.LocalTypeSend
 import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class UnfinishedExecTest {
@@ -21,7 +28,7 @@ class UnfinishedExecTest {
             send<Int>(a, b)
             send<Long>(b, c)
         }
-        globalProtocol {
+        val g = globalProtocol {
             choice(a) {
                 case("1") {
                     exec(aux)
@@ -29,9 +36,17 @@ class UnfinishedExecTest {
                 case("2") {
                     exec(aux)
                 }
-                // branches mergeable for 'c', even without being activated
+                // branches mergeable for 'b', even without being activated for the first send
             }
         }
+        val lB = LocalTypeSend(
+            c, StringClass,
+            LocalTypeReceive(
+                a, IntClass,
+                LocalTypeSend(c, LongClass, LEnd)
+            )
+        )
+        assertEquals(g.project(b), lB)
     }
 
     @Test

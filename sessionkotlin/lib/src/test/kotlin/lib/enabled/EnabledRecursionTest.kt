@@ -1,9 +1,14 @@
 package lib.enabled
 
+import lib.util.IntClass
+import lib.util.UnitClass
+import org.david.sessionkotlin_lib.dsl.RecursionTag
 import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.exception.RoleNotEnabledException
 import org.david.sessionkotlin_lib.dsl.globalProtocol
+import org.david.sessionkotlin_lib.dsl.types.*
 import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class EnabledRecursionTest {
@@ -92,13 +97,14 @@ class EnabledRecursionTest {
 
     @Test
     fun `rec and choice not enabled but mergeable`() {
-        globalProtocol {
-            val t = miu("X")
+        lateinit var t: RecursionTag
+        val g = globalProtocol {
+            t = miu("X")
             choice(a) {
                 case("1") {
                     send<Unit>(a, b)
                     choice(b) {
-                        // 'c' not enabled, but mergeable
+                        // 'a' not enabled, but mergeable
                         case("1.1") {
                             send<Int>(b, c)
                             goto(t)
@@ -115,6 +121,16 @@ class EnabledRecursionTest {
                 }
             }
         }
+        val lA = LocalTypeRecursionDefinition(
+            t,
+            LocalTypeInternalChoice(
+                mapOf(
+                    "1" to LocalTypeSend(b, UnitClass, LocalTypeRecursion(t)),
+                    "2" to LocalTypeSend(b, IntClass, LEnd)
+                )
+            )
+        )
+        assertEquals(g.project(a), lA)
     }
 
     @Test

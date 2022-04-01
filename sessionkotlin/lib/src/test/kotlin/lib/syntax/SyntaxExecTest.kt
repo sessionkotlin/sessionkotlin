@@ -1,5 +1,8 @@
 package lib.syntax
 
+import lib.util.IntClass
+import lib.util.StringClass
+import lib.util.UnitClass
 import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.exception.SendingtoSelfException
 import org.david.sessionkotlin_lib.dsl.globalProtocol
@@ -23,10 +26,16 @@ class SyntaxExecTest {
             send<Int>(b, c)
         }
 
-        globalProtocol {
+        val g = globalProtocol {
             send<Int>(a, b)
             exec(x)
         }
+        val lA = LocalTypeSend(b, IntClass, LEnd)
+        val lB = LocalTypeReceive(a, IntClass, LocalTypeSend(c, IntClass, LEnd))
+        val lC = LocalTypeReceive(b, IntClass, LEnd)
+        assertEquals(g.project(a), lA)
+        assertEquals(g.project(b), lB)
+        assertEquals(g.project(c), lC)
     }
 
     @Test
@@ -35,10 +44,12 @@ class SyntaxExecTest {
             send<Int>(c, a)
         }
 
-        globalProtocol {
+        val g = globalProtocol {
             send<Int>(a, b)
             exec(x)
         }
+        val lC = LocalTypeSend(a, IntClass, LEnd)
+        assertEquals(g.project(c), lC)
     }
 
     @Test
@@ -114,17 +125,17 @@ class SyntaxExecTest {
             mapOf(
                 "1" to LocalTypeSend(
                     a,
-                    String::class.java,
-                    LocalTypeReceive(a, String::class.java, LocalTypeEnd)
+                    StringClass,
+                    LocalTypeReceive(a, StringClass, LocalTypeEnd)
                 ),
-                "2" to LocalTypeSend(a, Unit::class.java, LocalTypeEnd)
+                "2" to LocalTypeSend(a, UnitClass, LocalTypeEnd)
             )
         )
         val lA = LocalTypeExternalChoice(
             b,
             mapOf(
-                "1" to LocalTypeReceive(b, String::class.java, LocalTypeSend(b, String::class.java, LocalTypeEnd)),
-                "2" to LocalTypeReceive(b, Unit::class.java, LocalTypeEnd)
+                "1" to LocalTypeReceive(b, StringClass, LocalTypeSend(b, StringClass, LocalTypeEnd)),
+                "2" to LocalTypeReceive(b, UnitClass, LocalTypeEnd)
             )
         )
         assertEquals(g.project(a), lA)

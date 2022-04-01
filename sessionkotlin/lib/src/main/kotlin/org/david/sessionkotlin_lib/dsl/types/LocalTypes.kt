@@ -34,3 +34,20 @@ internal fun LocalType.asString(): String =
         is LocalTypeRecursionDefinition -> "miu_$tag . ${cont.asString()}"
         LocalTypeEnd -> "end"
     }
+
+private fun aux(i: Int) = "\t".repeat(i)
+
+internal fun LocalType.asFormattedString(): String = asFormattedString(0)
+
+internal fun LocalType.asFormattedString(i: Int = 0): String =
+    when (this) {
+        is LocalTypeSend -> "$to!<${type.simpleName}> . ${cont.asFormattedString(i)}"
+        is LocalTypeReceive -> "$from?<${type.simpleName}> . ${cont.asFormattedString(i)}"
+        is LocalTypeExternalChoice -> "\n${aux(i)}&$to \n${aux(i)}${
+        cases.map { (k, v) -> "$k: ${v.asFormattedString(i + 1)}" }.joinToString("\n${aux(i)}")}"
+        is LocalTypeInternalChoice -> "\n${aux(i)}+\n${aux(i)}${
+        cases.map { (k, v) -> "$k: ${v.asFormattedString(i + 1)}" }.joinToString("\n${aux(i)}")}"
+        is LocalTypeRecursion -> "$tag"
+        is LocalTypeRecursionDefinition -> "miu_$tag . ${cont.asFormattedString(i)}"
+        LocalTypeEnd -> "end"
+    }

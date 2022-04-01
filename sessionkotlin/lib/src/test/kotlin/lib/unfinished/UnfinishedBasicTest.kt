@@ -1,9 +1,13 @@
 package lib.unfinished
 
+import lib.util.UnitClass
 import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.exception.UnfinishedRolesException
 import org.david.sessionkotlin_lib.dsl.globalProtocol
+import org.david.sessionkotlin_lib.dsl.types.LEnd
+import org.david.sessionkotlin_lib.dsl.types.LocalTypeSend
 import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class UnfinishedBasicTest {
@@ -36,7 +40,7 @@ class UnfinishedBasicTest {
 
     @Test
     fun `erasable choice`() {
-        globalProtocol {
+        val g = globalProtocol {
             send<Unit>(a, b)
             send<Unit>(c, b)
             choice(a) {
@@ -49,5 +53,7 @@ class UnfinishedBasicTest {
                 // 'c' not enabled in any branch
             }
         }
+        val lC = LocalTypeSend(b, UnitClass, LEnd)
+        assertEquals(g.project(c), lC)
     }
 }

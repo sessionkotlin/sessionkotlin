@@ -47,10 +47,6 @@ ktlint {
     outputToConsole.set(true)
     coloredOutput.set(true)
     disabledRules.set(setOf("no-wildcard-imports"))
-//    reporters {
-//        reporter(ReporterType.CHECKSTYLE)
-//        reporter(ReporterType.JSON)
-//    }
 }
 
 java {

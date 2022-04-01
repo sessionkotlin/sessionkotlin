@@ -1,5 +1,6 @@
 package lib.extra
 
+import lib.util.UnitClass
 import org.david.sessionkotlin_lib.dsl.RecursionTag
 import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.exception.InconsistentExternalChoiceException
@@ -244,7 +245,7 @@ class ExtraTest {
             mapOf(
                 "1" to LocalTypeExternalChoice(
                     b,
-                    mapOf("1.1" to LocalTypeReceive(b, Unit::class.java, LocalTypeEnd))
+                    mapOf("1.1" to LocalTypeReceive(b, UnitClass, LocalTypeEnd))
                 )
             )
         )
@@ -270,7 +271,7 @@ class ExtraTest {
         val lB = LocalTypeRecursionDefinition(
             t,
             LocalTypeReceive(
-                a, Unit::class.java,
+                a, UnitClass,
                 LocalTypeRecursion(t)
             )
         )
@@ -280,8 +281,9 @@ class ExtraTest {
     @Test
     fun `unguarded recursion`() {
         // scribble-java good.efsm.gcontinue.choiceunguarded.Test01c
-        globalProtocol {
-            val t = miu("X")
+        lateinit var t: RecursionTag
+        val g = globalProtocol {
+            t = miu("X")
             send<Unit>(a, b)
 
             choice(a) {
@@ -290,5 +292,20 @@ class ExtraTest {
                 }
             }
         }
+        val lA = LocalTypeRecursionDefinition(
+            t,
+            LocalTypeSend(
+                b, UnitClass,
+                LocalTypeInternalChoice(
+                    mapOf("1" to LocalTypeRecursion(t))
+                )
+            )
+        )
+        val lB = LocalTypeRecursionDefinition(
+            t,
+            LocalTypeReceive(a, UnitClass, LocalTypeRecursion(t))
+        )
+        assertEquals(g.project(a), lA)
+        assertEquals(g.project(b), lB)
     }
 }
