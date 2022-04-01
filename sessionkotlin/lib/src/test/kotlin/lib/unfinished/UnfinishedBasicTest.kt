@@ -48,8 +48,6 @@ class UnfinishedBasicTest {
                 }
                 // 'c' not enabled in any branch
             }
-
         }
     }
-
 }

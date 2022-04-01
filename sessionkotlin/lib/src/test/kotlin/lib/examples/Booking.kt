@@ -19,7 +19,7 @@ class Booking {
                 case("Book") {
                     send<String>(client, agency)
                     send<Int>(agency, client)
-                    send<Unit>(agency, company)  // dummy message
+                    send<Unit>(agency, company) // dummy message
                     goto(t)
                 }
                 case("Terminate") {
@@ -38,7 +38,6 @@ class Booking {
                 }
             }
         }
-
     }
 
     class PaymentInfo(

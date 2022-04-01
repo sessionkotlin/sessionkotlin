@@ -16,7 +16,6 @@ internal data class State(
     var enabledBy: Role? = null,
 )
 
-
 internal class GlobalTypeSend(
     private val from: Role,
     private val to: Role,
@@ -133,7 +132,6 @@ internal class GlobalTypeRecursionDefinition(
     }
 }
 
-
 internal class GlobalTypeRecursion(
     private val tag: RecursionTag,
 ) : GlobalType() {
@@ -144,4 +142,3 @@ internal class GlobalTypeRecursion(
         return LocalTypeRecursion(tag)
     }
 }
-

@@ -82,7 +82,6 @@ class ExtraTest {
         }
     }
 
-
     @Test
     fun `safety waitfor 3party 2`() {
         // scribble-java bad.safety.waitfor.threeparty.Test02
@@ -242,10 +241,12 @@ class ExtraTest {
         }
         val lC = LocalTypeExternalChoice(
             b,
-            mapOf("1" to LocalTypeExternalChoice(
-                b,
-                mapOf("1.1" to LocalTypeReceive(b, Unit::class.java, LocalTypeEnd))
-            ))
+            mapOf(
+                "1" to LocalTypeExternalChoice(
+                    b,
+                    mapOf("1.1" to LocalTypeReceive(b, Unit::class.java, LocalTypeEnd))
+                )
+            )
         )
         assertEquals(g.project(c), lC)
     }
@@ -266,8 +267,10 @@ class ExtraTest {
                 }
             }
         }
-        val lB = LocalTypeRecursionDefinition(t,
-            LocalTypeReceive(a, Unit::class.java,
+        val lB = LocalTypeRecursionDefinition(
+            t,
+            LocalTypeReceive(
+                a, Unit::class.java,
                 LocalTypeRecursion(t)
             )
         )
@@ -288,6 +291,4 @@ class ExtraTest {
             }
         }
     }
-
-
 }

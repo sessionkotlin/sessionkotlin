@@ -37,7 +37,6 @@ class TwoBuyers {
 
             exec(aux)
         }
-
     }
 
     class Address(

@@ -26,7 +26,6 @@ class ProxyExample {
                 }
             }
         }
-
     }
 
     data class Request(

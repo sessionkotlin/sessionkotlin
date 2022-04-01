@@ -91,7 +91,6 @@ class Samples {
                     send<Int>(server, client)
                 }
             }
-
         }
     }
 }

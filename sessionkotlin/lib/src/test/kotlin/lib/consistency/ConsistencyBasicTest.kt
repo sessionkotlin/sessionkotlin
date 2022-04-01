@@ -3,7 +3,9 @@ package lib.consistency
 import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.exception.InconsistentExternalChoiceException
 import org.david.sessionkotlin_lib.dsl.globalProtocol
+import org.david.sessionkotlin_lib.dsl.types.*
 import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class ConsistencyBasicTest {
@@ -120,7 +122,7 @@ class ConsistencyBasicTest {
 
     @Test
     fun `merge inlined and non inlined`() {
-        globalProtocol {
+        val g = globalProtocol {
             choice(b) {
                 // 'a' is not enabled in any branch
                 case("1") {
@@ -134,7 +136,6 @@ class ConsistencyBasicTest {
             }
         }
     }
-
 
     @Test
     fun `test enabled by`() {
@@ -161,6 +162,4 @@ class ConsistencyBasicTest {
             }
         }
     }
-
-
 }

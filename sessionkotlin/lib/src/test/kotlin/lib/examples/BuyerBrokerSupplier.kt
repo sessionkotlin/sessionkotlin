@@ -29,11 +29,8 @@ class BuyerBrokerSupplier {
                     send<Unit>(portal, finance)
                     send<Unit>(portal, applicant)
                 }
-
             }
         }
-
-
     }
 
     data class Application(

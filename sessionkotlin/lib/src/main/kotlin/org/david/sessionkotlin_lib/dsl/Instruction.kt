@@ -4,7 +4,6 @@ import org.david.sessionkotlin_lib.dsl.exception.SendingtoSelfException
 import org.david.sessionkotlin_lib.dsl.util.getOrKey
 import org.david.sessionkotlin_lib.dsl.util.printlnIndent
 
-
 internal sealed interface Instruction {
     fun dump(indent: Int)
     fun mapped(mapping: Map<Role, Role>): Instruction
@@ -55,7 +54,6 @@ internal class Choice(
         printlnIndent(indent, "]")
     }
 
-
     override fun mapped(mapping: Map<Role, Role>): Instruction {
 
         val newCaseMap = mutableMapOf<String, GlobalEnv>()
@@ -71,7 +69,6 @@ internal class Choice(
 
         return Choice(mapping.getOrKey(at), newCaseMap)
     }
-
 }
 
 internal class RecursionDefinition(internal val tag: RecursionTag) : Instruction {

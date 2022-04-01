@@ -30,6 +30,4 @@ class HTTP {
         val body: String,
         val contentType: String,
     )
-
-
 }

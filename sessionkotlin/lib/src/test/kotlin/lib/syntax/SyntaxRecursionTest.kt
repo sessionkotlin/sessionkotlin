@@ -42,7 +42,6 @@ class SyntaxRecursionTest {
         }
     }
 
-
     @Test
     fun `choice after goto`() {
         assertFailsWith<TerminalInstructionException> {
@@ -120,7 +119,6 @@ class SyntaxRecursionTest {
         }
     }
 
-
     @Test
     fun `recursion variable defined in subprotocol`() {
         lateinit var t: RecursionTag
@@ -145,7 +143,6 @@ class SyntaxRecursionTest {
             }
         }
     }
-
 
     @Test
     fun `empty loop`() {
@@ -223,7 +220,6 @@ class SyntaxRecursionTest {
         assertEquals(g.project(c), lC)
     }
 
-
     @Test
     fun `exec after goto`() {
         val aux = globalProtocol {
@@ -258,18 +254,37 @@ class SyntaxRecursionTest {
                 }
             }
         }
-        val lA = LocalTypeRecursionDefinition(x,
-            LocalTypeSend(b,
+        val lA = LocalTypeRecursionDefinition(
+            x,
+            LocalTypeSend(
+                b,
                 Int::class.javaObjectType,
-                LocalTypeInternalChoice(mapOf("1" to LocalTypeSend(b,
-                    Long::class.javaObjectType,
-                    LocalTypeRecursion(x)), "2" to LocalTypeSend(b, String::class.java, LocalTypeEnd)))))
-        val lB = LocalTypeRecursionDefinition(x,
-            LocalTypeReceive(a,
+                LocalTypeInternalChoice(
+                    mapOf(
+                        "1" to LocalTypeSend(
+                            b,
+                            Long::class.javaObjectType,
+                            LocalTypeRecursion(x)
+                        ),
+                        "2" to LocalTypeSend(b, String::class.java, LocalTypeEnd)
+                    )
+                )
+            )
+        )
+        val lB = LocalTypeRecursionDefinition(
+            x,
+            LocalTypeReceive(
+                a,
                 Int::class.javaObjectType,
-                LocalTypeExternalChoice(a,
-                    mapOf("1" to LocalTypeReceive(a, Long::class.javaObjectType, LocalTypeRecursion(x)),
-                        "2" to LocalTypeReceive(a, String::class.java, LocalTypeEnd)))))
+                LocalTypeExternalChoice(
+                    a,
+                    mapOf(
+                        "1" to LocalTypeReceive(a, Long::class.javaObjectType, LocalTypeRecursion(x)),
+                        "2" to LocalTypeReceive(a, String::class.java, LocalTypeEnd)
+                    )
+                )
+            )
+        )
         assertEquals(g.project(a), lA)
         assertEquals(g.project(b), lB)
     }

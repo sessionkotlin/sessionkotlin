@@ -178,7 +178,6 @@ sealed class GlobalEnv(
     }
 }
 
-
 internal fun buildGlobalType(
     instructions: MutableList<Instruction>,
 ): GlobalType =
@@ -203,7 +202,8 @@ internal fun buildGlobalType(
 internal class RootEnv : GlobalEnv(emptySet(), emptySet())
 
 internal class NonRootEnv(
-    roles: Set<Role>, recursionVariables: Set<RecursionTag>,
+    roles: Set<Role>,
+    recursionVariables: Set<RecursionTag>,
 ) : GlobalEnv(roles, recursionVariables)
 
 @SessionKotlinDSL

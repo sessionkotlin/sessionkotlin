@@ -11,6 +11,7 @@ internal data class LocalTypeExternalChoice(var to: Role, val cases: Map<String,
 internal data class LocalTypeRecursionDefinition(val tag: RecursionTag, val cont: LocalType) : LocalType()
 internal data class LocalTypeRecursion(val tag: RecursionTag) : LocalType()
 internal object LocalTypeEnd : LocalType()
+internal typealias LEnd = LocalTypeEnd
 
 internal fun LocalType.containsTag(tag: RecursionTag): Boolean =
     when (this) {

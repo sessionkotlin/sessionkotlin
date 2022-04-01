@@ -209,6 +209,4 @@ class SyntaxBasicTest {
             }
         }
     }
-
-
 }

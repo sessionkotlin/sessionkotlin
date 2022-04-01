@@ -17,7 +17,6 @@ class SyntaxExecTest {
         val d = Role("D")
     }
 
-
     @Test
     fun `basic exec`() {
         val x = globalProtocol {
@@ -106,19 +105,28 @@ class SyntaxExecTest {
                     send<Unit>(a, b)
                 }
             }
-
         }
         val g = globalProtocol {
             exec(subprotocol, mapOf(a to b, b to a)) // reverse roles
         }
 
-        val lB = LocalTypeInternalChoice(mapOf("1" to LocalTypeSend(a,
-            String::class.java,
-            LocalTypeReceive(a, String::class.java, LocalTypeEnd)),
-            "2" to LocalTypeSend(a, Unit::class.java, LocalTypeEnd)))
-        val lA = LocalTypeExternalChoice(b,
-            mapOf("1" to LocalTypeReceive(b, String::class.java, LocalTypeSend(b, String::class.java, LocalTypeEnd)),
-                "2" to LocalTypeReceive(b, Unit::class.java, LocalTypeEnd)))
+        val lB = LocalTypeInternalChoice(
+            mapOf(
+                "1" to LocalTypeSend(
+                    a,
+                    String::class.java,
+                    LocalTypeReceive(a, String::class.java, LocalTypeEnd)
+                ),
+                "2" to LocalTypeSend(a, Unit::class.java, LocalTypeEnd)
+            )
+        )
+        val lA = LocalTypeExternalChoice(
+            b,
+            mapOf(
+                "1" to LocalTypeReceive(b, String::class.java, LocalTypeSend(b, String::class.java, LocalTypeEnd)),
+                "2" to LocalTypeReceive(b, Unit::class.java, LocalTypeEnd)
+            )
+        )
         assertEquals(g.project(a), lA)
         assertEquals(g.project(b), lB)
     }

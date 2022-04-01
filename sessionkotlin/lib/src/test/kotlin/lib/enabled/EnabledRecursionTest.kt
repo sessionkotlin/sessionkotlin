@@ -141,9 +141,7 @@ class EnabledRecursionTest {
                         send<Long>(a, b)
                     }
                 }
-
             }
         }
     }
-
 }
