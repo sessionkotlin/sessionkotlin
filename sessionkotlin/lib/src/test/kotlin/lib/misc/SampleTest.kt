@@ -29,5 +29,4 @@ class SampleTest {
     fun `test exec example`() {
         Samples().exec()
     }
-
 }

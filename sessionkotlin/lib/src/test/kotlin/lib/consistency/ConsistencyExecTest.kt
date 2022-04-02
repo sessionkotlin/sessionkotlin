@@ -1,9 +1,12 @@
 package lib.consistency
 
+import lib.util.IntClass
 import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.exception.InconsistentExternalChoiceException
 import org.david.sessionkotlin_lib.dsl.globalProtocol
+import org.david.sessionkotlin_lib.dsl.types.*
 import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class ConsistencyExecTest {
@@ -50,7 +53,7 @@ class ConsistencyExecTest {
         val case2 = globalProtocol {
             send<Int>(b, c)
         }
-        globalProtocol {
+        val g = globalProtocol {
             choice(b) {
                 case("1") {
                     exec(case1, mapOf(a to b))
@@ -60,7 +63,26 @@ class ConsistencyExecTest {
                 }
             }
         }
+        val lB = LocalTypeInternalChoice(
+            mapOf(
+                "1" to LocalTypeSend(
+                    c, IntClass,
+                    LocalTypeReceive(c, IntClass, LEnd)
+                ),
+                "2" to LocalTypeSend(c, IntClass, LEnd)
+            )
+        )
+        val lC = LocalTypeExternalChoice(
+            b,
+            mapOf(
+                "1" to LocalTypeReceive(
+                    b, IntClass,
+                    LocalTypeSend(b, IntClass, LEnd)
+                ),
+                "2" to LocalTypeReceive(b, IntClass, LEnd)
+            )
+        )
+        assertEquals(g.project(b), lB)
+        assertEquals(g.project(c), lC)
     }
-
-
 }

@@ -7,6 +7,7 @@ plugins {
     jacoco
     id("org.jetbrains.dokka") version "1.6.10"
     `maven-publish`
+    id("org.jlleitschuh.gradle.ktlint")
 }
 
 dependencies {
@@ -41,6 +42,13 @@ tasks.dokkaHtml {
     }
 }
 
+ktlint {
+    verbose.set(true)
+    outputToConsole.set(true)
+    coloredOutput.set(true)
+    disabledRules.set(setOf("no-wildcard-imports"))
+}
+
 java {
     withJavadocJar()
 }
@@ -66,6 +74,5 @@ publishing {
                 }
             }
         }
-
     }
 }

@@ -1,9 +1,14 @@
 package lib.enabled
 
+import lib.util.IntClass
+import lib.util.LongClass
+import lib.util.StringClass
 import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.exception.RoleNotEnabledException
 import org.david.sessionkotlin_lib.dsl.globalProtocol
+import org.david.sessionkotlin_lib.dsl.types.*
 import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class EnabledBasicTest {
@@ -16,26 +21,34 @@ class EnabledBasicTest {
 
     @Test
     fun `role not enabled but is ignorable`() {
-        globalProtocol {
+        val g = globalProtocol {
             send<Int>(a, b)
             send<Int>(b, a)
 
-            // 'c' does not care
             choice(b) {
                 case("1") {
+                    // a not enabled
                     send<String>(a, b)
                 }
             }
         }
+        val lA = LocalTypeSend(
+            b, IntClass,
+            LocalTypeReceive(
+                b, IntClass,
+                LocalTypeSend(b, StringClass, LEnd)
+            )
+        )
+        assertEquals(g.project(a), lA)
     }
 
     @Test
     fun `role not enabled 2 cases mergeable`() {
-        globalProtocol {
+        val g = globalProtocol {
             send<Int>(a, b)
             send<Int>(b, a)
 
-            // mergeable for 'c'
+            // mergeable for 'a'
             choice(b) {
                 case("Case1") {
                     send<String>(b, c)
@@ -47,6 +60,14 @@ class EnabledBasicTest {
                 }
             }
         }
+        val lA = LocalTypeSend(
+            b, IntClass,
+            LocalTypeReceive(
+                b, IntClass,
+                LocalTypeSend(b, StringClass, LEnd)
+            )
+        )
+        assertEquals(g.project(a), lA)
     }
 
     @Test
@@ -70,25 +91,25 @@ class EnabledBasicTest {
 
     @Test
     fun `role not enabled 3 roles mergeable`() {
-        globalProtocol {
+        val g = globalProtocol {
             choice(b) {
                 case("Case1") {
                     send<String>(b, a)
-                    send<String>(a, d)
                     send<String>(d, a)
                 }
                 case("Case2") {
                     send<Int>(b, a)
-                    send<String>(a, d)
                     send<String>(d, a)
                 }
             }
         }
+        val lD = LocalTypeSend(a, StringClass, LEnd)
+        assertEquals(g.project(d), lD)
     }
 
     @Test
     fun `role not enabled 4 roles mergeable`() {
-        globalProtocol {
+        val g = globalProtocol {
             choice(b) {
                 case("Case1") {
                     send<String>(b, a)
@@ -102,6 +123,8 @@ class EnabledBasicTest {
                 }
             }
         }
+        val lC = LocalTypeSend(d, StringClass, LEnd)
+        assertEquals(g.project(c), lC)
     }
 
     @Test
@@ -143,7 +166,7 @@ class EnabledBasicTest {
 
     @Test
     fun `internal choice while ignoring external choice`() {
-        globalProtocol {
+        val g = globalProtocol {
             choice(b) {
                 case("Case1") {
                     choice(a) {
@@ -154,6 +177,10 @@ class EnabledBasicTest {
                 }
             }
         }
+        val lA = LocalTypeInternalChoice(
+            mapOf("SubCase1" to LocalTypeSend(b, IntClass, LEnd))
+        )
+        assertEquals(g.project(a), lA)
     }
 
     @Test
@@ -208,7 +235,7 @@ class EnabledBasicTest {
 
     @Test
     fun `erasable choice after activation`() {
-        globalProtocol {
+        val g = globalProtocol {
             choice(a) {
                 case("1") {
                     send<Long>(a, b)
@@ -229,6 +256,13 @@ class EnabledBasicTest {
                 }
             }
         }
+        val lB = LocalTypeExternalChoice(
+            a,
+            mapOf(
+                "1" to LocalTypeReceive(a, LongClass, LEnd),
+                "2" to LocalTypeReceive(a, IntClass, LEnd)
+            )
+        )
+        assertEquals(g.project(b), lB)
     }
-
 }

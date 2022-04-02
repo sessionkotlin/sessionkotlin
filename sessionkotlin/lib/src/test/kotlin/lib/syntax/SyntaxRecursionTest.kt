@@ -1,5 +1,9 @@
 package lib.syntax
 
+import lib.util.IntClass
+import lib.util.LongClass
+import lib.util.StringClass
+import lib.util.UnitClass
 import org.david.sessionkotlin_lib.dsl.RecursionTag
 import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.exception.TerminalInstructionException
@@ -21,12 +25,18 @@ class SyntaxRecursionTest {
 
     @Test
     fun `basic recursion`() {
-        globalProtocol {
-            val t = miu("X")
+        lateinit var t: RecursionTag
+        val g = globalProtocol {
+            t = miu("X")
             send<Int>(a, b)
             send<Int>(b, a)
             goto(t)
         }
+        val lA = LocalTypeRecursionDefinition(
+            t,
+            LocalTypeSend(b, IntClass, LocalTypeReceive(b, IntClass, LocalTypeRecursion(t)))
+        )
+        assertEquals(g.project(a), lA)
     }
 
     @Test
@@ -41,7 +51,6 @@ class SyntaxRecursionTest {
             }
         }
     }
-
 
     @Test
     fun `choice after goto`() {
@@ -120,7 +129,6 @@ class SyntaxRecursionTest {
         }
     }
 
-
     @Test
     fun `recursion variable defined in subprotocol`() {
         lateinit var t: RecursionTag
@@ -129,7 +137,7 @@ class SyntaxRecursionTest {
             t = miu("X")
         }
 
-        globalProtocol {
+        val g = globalProtocol {
             send<Int>(a, b)
             exec(aux)
             choice(b) {
@@ -144,16 +152,30 @@ class SyntaxRecursionTest {
                 }
             }
         }
+        val lC = LocalTypeRecursionDefinition(
+            t,
+            LocalTypeExternalChoice(
+                b,
+                mapOf(
+                    "1" to LocalTypeReceive(b, IntClass, LocalTypeRecursion(t)),
+                    "2" to LocalTypeReceive(b, IntClass, LEnd)
+                )
+            )
+        )
+        assertEquals(g.project(c), lC)
     }
-
 
     @Test
     fun `empty loop`() {
-        globalProtocol {
+        val g = globalProtocol {
             send<Int>(a, b)
             val t = miu("X")
             goto(t)
         }
+        val lA = LocalTypeSend(b, IntClass, LEnd)
+        val lB = LocalTypeReceive(a, IntClass, LEnd)
+        assertEquals(g.project(a), lA)
+        assertEquals(g.project(b), lB)
     }
 
     @Test
@@ -174,8 +196,10 @@ class SyntaxRecursionTest {
 
     @Test
     fun `nested recursion`() {
-        globalProtocol {
-            val t1 = miu("X")
+        lateinit var t1: RecursionTag
+        lateinit var t2: RecursionTag
+        val g = globalProtocol {
+            t1 = miu("X")
             send<Unit>(a, b)
             choice(b) {
                 case("1") {
@@ -184,7 +208,7 @@ class SyntaxRecursionTest {
                 }
                 case("2") {
                     send<Int>(b, a)
-                    val t2 = miu("Y")
+                    t2 = miu("Y")
                     choice(a) {
                         case("2.1") {
                             send<Int>(a, b)
@@ -201,6 +225,33 @@ class SyntaxRecursionTest {
                 }
             }
         }
+        val lA = LocalTypeRecursionDefinition(
+            t1,
+            LocalTypeSend(
+                b, UnitClass,
+                LocalTypeExternalChoice(
+                    b,
+                    mapOf(
+                        "1" to LocalTypeReceive(b, IntClass, LocalTypeRecursion(t1)),
+                        "2" to LocalTypeReceive(
+                            b, IntClass,
+                            LocalTypeRecursionDefinition(
+                                t2,
+                                LocalTypeInternalChoice(
+                                    mapOf(
+                                        "2.1" to LocalTypeSend(b, IntClass, LocalTypeRecursion(t2)),
+                                        "2.2" to LocalTypeSend(b, UnitClass, LocalTypeRecursion(t1))
+                                    )
+                                )
+                            )
+                        ),
+                        "3" to LocalTypeReceive(b, StringClass, LEnd),
+
+                    )
+                )
+            )
+        )
+        assertEquals(g.project(a), lA)
     }
 
     @Test
@@ -218,11 +269,11 @@ class SyntaxRecursionTest {
                 }
             }
         }
-        val lC = LocalTypeRecursionDefinition(t, LocalTypeSend(d, Unit::class.java, LocalTypeRecursion(t)))
-
+        val lC = LocalTypeRecursionDefinition(t, LocalTypeSend(d, UnitClass, LocalTypeRecursion(t)))
+        val lD = LocalTypeRecursionDefinition(t, LocalTypeReceive(c, UnitClass, LocalTypeRecursion(t)))
         assertEquals(g.project(c), lC)
+        assertEquals(g.project(d), lD)
     }
-
 
     @Test
     fun `exec after goto`() {
@@ -258,25 +309,44 @@ class SyntaxRecursionTest {
                 }
             }
         }
-        val lA = LocalTypeRecursionDefinition(x,
-            LocalTypeSend(b,
-                Int::class.javaObjectType,
-                LocalTypeInternalChoice(mapOf("1" to LocalTypeSend(b,
-                    Long::class.javaObjectType,
-                    LocalTypeRecursion(x)), "2" to LocalTypeSend(b, String::class.java, LocalTypeEnd)))))
-        val lB = LocalTypeRecursionDefinition(x,
-            LocalTypeReceive(a,
-                Int::class.javaObjectType,
-                LocalTypeExternalChoice(a,
-                    mapOf("1" to LocalTypeReceive(a, Long::class.javaObjectType, LocalTypeRecursion(x)),
-                        "2" to LocalTypeReceive(a, String::class.java, LocalTypeEnd)))))
+        val lA = LocalTypeRecursionDefinition(
+            x,
+            LocalTypeSend(
+                b,
+                IntClass,
+                LocalTypeInternalChoice(
+                    mapOf(
+                        "1" to LocalTypeSend(
+                            b,
+                            LongClass,
+                            LocalTypeRecursion(x)
+                        ),
+                        "2" to LocalTypeSend(b, StringClass, LocalTypeEnd)
+                    )
+                )
+            )
+        )
+        val lB = LocalTypeRecursionDefinition(
+            x,
+            LocalTypeReceive(
+                a,
+                IntClass,
+                LocalTypeExternalChoice(
+                    a,
+                    mapOf(
+                        "1" to LocalTypeReceive(a, LongClass, LocalTypeRecursion(x)),
+                        "2" to LocalTypeReceive(a, StringClass, LocalTypeEnd)
+                    )
+                )
+            )
+        )
         assertEquals(g.project(a), lA)
         assertEquals(g.project(b), lB)
     }
 
     @Test
     fun `unused recursion variables`() {
-        globalProtocol {
+        val g = globalProtocol {
             miu("X")
             choice(a) {
                 case("1") {
@@ -286,5 +356,18 @@ class SyntaxRecursionTest {
                 }
             }
         }
+        val lA = LocalTypeInternalChoice(
+            mapOf(
+                "1" to LocalTypeSend(b, LongClass, LocalTypeReceive(b, LongClass, LEnd))
+            )
+        )
+        val lB = LocalTypeExternalChoice(
+            a,
+            mapOf(
+                "1" to LocalTypeReceive(a, LongClass, LocalTypeSend(a, LongClass, LEnd))
+            )
+        )
+        assertEquals(g.project(a), lA)
+        assertEquals(g.project(b), lB)
     }
 }
