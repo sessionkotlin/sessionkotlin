@@ -6,4 +6,4 @@ internal fun printlnIndent(indent: Int, message: Any?) {
     println(" ".repeat(indent) + message)
 }
 
-fun Map<Role, Role>.getOrKey(key: Role) = this.getOrDefault(key, key)
+internal fun Map<Role, Role>.getOrKey(key: Role): Role = this.getOrDefault(key, key)

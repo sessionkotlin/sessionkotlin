@@ -10,8 +10,11 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint")
 }
 
+val kotlinPoetVersion: String by project
+
 dependencies {
     testImplementation(kotlin("test"))
+    implementation("com.squareup:kotlinpoet:$kotlinPoetVersion")
 }
 
 tasks.test {
@@ -47,6 +50,10 @@ ktlint {
     outputToConsole.set(true)
     coloredOutput.set(true)
     disabledRules.set(setOf("no-wildcard-imports"))
+}
+
+kotlin {
+    explicitApi()
 }
 
 java {

@@ -1,8 +1,8 @@
 package org.david.sessionkotlin_lib.dsl
 
-class Samples {
+public class Samples {
 
-    fun send() {
+    public fun send() {
         val a = Role("A")
         val b = Role("B")
         val s = Role("C")
@@ -15,7 +15,7 @@ class Samples {
         }
     }
 
-    fun sendTypes() {
+    public fun sendTypes() {
         val a = Role("A")
         val b = Role("B")
         val s = Role("C")
@@ -28,7 +28,7 @@ class Samples {
         }
     }
 
-    fun choice() {
+    public fun choice() {
         val a = Role("A")
         val b = Role("B")
 
@@ -44,7 +44,7 @@ class Samples {
         }
     }
 
-    fun exec() {
+    public fun exec() {
         val a = Role("A")
         val b = Role("B")
         val c = Role("C")
@@ -74,7 +74,7 @@ class Samples {
         }
     }
 
-    fun goto() {
+    public fun goto() {
         val server = Role("Server")
         val client = Role("Client")
 
