@@ -15,7 +15,6 @@ repositories {
 
 dependencies {
     implementation("org.david:sessionkotlin_lib:0.0.1")
-    ksp("org.david:sessionkotlin_processor:0.0.1")
 }
 
 application {
@@ -27,4 +26,10 @@ idea {
     module {
         isDownloadJavadoc = true
     }
+}
+
+kotlin.sourceSets.main {
+    kotlin.srcDirs(
+        file("$buildDir/generated/sessionkotlin/main/kotlin"),
+    )
 }

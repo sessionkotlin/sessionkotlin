@@ -170,7 +170,7 @@ public sealed class GlobalEnv(
         roles.forEach {
             try {
                 project(it)
-            } catch (e: SessionKotlinException) {
+            } catch (e: SessionKotlinDSLException) {
                 System.err.println("Exception while projecting $it:")
                 throw e
             }

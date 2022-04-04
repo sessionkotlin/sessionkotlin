@@ -1,38 +1,20 @@
 package demo
 
+import org.david.sessionkotlin_lib.api.SKFluent
 import org.david.sessionkotlin_lib.dsl.*
+import java.io.File
 
+class ClassX(g: RootEnv, r: Role) : SKFluent(g, r)
 
 fun main() {
     val a = Role("A")
     val b = Role("B")
-    val c = Role("C")
-
-
-    val case1 = globalProtocol {
-        send<Int>(b, c)
-        send<Int>(b, a)
-    }
-
-    val case2 = globalProtocol {
-        send<String>(b, a)
-        send<Int>(b, c)
-    }
 
     val g = globalProtocol {
-        choice(b) {
-
-            case("Case 1") {
-                exec(case1)
-            }
-            case("Case 2") {
-                exec(case2)
-            }
-        }
+        send<Int>(a, b)
     }
-
-    for (i in g.project(a))
-        i.dump(0)
-
+//    System.setProperty("user.dir", "/home/david/code/session-kotlin/demo/app")
+//    println(System.getProperty("user.dir"))
+    val fluent = ClassX(g, a)
 
 }

@@ -4,8 +4,8 @@ pluginManagement {
     val klintVersion: String by settings
 
     plugins {
-        kotlin("jvm") version kotlinVersion
-        id("org.jlleitschuh.gradle.ktlint") version klintVersion
+        kotlin("jvm") version kotlinVersion apply false
+        id("org.jlleitschuh.gradle.ktlint") version klintVersion apply false
     }
     repositories {
         mavenLocal()
@@ -27,5 +27,3 @@ dependencyResolutionManagement {
 rootProject.name = "sessionkotlin"
 
 include(":lib")
-include(":processor")
-include(":tester")
