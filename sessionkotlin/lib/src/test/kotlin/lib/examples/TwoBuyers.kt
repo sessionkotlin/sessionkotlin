@@ -4,7 +4,7 @@ import lib.util.IntClass
 import lib.util.StringClass
 import lib.util.UnitClass
 import org.david.sessionkotlin_lib.dsl.Role
-import org.david.sessionkotlin_lib.dsl.globalProtocol
+import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.david.sessionkotlin_lib.dsl.types.*
 import org.junit.jupiter.api.Test
 import java.util.*
@@ -18,7 +18,7 @@ class TwoBuyers {
         val b = Role("Client B")
         val seller = Role("Seller")
 
-        val aux = globalProtocol {
+        val aux = globalProtocolInternal {
             choice(b) {
                 case("Ok") {
                     send<Address>(b, seller)
@@ -32,7 +32,7 @@ class TwoBuyers {
             }
         }
 
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             send<String>(a, seller)
 
             send<Int>(seller, a)

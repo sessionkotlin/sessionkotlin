@@ -1,7 +1,7 @@
 package lib.examples
 
 import org.david.sessionkotlin_lib.dsl.Role
-import org.david.sessionkotlin_lib.dsl.globalProtocol
+import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.david.sessionkotlin_lib.dsl.types.*
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -14,7 +14,7 @@ class ProxyExample {
         val proxy = Role("Proxy")
         val server = Role("Server")
 
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             send<Request>(client, proxy)
 
             send<Request>(proxy, server)

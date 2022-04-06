@@ -4,7 +4,7 @@ import lib.util.BoolClass
 import lib.util.IntClass
 import lib.util.UnitClass
 import org.david.sessionkotlin_lib.dsl.Role
-import org.david.sessionkotlin_lib.dsl.globalProtocol
+import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.david.sessionkotlin_lib.dsl.types.*
 import org.junit.jupiter.api.Test
 import java.util.*
@@ -19,7 +19,7 @@ class BuyerBrokerSupplier {
         val proc = Role("Processing Department")
         val finance = Role("Finance Department")
 
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             send<Application>(applicant, portal)
             send<Application>(portal, proc)
             send<Boolean>(proc, portal)

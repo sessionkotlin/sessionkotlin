@@ -5,7 +5,7 @@ import lib.util.LongClass
 import lib.util.StringClass
 import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.exception.UnfinishedRolesException
-import org.david.sessionkotlin_lib.dsl.globalProtocol
+import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.david.sessionkotlin_lib.dsl.types.LEnd
 import org.david.sessionkotlin_lib.dsl.types.LocalTypeReceive
 import org.david.sessionkotlin_lib.dsl.types.LocalTypeSend
@@ -23,12 +23,12 @@ class UnfinishedExecTest {
 
     @Test
     fun `choice agnostic`() {
-        val aux = globalProtocol {
+        val aux = globalProtocolInternal {
             send<String>(b, c)
             send<Int>(a, b)
             send<Long>(b, c)
         }
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             choice(a) {
                 case("1") {
                     exec(aux)
@@ -51,13 +51,13 @@ class UnfinishedExecTest {
 
     @Test
     fun `unfinished after map`() {
-        val subprotocol = globalProtocol {
+        val subprotocol = globalProtocolInternal {
             send<Int>(a, b)
             send<Int>(a, c)
         }
 
         assertFailsWith<UnfinishedRolesException> {
-            globalProtocol {
+            globalProtocolInternal {
                 send<Int>(a, b)
                 send<Int>(a, c)
                 choice(a) {
@@ -74,13 +74,13 @@ class UnfinishedExecTest {
 
     @Test
     fun `unfinished after map 2`() {
-        val subprotocol = globalProtocol {
+        val subprotocol = globalProtocolInternal {
             send<Int>(a, b)
             send<Int>(a, c)
         }
 
         assertFailsWith<UnfinishedRolesException> {
-            globalProtocol {
+            globalProtocolInternal {
                 choice(a) {
                     case("1") {
                         exec(subprotocol)

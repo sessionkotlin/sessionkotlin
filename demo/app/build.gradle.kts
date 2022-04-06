@@ -5,7 +5,6 @@ plugins {
     id("com.google.devtools.ksp") version "1.6.10-1.0.2"
     // Apply the application plugin to add support for building a CLI application in Java.
     application
-    id("idea")
 }
 
 repositories {
@@ -20,12 +19,6 @@ dependencies {
 application {
     // Define the main class for the application.
     mainClass.set("demo.AppKt")
-}
-
-idea {
-    module {
-        isDownloadJavadoc = true
-    }
 }
 
 kotlin.sourceSets.main {

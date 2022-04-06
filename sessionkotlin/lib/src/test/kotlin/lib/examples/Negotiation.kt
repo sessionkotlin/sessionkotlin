@@ -4,7 +4,7 @@ import lib.util.IntClass
 import lib.util.UnitClass
 import org.david.sessionkotlin_lib.dsl.RecursionTag
 import org.david.sessionkotlin_lib.dsl.Role
-import org.david.sessionkotlin_lib.dsl.globalProtocol
+import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.david.sessionkotlin_lib.dsl.types.*
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -17,7 +17,7 @@ class Negotiation {
         val seller = Role("Seller")
         lateinit var t: RecursionTag
 
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             send<Int>(buyer, seller)
             t = miu("X")
 

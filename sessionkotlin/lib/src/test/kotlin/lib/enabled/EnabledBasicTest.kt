@@ -5,7 +5,7 @@ import lib.util.LongClass
 import lib.util.StringClass
 import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.exception.RoleNotEnabledException
-import org.david.sessionkotlin_lib.dsl.globalProtocol
+import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.david.sessionkotlin_lib.dsl.types.*
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -21,7 +21,7 @@ class EnabledBasicTest {
 
     @Test
     fun `role not enabled but is ignorable`() {
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             send<Int>(a, b)
             send<Int>(b, a)
 
@@ -44,7 +44,7 @@ class EnabledBasicTest {
 
     @Test
     fun `role not enabled 2 cases mergeable`() {
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             send<Int>(a, b)
             send<Int>(b, a)
 
@@ -73,7 +73,7 @@ class EnabledBasicTest {
     @Test
     fun `role not enabled 2 cases not mergeable`() {
         assertFailsWith<RoleNotEnabledException> {
-            globalProtocol {
+            globalProtocolInternal {
                 choice(b) {
                     case("Case1") {
                         send<String>(b, c)
@@ -91,7 +91,7 @@ class EnabledBasicTest {
 
     @Test
     fun `role not enabled 3 roles mergeable`() {
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             choice(b) {
                 case("Case1") {
                     send<String>(b, a)
@@ -109,7 +109,7 @@ class EnabledBasicTest {
 
     @Test
     fun `role not enabled 4 roles mergeable`() {
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             choice(b) {
                 case("Case1") {
                     send<String>(b, a)
@@ -130,7 +130,7 @@ class EnabledBasicTest {
     @Test
     fun `role not enabled to send not mergeable`() {
         assertFailsWith<RoleNotEnabledException> {
-            globalProtocol {
+            globalProtocolInternal {
                 choice(b) {
                     case("Case1") {
                         send<String>(b, a)
@@ -147,7 +147,7 @@ class EnabledBasicTest {
     @Test
     fun `role not enabled to choose not mergeable`() {
         assertFailsWith<RoleNotEnabledException> {
-            globalProtocol {
+            globalProtocolInternal {
                 choice(b) {
                     case("Case1") {
                         choice(a) {
@@ -166,7 +166,7 @@ class EnabledBasicTest {
 
     @Test
     fun `internal choice while ignoring external choice`() {
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             choice(b) {
                 case("Case1") {
                     choice(a) {
@@ -185,7 +185,7 @@ class EnabledBasicTest {
 
     @Test
     fun `role activated`() {
-        globalProtocol {
+        globalProtocolInternal {
             choice(b) {
                 case("Case1") {
                     send<String>(b, a)
@@ -200,7 +200,7 @@ class EnabledBasicTest {
 
     @Test
     fun `role activated transitivity`() {
-        globalProtocol {
+        globalProtocolInternal {
             choice(b) {
                 case("Case1") {
                     send<String>(b, c)
@@ -217,7 +217,7 @@ class EnabledBasicTest {
 
     @Test
     fun `role activated transitivity 2`() {
-        globalProtocol {
+        globalProtocolInternal {
             choice(a) {
                 case("1") {
                     send<Long>(a, b)
@@ -235,7 +235,7 @@ class EnabledBasicTest {
 
     @Test
     fun `erasable choice after activation`() {
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             choice(a) {
                 case("1") {
                     send<Long>(a, b)

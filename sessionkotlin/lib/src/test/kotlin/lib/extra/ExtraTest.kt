@@ -6,7 +6,7 @@ import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.exception.InconsistentExternalChoiceException
 import org.david.sessionkotlin_lib.dsl.exception.RoleNotEnabledException
 import org.david.sessionkotlin_lib.dsl.exception.UnfinishedRolesException
-import org.david.sessionkotlin_lib.dsl.globalProtocol
+import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.david.sessionkotlin_lib.dsl.types.*
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -24,7 +24,7 @@ class ExtraTest {
     fun `liveliness roleprog 1`() {
         // scribble-java bad.liveness.roleprog.Test01
         assertFailsWith<UnfinishedRolesException> {
-            globalProtocol {
+            globalProtocolInternal {
                 choice(a) {
                     case("1") {
                         val t = miu("X")
@@ -44,7 +44,7 @@ class ExtraTest {
     fun `liveliness roleprog 3a`() {
         // scribble-java bad.liveness.roleprog.Test03a
         assertFailsWith<UnfinishedRolesException> {
-            globalProtocol {
+            globalProtocolInternal {
                 choice(a) {
                     case("1") {
                         val t = miu("X")
@@ -68,7 +68,7 @@ class ExtraTest {
     fun `safety waitfor 3party 1`() {
         // scribble-java bad.safety.waitfor.threeparty.Test01
         assertFailsWith<UnfinishedRolesException> {
-            globalProtocol {
+            globalProtocolInternal {
                 val t = miu("X")
                 choice(a) {
                     case("1") {
@@ -87,7 +87,7 @@ class ExtraTest {
     fun `safety waitfor 3party 2`() {
         // scribble-java bad.safety.waitfor.threeparty.Test02
         assertFailsWith<RoleNotEnabledException> {
-            globalProtocol {
+            globalProtocolInternal {
                 val t = miu("X")
                 choice(a) {
                     case("1") {
@@ -115,7 +115,7 @@ class ExtraTest {
     fun `consistent choice subject 4b`() {
         // scribble-java bad.syntax.consistentchoicesubj.Test04b
         assertFailsWith<InconsistentExternalChoiceException> {
-            globalProtocol {
+            globalProtocolInternal {
                 val t = miu("X")
                 choice(a) {
                     case("1") {
@@ -137,7 +137,7 @@ class ExtraTest {
     fun `consistent choice subject 5a`() {
         // scribble-java bad.syntax.consistentchoicesubj.Test05a
         assertFailsWith<InconsistentExternalChoiceException> {
-            globalProtocol {
+            globalProtocolInternal {
                 choice(a) {
                     case("1") {
                         send<Unit>(a, b)
@@ -159,7 +159,7 @@ class ExtraTest {
     fun `consistent choice subject 5b`() {
         // scribble-java bad.syntax.consistentchoicesubj.Test05b
         assertFailsWith<InconsistentExternalChoiceException> {
-            globalProtocol {
+            globalProtocolInternal {
                 val t = miu("X")
                 choice(a) {
                     case("1") {
@@ -184,7 +184,7 @@ class ExtraTest {
     fun `consistent choice subject 6a`() {
         // scribble-java bad.syntax.consistentchoicesubj.Test06a
         assertFailsWith<InconsistentExternalChoiceException> {
-            globalProtocol {
+            globalProtocolInternal {
                 choice(a) {
                     case("1") {
                         send<Unit>(a, b)
@@ -204,7 +204,7 @@ class ExtraTest {
     fun `consistent choice subject 7b`() {
         // scribble-java bad.syntax.consistentchoicesubj.Test07c
         assertFailsWith<InconsistentExternalChoiceException> {
-            globalProtocol {
+            globalProtocolInternal {
                 val t = miu("X")
                 choice(a) {
                     case("1") {
@@ -227,7 +227,7 @@ class ExtraTest {
     @Test
     fun `test enabled by`() {
         // scribble-java good.efsm.gchoice.Test11
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             choice(a) {
                 case("1") {
                     send<Unit>(a, b)
@@ -255,7 +255,7 @@ class ExtraTest {
     @Test
     fun `collapsable recs`() {
         lateinit var t: RecursionTag
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             t = miu("X")
             send<Unit>(a, b)
 
@@ -282,7 +282,7 @@ class ExtraTest {
     fun `unguarded recursion`() {
         // scribble-java good.efsm.gcontinue.choiceunguarded.Test01c
         lateinit var t: RecursionTag
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             t = miu("X")
             send<Unit>(a, b)
 

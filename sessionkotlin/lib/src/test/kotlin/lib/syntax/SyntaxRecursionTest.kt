@@ -8,7 +8,7 @@ import org.david.sessionkotlin_lib.dsl.RecursionTag
 import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.exception.TerminalInstructionException
 import org.david.sessionkotlin_lib.dsl.exception.UndefinedRecursionVariableException
-import org.david.sessionkotlin_lib.dsl.globalProtocol
+import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.david.sessionkotlin_lib.dsl.types.*
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -26,7 +26,7 @@ class SyntaxRecursionTest {
     @Test
     fun `basic recursion`() {
         lateinit var t: RecursionTag
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             t = miu("X")
             send<Int>(a, b)
             send<Int>(b, a)
@@ -42,7 +42,7 @@ class SyntaxRecursionTest {
     @Test
     fun `send after goto`() {
         assertFailsWith<TerminalInstructionException> {
-            globalProtocol {
+            globalProtocolInternal {
                 val t = miu("X")
                 send<Int>(a, b)
                 send<Int>(b, a)
@@ -55,7 +55,7 @@ class SyntaxRecursionTest {
     @Test
     fun `choice after goto`() {
         assertFailsWith<TerminalInstructionException> {
-            globalProtocol {
+            globalProtocolInternal {
                 val t = miu("X")
                 send<Int>(a, b)
                 send<Int>(b, a)
@@ -68,7 +68,7 @@ class SyntaxRecursionTest {
     @Test
     fun `send after goto 2`() {
         assertFailsWith<TerminalInstructionException> {
-            globalProtocol {
+            globalProtocolInternal {
                 val t = miu("X")
                 send<Int>(a, b)
                 send<Int>(b, a)
@@ -85,7 +85,7 @@ class SyntaxRecursionTest {
     @Test
     fun `undefined recursion variable`() {
         assertFailsWith<UndefinedRecursionVariableException> {
-            globalProtocol {
+            globalProtocolInternal {
                 goto(RecursionTag("X"))
             }
         }
@@ -95,11 +95,11 @@ class SyntaxRecursionTest {
     fun `undefined recursion variable 2`() {
         assertFailsWith<UndefinedRecursionVariableException> {
             lateinit var t: RecursionTag
-            globalProtocol {
+            globalProtocolInternal {
                 t = miu("X")
             }
 
-            globalProtocol {
+            globalProtocolInternal {
                 send<Int>(a, b)
                 choice(b) {
                     case("1") {
@@ -117,7 +117,7 @@ class SyntaxRecursionTest {
     @Test
     fun `send after goto inside choice`() {
         assertFailsWith<TerminalInstructionException> {
-            globalProtocol {
+            globalProtocolInternal {
                 val t = miu("X")
                 choice(b) {
                     case("1") {
@@ -133,11 +133,11 @@ class SyntaxRecursionTest {
     fun `recursion variable defined in subprotocol`() {
         lateinit var t: RecursionTag
 
-        val aux = globalProtocol {
+        val aux = globalProtocolInternal {
             t = miu("X")
         }
 
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             send<Int>(a, b)
             exec(aux)
             choice(b) {
@@ -167,7 +167,7 @@ class SyntaxRecursionTest {
 
     @Test
     fun `empty loop`() {
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             send<Int>(a, b)
             val t = miu("X")
             goto(t)
@@ -181,7 +181,7 @@ class SyntaxRecursionTest {
     @Test
     fun `rec def after goto`() {
         assertFailsWith<TerminalInstructionException> {
-            globalProtocol {
+            globalProtocolInternal {
                 val t1 = miu("X")
                 send<Unit>(a, b)
                 goto(t1)
@@ -198,7 +198,7 @@ class SyntaxRecursionTest {
     fun `nested recursion`() {
         lateinit var t1: RecursionTag
         lateinit var t2: RecursionTag
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             t1 = miu("X")
             send<Unit>(a, b)
             choice(b) {
@@ -257,7 +257,7 @@ class SyntaxRecursionTest {
     @Test
     fun `erasable choice goto`() {
         lateinit var t: RecursionTag
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             t = miu("X")
             send<Unit>(c, d)
 
@@ -277,11 +277,11 @@ class SyntaxRecursionTest {
 
     @Test
     fun `exec after goto`() {
-        val aux = globalProtocol {
+        val aux = globalProtocolInternal {
             send<Int>(a, b)
         }
         assertFailsWith<TerminalInstructionException> {
-            globalProtocol {
+            globalProtocolInternal {
                 val t = miu("X")
                 send<Int>(a, b)
                 goto(t)
@@ -295,7 +295,7 @@ class SyntaxRecursionTest {
     fun `unused recursion variable Y`() {
         lateinit var x: RecursionTag
 
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             x = miu("X")
             send<Int>(a, b)
             choice(a) {
@@ -346,7 +346,7 @@ class SyntaxRecursionTest {
 
     @Test
     fun `unused recursion variables`() {
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             miu("X")
             choice(a) {
                 case("1") {

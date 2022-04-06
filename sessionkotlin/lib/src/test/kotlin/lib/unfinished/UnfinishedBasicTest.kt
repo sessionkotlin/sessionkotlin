@@ -3,7 +3,7 @@ package lib.unfinished
 import lib.util.UnitClass
 import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.exception.UnfinishedRolesException
-import org.david.sessionkotlin_lib.dsl.globalProtocol
+import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.david.sessionkotlin_lib.dsl.types.LEnd
 import org.david.sessionkotlin_lib.dsl.types.LocalTypeSend
 import org.junit.jupiter.api.Test
@@ -21,7 +21,7 @@ class UnfinishedBasicTest {
     @Test
     fun `unfinished roles`() {
         assertFailsWith<UnfinishedRolesException> {
-            globalProtocol {
+            globalProtocolInternal {
                 choice(a) {
                     case("Case1") {
                         send<Unit>(a, b)
@@ -40,7 +40,7 @@ class UnfinishedBasicTest {
 
     @Test
     fun `erasable choice`() {
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             send<Unit>(a, b)
             send<Unit>(c, b)
             choice(a) {

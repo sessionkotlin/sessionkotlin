@@ -3,7 +3,7 @@ package lib.enabled
 import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.exception.RoleNotEnabledException
 import org.david.sessionkotlin_lib.dsl.exception.UnfinishedRolesException
-import org.david.sessionkotlin_lib.dsl.globalProtocol
+import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFailsWith
 
@@ -17,12 +17,12 @@ class EnabledExecTest {
 
     @Test
     fun `exec not enabled`() {
-        val x = globalProtocol {
+        val x = globalProtocolInternal {
             // 'c' not enabled
             send<Int>(c, b)
         }
         assertFailsWith<UnfinishedRolesException> {
-            globalProtocol {
+            globalProtocolInternal {
                 send<Int>(a, b)
                 choice(b) {
                     case("Case1") {
@@ -39,11 +39,11 @@ class EnabledExecTest {
 
     @Test
     fun `activated in exec`() {
-        val aux = globalProtocol {
+        val aux = globalProtocolInternal {
             send<Int>(b, c)
         }
 
-        globalProtocol {
+        globalProtocolInternal {
             choice(b) {
                 case("Case 1") {
                     exec(aux)
@@ -58,12 +58,12 @@ class EnabledExecTest {
     fun `not enabled in exec after map`() {
         val x = Role("X")
         val y = Role("Y")
-        val subprotocol = globalProtocol {
+        val subprotocol = globalProtocolInternal {
             send<Int>(x, y)
             send<Int>(y, x)
         }
         assertFailsWith<RoleNotEnabledException> {
-            globalProtocol {
+            globalProtocolInternal {
                 choice(a) {
                     case("1") {
                         // b not enabled

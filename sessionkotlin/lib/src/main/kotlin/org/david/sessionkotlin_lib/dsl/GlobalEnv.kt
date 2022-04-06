@@ -1,18 +1,12 @@
 package org.david.sessionkotlin_lib.dsl
 
-import org.david.sessionkotlin_lib.dsl.exception.*
+import org.david.sessionkotlin_lib.dsl.exception.ProjectionTargetException
+import org.david.sessionkotlin_lib.dsl.exception.SessionKotlinDSLException
+import org.david.sessionkotlin_lib.dsl.exception.TerminalInstructionException
+import org.david.sessionkotlin_lib.dsl.exception.UndefinedRecursionVariableException
 import org.david.sessionkotlin_lib.dsl.types.*
 import org.david.sessionkotlin_lib.dsl.util.getOrKey
 import org.david.sessionkotlin_lib.dsl.util.printlnIndent
-
-@DslMarker
-private annotation class SessionKotlinDSL
-
-public class RecursionTag internal constructor(
-    private val name: String,
-) {
-    override fun toString(): String = name
-}
 
 @SessionKotlinDSL
 public sealed class GlobalEnv(
@@ -157,13 +151,11 @@ public sealed class GlobalEnv(
     }
 
     internal fun project(role: Role): LocalType {
-//        for (i in instructions)
-//            i.dump(0)
         if (!roles.contains(role)) {
             throw ProjectionTargetException(role)
         }
         return buildGlobalType(instructions)
-            .project(role, State())
+            .project(role)
     }
 
     internal fun validate() {
@@ -199,33 +191,14 @@ internal fun buildGlobalType(
         }
     }
 
-public class RootEnv(public val name: String) : GlobalEnv(emptySet(), emptySet())
-
-internal class NonRootEnv(
-    roles: Set<Role>,
-    recursionVariables: Set<RecursionTag>,
-) : GlobalEnv(roles, recursionVariables)
-
-@SessionKotlinDSL
-public class ChoiceEnv(
-    private val roles: Set<Role>,
-    private val recursionVariables: Set<RecursionTag>,
-) {
-    internal val caseMap = mutableMapOf<String, GlobalEnv>()
-
-    public fun case(label: String, protocolBuilder: GlobalEnv.() -> Unit) {
-        val p = NonRootEnv(roles, recursionVariables)
-        p.protocolBuilder()
-        if (caseMap.containsKey(label)) {
-            throw DuplicateCaseLabelException(label)
-        }
-        caseMap[label] = p
-    }
-}
-
-public fun globalProtocol(name: String = "Proto1", protocolBuilder: GlobalEnv.() -> Unit): RootEnv {
+public fun globalProtocolInternal(name: String = "Proto1", protocolBuilder: GlobalEnv.() -> Unit): RootEnv {
     val p = RootEnv(name)
     p.protocolBuilder()
     p.validate()
     return p
+}
+
+public fun globalProtocol(name: String = "Proto1", protocolBuilder: GlobalEnv.() -> Unit) {
+    val g = globalProtocolInternal(name, protocolBuilder)
+    g.genLocals()
 }

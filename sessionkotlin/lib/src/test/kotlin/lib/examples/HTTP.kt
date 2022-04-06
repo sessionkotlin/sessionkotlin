@@ -1,7 +1,7 @@
 package lib.examples
 
 import org.david.sessionkotlin_lib.dsl.Role
-import org.david.sessionkotlin_lib.dsl.globalProtocol
+import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.david.sessionkotlin_lib.dsl.types.LEnd
 import org.david.sessionkotlin_lib.dsl.types.LocalTypeReceive
 import org.david.sessionkotlin_lib.dsl.types.LocalTypeSend
@@ -16,7 +16,7 @@ class HTTP {
         val c = Role("Client")
         val s = Role("Server")
 
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             send<HttpRequest>(c, s)
             send<HttpResponse>(s, c)
         }

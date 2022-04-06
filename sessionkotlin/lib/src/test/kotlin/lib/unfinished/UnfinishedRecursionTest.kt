@@ -2,7 +2,7 @@ package lib.unfinished
 
 import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.exception.UnfinishedRolesException
-import org.david.sessionkotlin_lib.dsl.globalProtocol
+import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFailsWith
 
@@ -17,7 +17,7 @@ class UnfinishedRecursionTest {
     @Test
     fun `unfinished role`() {
         assertFailsWith<UnfinishedRolesException> {
-            globalProtocol {
+            globalProtocolInternal {
                 val t = miu("X")
                 choice(a) {
                     case("1") {
@@ -38,7 +38,7 @@ class UnfinishedRecursionTest {
     @Test
     fun `rec and choice unfinished`() {
         assertFailsWith<UnfinishedRolesException> {
-            globalProtocol {
+            globalProtocolInternal {
                 choice(a) {
                     case("1") {
                         send<Int>(a, b)
@@ -68,7 +68,7 @@ class UnfinishedRecursionTest {
     @Test
     fun `rec and choice unfinished 2`() {
         assertFailsWith<UnfinishedRolesException> {
-            globalProtocol {
+            globalProtocolInternal {
                 val x = miu("X")
                 send<Int>(a, b)
                 choice(a) {
@@ -96,7 +96,7 @@ class UnfinishedRecursionTest {
     @Test
     fun `rec and choice unfinished 3`() {
         assertFailsWith<UnfinishedRolesException> {
-            globalProtocol {
+            globalProtocolInternal {
                 val x = miu("X")
                 choice(a) {
                     case("1") {
@@ -115,7 +115,7 @@ class UnfinishedRecursionTest {
 
     @Test
     fun `rec and choice unfinished 4`() {
-        globalProtocol {
+        globalProtocolInternal {
             val x = miu("X")
             choice(a) {
                 case("1") {

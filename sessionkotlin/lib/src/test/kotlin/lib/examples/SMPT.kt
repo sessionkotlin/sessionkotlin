@@ -3,7 +3,7 @@ package lib.examples
 import lib.util.UnitClass
 import org.david.sessionkotlin_lib.dsl.RecursionTag
 import org.david.sessionkotlin_lib.dsl.Role
-import org.david.sessionkotlin_lib.dsl.globalProtocol
+import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.david.sessionkotlin_lib.dsl.types.*
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -23,7 +23,7 @@ class SMPT {
 
     @Test
     fun main() {
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             send<Code220>(s, c)
             exec(ehlo)
         }
@@ -31,7 +31,7 @@ class SMPT {
         assertEquals(g.project(c), lC)
     }
 
-    private val mail = globalProtocol {
+    private val mail = globalProtocolInternal {
         tMail1 = miu("tMail1")
 
         choice(c) {
@@ -82,7 +82,7 @@ class SMPT {
             }
         }
     }
-    private val auth = globalProtocol {
+    private val auth = globalProtocolInternal {
         tAuth = miu("tAuth")
         choice(c) {
             case("Continue") {
@@ -103,7 +103,7 @@ class SMPT {
             }
         }
     }
-    private val secureEhlo = globalProtocol {
+    private val secureEhlo = globalProtocolInternal {
         choice(c) {
             case("Continue") {
                 send<Ehlo>(c, s)
@@ -125,7 +125,7 @@ class SMPT {
             }
         }
     }
-    private val startTLS = globalProtocol {
+    private val startTLS = globalProtocolInternal {
         choice(c) {
             case("Continue") {
                 send<Unit>(c, s)
@@ -138,7 +138,7 @@ class SMPT {
             }
         }
     }
-    private val ehlo = globalProtocol {
+    private val ehlo = globalProtocolInternal {
         choice(c) {
             case("Continue") {
                 send<Ehlo>(c, s)

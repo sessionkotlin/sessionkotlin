@@ -7,7 +7,7 @@ import org.david.sessionkotlin_lib.dsl.exception.RoleNotEnabledException
 import org.david.sessionkotlin_lib.dsl.exception.UnfinishedRolesException
 
 internal abstract class GlobalType {
-    internal abstract fun project(role: Role, state: State): LocalType
+    internal abstract fun project(role: Role, state: State = State()): LocalType
 }
 
 internal data class State(

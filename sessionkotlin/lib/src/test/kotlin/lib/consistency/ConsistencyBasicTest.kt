@@ -6,7 +6,7 @@ import lib.util.LongClass
 import lib.util.StringClass
 import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.exception.InconsistentExternalChoiceException
-import org.david.sessionkotlin_lib.dsl.globalProtocol
+import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.david.sessionkotlin_lib.dsl.types.*
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -22,7 +22,7 @@ class ConsistencyBasicTest {
     @Test
     fun `role not activated in one case`() {
         assertFailsWith<InconsistentExternalChoiceException> {
-            globalProtocol {
+            globalProtocolInternal {
                 choice(b) {
                     case("Case1") {
                         // 'a' activated
@@ -42,7 +42,7 @@ class ConsistencyBasicTest {
     @Test
     fun `role not activated in one case 2`() {
         assertFailsWith<InconsistentExternalChoiceException> {
-            globalProtocol {
+            globalProtocolInternal {
                 choice(b) {
                     case("Case1") {
                         send<Int>(b, c)
@@ -62,7 +62,7 @@ class ConsistencyBasicTest {
     @Test
     fun `role not activated in one case 3`() {
         assertFailsWith<InconsistentExternalChoiceException> {
-            globalProtocol {
+            globalProtocolInternal {
                 choice(b) {
                     case("Case1") {
                         send<String>(b, c)
@@ -83,7 +83,7 @@ class ConsistencyBasicTest {
     fun `enabled by different roles`() {
 
         assertFailsWith<InconsistentExternalChoiceException> {
-            globalProtocol {
+            globalProtocolInternal {
                 choice(b) {
                     case("Case1") {
                         // 'c' enabled by 'b'
@@ -104,7 +104,7 @@ class ConsistencyBasicTest {
         val s = Role("S")
 
         assertFailsWith<InconsistentExternalChoiceException> {
-            globalProtocol {
+            globalProtocolInternal {
                 send<String>(a, s)
                 send<Int>(s, a)
                 send<Int>(s, b)
@@ -126,7 +126,7 @@ class ConsistencyBasicTest {
 
     @Test
     fun `merge inlined and non inlined`() {
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             choice(b) {
                 // 'a' is not enabled in any branch
                 case("1") {
@@ -160,7 +160,7 @@ class ConsistencyBasicTest {
 
     @Test
     fun `test enabled by`() {
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             choice(a) {
                 case("1") {
                     send<Long>(a, b)

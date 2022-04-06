@@ -2,7 +2,7 @@ package lib.misc
 
 import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.exception.ProjectionTargetException
-import org.david.sessionkotlin_lib.dsl.globalProtocol
+import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.david.sessionkotlin_lib.dsl.types.asFormattedString
 import org.david.sessionkotlin_lib.dsl.types.asString
 import org.junit.jupiter.api.Test
@@ -17,7 +17,7 @@ class MiscTest {
 
     @Test
     fun `projecting unused`() {
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             send<Unit>(a, b)
         }
         assertFailsWith<ProjectionTargetException> {
@@ -27,12 +27,12 @@ class MiscTest {
 
     @Test
     fun `test dump`() {
-        val case1 = globalProtocol {
+        val case1 = globalProtocolInternal {
             send<Int>(b, c)
             send<Int>(c, a)
         }
 
-        globalProtocol {
+        globalProtocolInternal {
             choice(b) {
                 case("1") {
                     exec(case1)
@@ -44,12 +44,12 @@ class MiscTest {
 
     @Test
     fun `test toStrings`() {
-        val case1 = globalProtocol {
+        val case1 = globalProtocolInternal {
             send<Int>(b, c)
             send<Int>(c, a)
         }
 
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             choice(b) {
                 case("1") {
                     exec(case1)

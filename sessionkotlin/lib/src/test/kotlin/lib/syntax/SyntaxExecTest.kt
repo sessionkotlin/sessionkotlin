@@ -5,7 +5,7 @@ import lib.util.StringClass
 import lib.util.UnitClass
 import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.exception.SendingtoSelfException
-import org.david.sessionkotlin_lib.dsl.globalProtocol
+import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.david.sessionkotlin_lib.dsl.types.*
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -22,11 +22,11 @@ class SyntaxExecTest {
 
     @Test
     fun `basic exec`() {
-        val x = globalProtocol {
+        val x = globalProtocolInternal {
             send<Int>(b, c)
         }
 
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             send<Int>(a, b)
             exec(x)
         }
@@ -40,11 +40,11 @@ class SyntaxExecTest {
 
     @Test
     fun `basic exec new roles`() {
-        val x = globalProtocol {
+        val x = globalProtocolInternal {
             send<Int>(c, a)
         }
 
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             send<Int>(a, b)
             exec(x)
         }
@@ -55,10 +55,10 @@ class SyntaxExecTest {
     @Test
     fun `same role sending and receiving 2`() {
         assertFailsWith<SendingtoSelfException> {
-            val x = globalProtocol {
+            val x = globalProtocolInternal {
                 send<Int>(b, c)
             }
-            globalProtocol {
+            globalProtocolInternal {
                 send<Int>(a, b)
                 exec(x, mapOf(c to b))
             }
@@ -68,7 +68,7 @@ class SyntaxExecTest {
     @Test
     fun `same role sending and receiving 3`() {
         assertFailsWith<SendingtoSelfException> {
-            val x = globalProtocol {
+            val x = globalProtocolInternal {
                 choice(a) {
                     case("1") {
                         send<Int>(a, b)
@@ -76,7 +76,7 @@ class SyntaxExecTest {
                 }
             }
 
-            globalProtocol {
+            globalProtocolInternal {
                 send<Int>(a, b)
                 exec(x, mapOf(a to b))
             }
@@ -85,12 +85,12 @@ class SyntaxExecTest {
 
     @Test
     fun `roles in map but not in protocol`() {
-        val subprotocol = globalProtocol {
+        val subprotocol = globalProtocolInternal {
             send<Int>(a, c)
         }
         val x = Role("X")
 
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             choice(a) {
                 case("1") {
                     exec(subprotocol)
@@ -106,7 +106,7 @@ class SyntaxExecTest {
 
     @Test
     fun `reversed roles`() {
-        val subprotocol = globalProtocol {
+        val subprotocol = globalProtocolInternal {
             choice(a) {
                 case("1") {
                     send<String>(a, b)
@@ -117,7 +117,7 @@ class SyntaxExecTest {
                 }
             }
         }
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             exec(subprotocol, mapOf(a to b, b to a)) // reverse roles
         }
 

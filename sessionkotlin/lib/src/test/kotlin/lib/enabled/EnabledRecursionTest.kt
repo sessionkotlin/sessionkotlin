@@ -5,7 +5,7 @@ import lib.util.UnitClass
 import org.david.sessionkotlin_lib.dsl.RecursionTag
 import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.exception.RoleNotEnabledException
-import org.david.sessionkotlin_lib.dsl.globalProtocol
+import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.david.sessionkotlin_lib.dsl.types.*
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -22,7 +22,7 @@ class EnabledRecursionTest {
     @Test
     fun `rec disabled role`() {
         assertFailsWith<RoleNotEnabledException> {
-            globalProtocol {
+            globalProtocolInternal {
                 val t = miu("X")
                 send<Int>(a, b)
                 send<Int>(c, b)
@@ -43,7 +43,7 @@ class EnabledRecursionTest {
     @Test
     fun `rec and choice not enabled`() {
         assertFailsWith<RoleNotEnabledException> {
-            globalProtocol {
+            globalProtocolInternal {
                 val t = miu("X")
                 choice(a) {
                     case("1") {
@@ -70,7 +70,7 @@ class EnabledRecursionTest {
     @Test
     fun `rec and choice not enabled nested choice`() {
         assertFailsWith<RoleNotEnabledException> {
-            globalProtocol {
+            globalProtocolInternal {
                 val t = miu("X")
                 choice(a) {
                     case("1") {
@@ -98,7 +98,7 @@ class EnabledRecursionTest {
     @Test
     fun `rec and choice not enabled but mergeable`() {
         lateinit var t: RecursionTag
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             t = miu("X")
             choice(a) {
                 case("1") {
@@ -136,7 +136,7 @@ class EnabledRecursionTest {
     @Test
     fun `nested rec not enabled`() {
         assertFailsWith<RoleNotEnabledException> {
-            globalProtocol {
+            globalProtocolInternal {
                 send<Int>(a, c)
                 val y = miu("Y")
                 send<Unit>(a, b)

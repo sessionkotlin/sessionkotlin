@@ -5,7 +5,7 @@ import lib.util.StringClass
 import lib.util.UnitClass
 import org.david.sessionkotlin_lib.dsl.RecursionTag
 import org.david.sessionkotlin_lib.dsl.Role
-import org.david.sessionkotlin_lib.dsl.globalProtocol
+import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.david.sessionkotlin_lib.dsl.types.*
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -20,7 +20,7 @@ class Booking {
 
         lateinit var t: RecursionTag
 
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             t = miu("X")
             choice(client) {
                 case("Book") {

@@ -7,7 +7,7 @@ import org.david.sessionkotlin_lib.dsl.Role
 import org.david.sessionkotlin_lib.dsl.exception.DuplicateCaseLabelException
 import org.david.sessionkotlin_lib.dsl.exception.SendingtoSelfException
 import org.david.sessionkotlin_lib.dsl.exception.TerminalInstructionException
-import org.david.sessionkotlin_lib.dsl.globalProtocol
+import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.david.sessionkotlin_lib.dsl.types.LEnd
 import org.david.sessionkotlin_lib.dsl.types.LocalTypeExternalChoice
 import org.david.sessionkotlin_lib.dsl.types.LocalTypeReceive
@@ -27,7 +27,7 @@ class SyntaxBasicTest {
 
     @Test
     fun `two party`() {
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             send<Int>(a, b)
         }
         val lA = LocalTypeSend(b, IntClass, LEnd)
@@ -38,7 +38,7 @@ class SyntaxBasicTest {
 
     @Test
     fun `four party`() {
-        globalProtocol {
+        globalProtocolInternal {
             send<String>(a, b)
             send<Double>(a, d)
             send<Int>(d, c)
@@ -48,7 +48,7 @@ class SyntaxBasicTest {
 
     @Test
     fun `four party non inlined`() {
-        globalProtocol {
+        globalProtocolInternal {
             send(a, b, StringClass)
             send(a, d, DoubleClass)
             send(d, c, Int::class.java)
@@ -59,7 +59,7 @@ class SyntaxBasicTest {
     @Test
     fun `same role sending and receiving`() {
         assertFailsWith<SendingtoSelfException> {
-            globalProtocol {
+            globalProtocolInternal {
                 send<Int>(a, a)
             }
         }
@@ -67,7 +67,7 @@ class SyntaxBasicTest {
 
     @Test
     fun `three party`() {
-        globalProtocol {
+        globalProtocolInternal {
             send<Int>(a, b)
             send<Int>(c, b)
             send<Int>(b, a)
@@ -76,7 +76,7 @@ class SyntaxBasicTest {
 
     @Test
     fun `simple choice`() {
-        globalProtocol {
+        globalProtocolInternal {
             choice(b) {
                 case("Case1") {
                     send<String>(b, a)
@@ -97,7 +97,7 @@ class SyntaxBasicTest {
     fun `two buyers`() {
         val s = Role("S")
 
-        globalProtocol {
+        globalProtocolInternal {
             send<String>(a, s)
             send<Int>(s, a)
             send<Int>(s, b)
@@ -117,7 +117,7 @@ class SyntaxBasicTest {
     @Test
     fun `send after choice`() {
         assertFailsWith<TerminalInstructionException> {
-            globalProtocol {
+            globalProtocolInternal {
                 choice(a) {
                     case("Case1") {
                         send<Unit>(a, b)
@@ -135,7 +135,7 @@ class SyntaxBasicTest {
     @Test
     fun `dupe case labels`() {
         assertFailsWith<DuplicateCaseLabelException> {
-            globalProtocol {
+            globalProtocolInternal {
                 choice(b) {
                     case("Case1") {
                         send<String>(b, a)
@@ -151,7 +151,7 @@ class SyntaxBasicTest {
 
     @Test
     fun `dupe case labels nested`() {
-        globalProtocol {
+        globalProtocolInternal {
             choice(b) {
                 case("Case1") {
                     send<String>(b, a)
@@ -174,7 +174,7 @@ class SyntaxBasicTest {
 
     @Test
     fun `cumutative sends in choice branches`() {
-        globalProtocol {
+        globalProtocolInternal {
             choice(b) {
                 case("Case1") {
                     send<Int>(b, c)
@@ -190,7 +190,7 @@ class SyntaxBasicTest {
 
     @Test
     fun `different actual choice subject`() {
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             choice(b) {
                 case("1") {
                     send<String>(b, c)
@@ -214,7 +214,7 @@ class SyntaxBasicTest {
 
     @Test
     fun `different actual choice subject 2`() {
-        val g = globalProtocol {
+        val g = globalProtocolInternal {
             choice(b) {
                 case("1") {
                     send<Int>(b, c)

@@ -1,20 +1,31 @@
 package demo
 
-import org.david.sessionkotlin_lib.api.SKFluent
+
+import Proto1A1
+import Proto1A2
+import org.david.sessionkotlin_lib.api.SKBuffer
 import org.david.sessionkotlin_lib.dsl.*
 import java.io.File
-
-class ClassX(g: RootEnv, r: Role) : SKFluent(g, r)
 
 fun main() {
     val a = Role("A")
     val b = Role("B")
 
-    val g = globalProtocol {
+    globalProtocol {
         send<Int>(a, b)
+        val t1 = miu("X")
+        send<String>(b, a)
+        miu("Y")
+        send<Long>(b, a)
+        goto(t1)
     }
-//    System.setProperty("user.dir", "/home/david/code/session-kotlin/demo/app")
-//    println(System.getProperty("user.dir"))
-    val fluent = ClassX(g, a)
+
+    val buf = SKBuffer<Int>()
+
+//    Proto1A1()
+//        .sendToB(10)
+//        .receiveFromB(buf)
+//
+//    Proto1A2()
 
 }

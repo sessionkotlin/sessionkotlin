@@ -7,7 +7,7 @@ public class Samples {
         val b = Role("B")
         val s = Role("C")
 
-        globalProtocol {
+        globalProtocolInternal {
             send<String>(a, s)
             send<Long>(s, a)
             send<Long>(s, b)
@@ -20,7 +20,7 @@ public class Samples {
         val b = Role("B")
         val s = Role("C")
 
-        globalProtocol {
+        globalProtocolInternal {
             send(a, s, String::class.java)
             send(s, a, Long::class.java)
             send(s, b, Long::class.java)
@@ -32,7 +32,7 @@ public class Samples {
         val a = Role("A")
         val b = Role("B")
 
-        globalProtocol {
+        globalProtocolInternal {
             choice(b) {
                 case("Ok") {
                     send<String>(b, a)
@@ -51,17 +51,17 @@ public class Samples {
 
         val z = Role("Z")
 
-        val case1 = globalProtocol {
+        val case1 = globalProtocolInternal {
             send<Int>(b, a)
             send<Int>(a, c)
         }
 
-        val case2 = globalProtocol {
+        val case2 = globalProtocolInternal {
             send<String>(b, a)
             send<String>(a, z)
         }
 
-        globalProtocol {
+        globalProtocolInternal {
             choice(b) {
 
                 case("Case 1") {
@@ -78,7 +78,7 @@ public class Samples {
         val server = Role("Server")
         val client = Role("Client")
 
-        globalProtocol {
+        globalProtocolInternal {
             val t = miu("X")
             choice(client) {
 
