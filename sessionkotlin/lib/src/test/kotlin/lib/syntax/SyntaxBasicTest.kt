@@ -180,7 +180,7 @@ class SyntaxBasicTest {
                     send<Int>(b, c)
                     send<String>(b, a)
                 }
-                case("Case 2") {
+                case("Case2") {
                     send<String>(b, a)
                     send<Int>(b, c)
                 }

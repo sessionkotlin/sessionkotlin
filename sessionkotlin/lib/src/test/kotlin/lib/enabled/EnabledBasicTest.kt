@@ -156,7 +156,7 @@ class EnabledBasicTest {
                             }
                         }
                     }
-                    case("Case 2") {
+                    case("Case2") {
                         send<Int>(b, a)
                     }
                 }

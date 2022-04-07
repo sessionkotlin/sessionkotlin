@@ -1,6 +1,7 @@
 package org.david.sessionkotlin_lib.dsl
 
 import org.david.sessionkotlin_lib.dsl.exception.DuplicateCaseLabelException
+import org.david.sessionkotlin_lib.dsl.exception.InvalidCaseLabelException
 
 @SessionKotlinDSL
 public class ChoiceEnv(
@@ -15,6 +16,12 @@ public class ChoiceEnv(
         if (caseMap.containsKey(label)) {
             throw DuplicateCaseLabelException(label)
         }
+        if (invalidLabel(label)) {
+            throw InvalidCaseLabelException(label)
+        }
         caseMap[label] = p
     }
+
+    private fun invalidLabel(label: String) =
+        label.contains(" ")
 }

@@ -28,7 +28,7 @@ class EnabledExecTest {
                     case("Case1") {
                         exec(x)
                     }
-                    case("Case 2") {
+                    case("Case2") {
                         send<Int>(b, c)
                         send<Int>(c, b)
                     }
@@ -45,7 +45,7 @@ class EnabledExecTest {
 
         globalProtocolInternal {
             choice(b) {
-                case("Case 1") {
+                case("Case1") {
                     exec(aux)
                     // 'c' was enabled inside aux
                     send<Int>(c, a)

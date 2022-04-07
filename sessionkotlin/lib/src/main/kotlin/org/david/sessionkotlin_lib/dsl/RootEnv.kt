@@ -93,12 +93,10 @@ public class RootEnv(private val name: String) : GlobalEnv(emptySet(), emptySet(
                 val methodName = "sendTo${l.to}"
 
                 val abstractFunction = FunSpec.builder(methodName)
-                    .addParameter("arg", l.type.kotlin)
                     .returns(ret.interfaceClassPair.interfaceClassName)
                     .addModifiers(KModifier.ABSTRACT)
 
                 val function = FunSpec.builder(methodName)
-                    .addParameter("arg", l.type.kotlin)
                     .addModifiers(KModifier.OVERRIDE)
                     .returns(ret.interfaceClassPair.interfaceClassName)
                     .let {
@@ -106,6 +104,12 @@ public class RootEnv(private val name: String) : GlobalEnv(emptySet(), emptySet(
                         it.addStatement("return (${ret.interfaceClassPair.className.constructorReference()})()")
                         it
                     }
+
+                if (l.type != Unit::class.java) {
+                    abstractFunction.addParameter("arg", l.type.kotlin)
+                    function.addParameter("arg", l.type.kotlin)
+                }
+
                 interfaceBuilder.addFunction(abstractFunction.build())
                 classBuilder.addFunction(function.build())
 
@@ -119,12 +123,10 @@ public class RootEnv(private val name: String) : GlobalEnv(emptySet(), emptySet(
                 val methodName = "receiveFrom${l.from}"
 
                 val abstractFunction = FunSpec.builder(methodName)
-                    .addParameter("buf", SKBuffer::class.parameterizedBy(l.type.kotlin))
                     .returns(ret.interfaceClassPair.interfaceClassName)
                     .addModifiers(KModifier.ABSTRACT)
 
                 val function = FunSpec.builder(methodName)
-                    .addParameter("buf", SKBuffer::class.parameterizedBy(l.type.kotlin))
                     .returns(ret.interfaceClassPair.interfaceClassName)
                     .addModifiers(KModifier.OVERRIDE)
                     .let {
@@ -132,6 +134,11 @@ public class RootEnv(private val name: String) : GlobalEnv(emptySet(), emptySet(
                         it.addStatement("return (${ret.interfaceClassPair.className.constructorReference()})()")
                         it
                     }
+
+                if (l.type != Unit::class.java) {
+                    abstractFunction.addParameter("buf", SKBuffer::class.parameterizedBy(l.type.kotlin))
+                    function.addParameter("buf", SKBuffer::class.parameterizedBy(l.type.kotlin))
+                }
 
                 interfaceBuilder.addFunction(abstractFunction.build())
                 classBuilder.addFunction(function.build())

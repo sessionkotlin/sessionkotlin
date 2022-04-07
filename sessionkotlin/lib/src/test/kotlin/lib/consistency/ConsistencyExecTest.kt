@@ -33,10 +33,10 @@ class ConsistencyExecTest {
         assertFailsWith<InconsistentExternalChoiceException> {
             globalProtocolInternal {
                 choice(b) {
-                    case("Case 1") {
+                    case("Case1") {
                         exec(case1)
                     }
-                    case("Case 2") {
+                    case("Case2") {
                         exec(case2)
                     }
                 }

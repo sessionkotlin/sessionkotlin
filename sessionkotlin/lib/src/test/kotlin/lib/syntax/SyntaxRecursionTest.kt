@@ -74,7 +74,7 @@ class SyntaxRecursionTest {
                 send<Int>(b, a)
                 goto(t)
                 choice(c) {
-                    case("Case 1") {
+                    case("Case1") {
                         send<Int>(c, b)
                     }
                 }

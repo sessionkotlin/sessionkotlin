@@ -17,9 +17,11 @@ fun main() {
         choice(b) {
             case("Case 1") {
                 send<Int>(b, a)
+                val t = miu("X")
                 choice(a) {
                     case("OK") {
                         send<String>(a, b)
+                        goto(t)
                     }
                     case("Exit") {
                         send<Unit>(a, b)
@@ -39,7 +41,11 @@ fun main() {
         is Proto1_A_2_Case1Interface ->
             b1.receiveFromB(SKBuffer())
                 .branchOK()
-                .sendToB("")
+                .sendToB("1")
+                .branchOK()
+                .sendToB("2")
+                .branchExit()
+                .sendToB()
         is Proto1_A_9_Case2Interface ->
             b1.receiveFromB(SKBuffer())
     }
