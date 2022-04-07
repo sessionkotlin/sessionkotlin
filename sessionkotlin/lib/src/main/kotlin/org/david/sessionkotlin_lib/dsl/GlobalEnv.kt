@@ -5,8 +5,8 @@ import org.david.sessionkotlin_lib.dsl.exception.SessionKotlinDSLException
 import org.david.sessionkotlin_lib.dsl.exception.TerminalInstructionException
 import org.david.sessionkotlin_lib.dsl.exception.UndefinedRecursionVariableException
 import org.david.sessionkotlin_lib.dsl.types.*
-import org.david.sessionkotlin_lib.dsl.util.getOrKey
-import org.david.sessionkotlin_lib.dsl.util.printlnIndent
+import org.david.sessionkotlin_lib.util.getOrKey
+import org.david.sessionkotlin_lib.util.printlnIndent
 
 @SessionKotlinDSL
 public sealed class GlobalEnv(

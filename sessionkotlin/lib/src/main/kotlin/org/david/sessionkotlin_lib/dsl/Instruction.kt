@@ -1,8 +1,8 @@
 package org.david.sessionkotlin_lib.dsl
 
 import org.david.sessionkotlin_lib.dsl.exception.SendingtoSelfException
-import org.david.sessionkotlin_lib.dsl.util.getOrKey
-import org.david.sessionkotlin_lib.dsl.util.printlnIndent
+import org.david.sessionkotlin_lib.util.getOrKey
+import org.david.sessionkotlin_lib.util.printlnIndent
 
 internal sealed interface Instruction {
     fun dump(indent: Int)
