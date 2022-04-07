@@ -1,7 +1,6 @@
 package demo
 
 
-
 import org.david.sessionkotlin_lib.api.SKBuffer
 import org.david.sessionkotlin_lib.dsl.*
 import java.io.File
@@ -11,19 +10,15 @@ fun main() {
     val b = Role("B")
 
     globalProtocol {
-        send<Int>(a, b)
-        val t1 = miu("X")
-        send<String>(b, a)
-        miu("Y")
-        send<Long>(b, a)
-        goto(t1)
+        choice(b) {
+            case("Case1") {
+                send<Int>(b, a)
+            }
+            case("Case2") {
+                send<Long>(b, a)
+            }
+        }
     }
-
-    Proto1A1()
-        .sendToB(10)
-        .receiveFromB(SKBuffer())
-        .receiveFromB(SKBuffer())
-        .receiveFromB(SKBuffer())
 
 
 

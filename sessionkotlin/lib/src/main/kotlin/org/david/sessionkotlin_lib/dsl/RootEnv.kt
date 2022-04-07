@@ -42,6 +42,7 @@ public class RootEnv(private val name: String) : GlobalEnv(emptySet(), emptySet(
     }
 
     private data class InterfaceClassPair(val interfaceClassName: ClassName, val className: ClassName)
+    private data class GenRet(val interfaceClassPair: InterfaceClassPair, val counter: Int)
 
     private fun genLocals(
         fileSpecBuilder: FileSpec.Builder,
@@ -50,36 +51,43 @@ public class RootEnv(private val name: String) : GlobalEnv(emptySet(), emptySet(
         stateCount: Int,
         recMap: Map<RecursionTag, InterfaceClassPair>,
         tag: RecursionTag? = null,
-    ): InterfaceClassPair {
+        implementInterface: ClassName? = null,
+        branch: String? = null,
+    ): GenRet {
 
-        val interfaceName = ClassName("", "$name$r${stateCount}Interface")
+        val interfaceName = ClassName("", "$name$r${stateCount}${branch ?: ""}Interface")
         val className = ClassName("", "$name$r$stateCount")
+        val newMapRec =
+            if (tag != null) recMap.plus(Pair(tag, InterfaceClassPair(interfaceName, className))) else recMap
 
         val interfaceBuilder = TypeSpec.interfaceBuilder(interfaceName)
+        if (implementInterface != null) {
+            interfaceBuilder.addSuperinterface(implementInterface)
+        }
+
         val classBuilder = TypeSpec
             .classBuilder(className)
             .addSuperinterface(interfaceName)
             .addModifiers(KModifier.PRIVATE)
 
         return when (l) {
-            LocalTypeEnd -> InterfaceClassPair(endClassName, endClassName)
+            LocalTypeEnd -> GenRet(InterfaceClassPair(endClassName, endClassName), stateCount)
             is LocalTypeSend -> {
-                val m = if (tag != null) recMap.plus(Pair(tag, InterfaceClassPair(interfaceName, className))) else recMap
-                val nextInterfaceClassPair = genLocals(fileSpecBuilder, l.cont, r, stateCount + 1, m)
+                val ret = genLocals(fileSpecBuilder, l.cont, r, stateCount + 1, newMapRec)
                 val methodName = "sendTo${l.to}"
 
                 val abstractFunction = FunSpec.builder(methodName)
                     .addParameter("arg", l.type.kotlin)
-                    .returns(nextInterfaceClassPair.interfaceClassName)
+                    .returns(ret.interfaceClassPair.interfaceClassName)
                     .addModifiers(KModifier.ABSTRACT)
 
                 val function = FunSpec.builder(methodName)
                     .addParameter("arg", l.type.kotlin)
                     .addModifiers(KModifier.OVERRIDE)
-                    .returns(nextInterfaceClassPair.interfaceClassName)
+                    .returns(ret.interfaceClassPair.interfaceClassName)
                     .let {
                         it.addStatement("println(\"Send to ${l.to}\")")
-                        it.addStatement("return (${nextInterfaceClassPair.className.constructorReference()})()")
+                        it.addStatement("return (${ret.interfaceClassPair.className.constructorReference()})()")
                         it
                     }
                 interfaceBuilder.addFunction(abstractFunction.build())
@@ -88,25 +96,24 @@ public class RootEnv(private val name: String) : GlobalEnv(emptySet(), emptySet(
                 fileSpecBuilder.addType(interfaceBuilder.build())
                 fileSpecBuilder.addType(classBuilder.build())
 
-                InterfaceClassPair(interfaceName, className)
+                GenRet(InterfaceClassPair(interfaceName, className), ret.counter)
             }
             is LocalTypeReceive -> {
-                val m = if (tag != null) recMap.plus(Pair(tag, InterfaceClassPair(interfaceName, className))) else recMap
-                val nextInterfaceClassPair = genLocals(fileSpecBuilder, l.cont, r, stateCount + 1, m)
+                val ret = genLocals(fileSpecBuilder, l.cont, r, stateCount + 1, newMapRec)
                 val methodName = "receiveFrom${l.from}"
 
                 val abstractFunction = FunSpec.builder(methodName)
                     .addParameter("arg", l.type.kotlin)
-                    .returns(nextInterfaceClassPair.interfaceClassName)
+                    .returns(ret.interfaceClassPair.interfaceClassName)
                     .addModifiers(KModifier.ABSTRACT)
 
                 val function = FunSpec.builder(methodName)
                     .addParameter("arg", l.type.kotlin)
-                    .returns(nextInterfaceClassPair.interfaceClassName)
+                    .returns(ret.interfaceClassPair.interfaceClassName)
                     .addModifiers(KModifier.OVERRIDE)
                     .let {
                         it.addStatement("println(\"Receive from ${l.from}\")")
-                        it.addStatement("return (${nextInterfaceClassPair.className.constructorReference()})()")
+                        it.addStatement("return (${ret.interfaceClassPair.className.constructorReference()})()")
                         it
                     }
 
@@ -117,15 +124,56 @@ public class RootEnv(private val name: String) : GlobalEnv(emptySet(), emptySet(
                 fileSpecBuilder.addType(classBuilder.build())
 
                 fileSpecBuilder.build().writeTo(directory)
-                InterfaceClassPair(interfaceName, className)
+                GenRet(InterfaceClassPair(interfaceName, className), ret.counter)
             }
-            is LocalTypeRecursion -> recMap.getValue(l.tag)
+            is LocalTypeRecursion -> GenRet(recMap.getValue(l.tag), stateCount)
             is LocalTypeRecursionDefinition -> genLocals(fileSpecBuilder, l.cont, r, stateCount, recMap, l.tag)
             is LocalTypeExternalChoice -> {
-                TODO()
+                val branchInterface = ClassName("", "$name$r${stateCount + 1}Branch")
+                val branchInterfaceBuilder = TypeSpec
+                    .interfaceBuilder(branchInterface)
+                    .addModifiers(KModifier.SEALED)
+
+                var count = stateCount + 1
+                for ((k, v) in l.cases) {
+                    val ret = genLocals(fileSpecBuilder, v, r, count, newMapRec, implementInterface = branchInterface, branch = k)
+                    count = ret.counter + 1
+                }
+
+                val methodName = "branch"
+
+                val abstractFunction = FunSpec.builder(methodName)
+                    .returns(branchInterface)
+                    .addModifiers(KModifier.ABSTRACT)
+
+                val function = FunSpec.builder(methodName)
+                    .returns(branchInterface)
+                    .addModifiers(KModifier.OVERRIDE)
+                    .let {
+                        it.addStatement("println(\"External choice\")")
+                        it.addStatement("TODO()")
+                        it
+                    }
+
+                interfaceBuilder.addFunction(abstractFunction.build())
+                classBuilder.addFunction(function.build())
+
+                fileSpecBuilder.addType(branchInterfaceBuilder.build())
+                fileSpecBuilder.addType(interfaceBuilder.build())
+                fileSpecBuilder.addType(classBuilder.build())
+
+                fileSpecBuilder.build().writeTo(directory)
+                GenRet(InterfaceClassPair(interfaceName, className), count)
             }
             is LocalTypeInternalChoice -> {
-                TODO()
+                var counter = stateCount + 1
+                for ((k, v) in l.cases) {
+                    val ret = genLocals(fileSpecBuilder, v, r, counter, newMapRec, implementInterface = interfaceName)
+                    counter = ret.counter + 1
+                }
+                fileSpecBuilder.addType(interfaceBuilder.build())
+                fileSpecBuilder.build().writeTo(directory)
+                GenRet(InterfaceClassPair(interfaceName, className), counter)
             }
         }
     }
