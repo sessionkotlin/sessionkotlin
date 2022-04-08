@@ -4,7 +4,7 @@ import lib.util.BoolClass
 import lib.util.IntClass
 import lib.util.LongClass
 import lib.util.StringClass
-import org.david.sessionkotlin_lib.dsl.Role
+import org.david.sessionkotlin_lib.dsl.SKRole
 import org.david.sessionkotlin_lib.dsl.exception.InconsistentExternalChoiceException
 import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.david.sessionkotlin_lib.dsl.types.*
@@ -14,9 +14,9 @@ import kotlin.test.assertFailsWith
 
 class ConsistencyBasicTest {
     companion object {
-        val a = Role("A")
-        val b = Role("B")
-        val c = Role("C")
+        val a = SKRole("A")
+        val b = SKRole("B")
+        val c = SKRole("C")
     }
 
     @Test
@@ -101,7 +101,7 @@ class ConsistencyBasicTest {
 
     @Test
     fun `two buyers inconsistent`() {
-        val s = Role("S")
+        val s = SKRole("S")
 
         assertFailsWith<InconsistentExternalChoiceException> {
             globalProtocolInternal {

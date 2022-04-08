@@ -1,7 +1,7 @@
 package lib.consistency
 
 import lib.util.IntClass
-import org.david.sessionkotlin_lib.dsl.Role
+import org.david.sessionkotlin_lib.dsl.SKRole
 import org.david.sessionkotlin_lib.dsl.exception.InconsistentExternalChoiceException
 import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.david.sessionkotlin_lib.dsl.types.*
@@ -11,9 +11,9 @@ import kotlin.test.assertFailsWith
 
 class ConsistencyExecTest {
     companion object {
-        val a = Role("A")
-        val b = Role("B")
-        val c = Role("C")
+        val a = SKRole("A")
+        val b = SKRole("B")
+        val c = SKRole("C")
     }
 
     @Test

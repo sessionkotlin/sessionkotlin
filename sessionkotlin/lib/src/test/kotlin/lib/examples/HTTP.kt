@@ -1,6 +1,6 @@
 package lib.examples
 
-import org.david.sessionkotlin_lib.dsl.Role
+import org.david.sessionkotlin_lib.dsl.SKRole
 import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.david.sessionkotlin_lib.dsl.types.LEnd
 import org.david.sessionkotlin_lib.dsl.types.LocalTypeReceive
@@ -13,8 +13,8 @@ class HTTP {
 
     @Test
     fun main() {
-        val c = Role("Client")
-        val s = Role("Server")
+        val c = SKRole("Client")
+        val s = SKRole("Server")
 
         val g = globalProtocolInternal {
             send<HttpRequest>(c, s)

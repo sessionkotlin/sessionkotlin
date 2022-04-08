@@ -1,5 +1,5 @@
 package org.david.sessionkotlin_lib.dsl.exception
 
-import org.david.sessionkotlin_lib.dsl.Role
+import org.david.sessionkotlin_lib.dsl.SKRole
 
-public class RoleNotEnabledException(role: Role) : SessionKotlinDSLException("Role $role not enabled.")
+public class RoleNotEnabledException(role: SKRole) : SessionKotlinDSLException("Role $role not enabled.")

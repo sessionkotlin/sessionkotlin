@@ -3,9 +3,9 @@ package org.david.sessionkotlin_lib.dsl
 public class Samples {
 
     public fun send() {
-        val a = Role("A")
-        val b = Role("B")
-        val s = Role("C")
+        val a = SKRole("A")
+        val b = SKRole("B")
+        val s = SKRole("C")
 
         globalProtocolInternal {
             send<String>(a, s)
@@ -16,9 +16,9 @@ public class Samples {
     }
 
     public fun sendTypes() {
-        val a = Role("A")
-        val b = Role("B")
-        val s = Role("C")
+        val a = SKRole("A")
+        val b = SKRole("B")
+        val s = SKRole("C")
 
         globalProtocolInternal {
             send(a, s, String::class.java)
@@ -29,8 +29,8 @@ public class Samples {
     }
 
     public fun choice() {
-        val a = Role("A")
-        val b = Role("B")
+        val a = SKRole("A")
+        val b = SKRole("B")
 
         globalProtocolInternal {
             choice(b) {
@@ -45,11 +45,11 @@ public class Samples {
     }
 
     public fun exec() {
-        val a = Role("A")
-        val b = Role("B")
-        val c = Role("C")
+        val a = SKRole("A")
+        val b = SKRole("B")
+        val c = SKRole("C")
 
-        val z = Role("Z")
+        val z = SKRole("Z")
 
         val case1 = globalProtocolInternal {
             send<Int>(b, a)
@@ -75,8 +75,8 @@ public class Samples {
     }
 
     public fun goto() {
-        val server = Role("Server")
-        val client = Role("Client")
+        val server = SKRole("Server")
+        val client = SKRole("Client")
 
         globalProtocolInternal {
             val t = miu("X")

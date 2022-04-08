@@ -1,5 +1,6 @@
 package org.david.sessionkotlin_lib.dsl
 
+import org.david.sessionkotlin_lib.api.generateAPI
 import org.david.sessionkotlin_lib.dsl.exception.ProjectionTargetException
 import org.david.sessionkotlin_lib.dsl.exception.SessionKotlinDSLException
 import org.david.sessionkotlin_lib.dsl.exception.TerminalInstructionException
@@ -10,7 +11,7 @@ import org.david.sessionkotlin_lib.util.printlnIndent
 
 @SessionKotlinDSL
 public sealed class GlobalEnv(
-    roles: Set<Role>,
+    roles: Set<SKRole>,
     recursionVariables: Set<RecursionTag>,
 ) {
     internal var instructions = mutableListOf<Instruction>()
@@ -36,7 +37,7 @@ public sealed class GlobalEnv(
      * @sample [org.david.sessionkotlin_lib.dsl.Samples.send]
      *
      */
-    public inline fun <reified T> send(from: Role, to: Role) {
+    public inline fun <reified T> send(from: SKRole, to: SKRole) {
         send(from, to, T::class.java)
     }
 
@@ -54,7 +55,7 @@ public sealed class GlobalEnv(
      * @sample [org.david.sessionkotlin_lib.dsl.Samples.sendTypes]
      *
      */
-    public open fun send(from: Role, to: Role, type: Class<*>) {
+    public open fun send(from: SKRole, to: SKRole, type: Class<*>) {
         val msg = Send(from, to, type)
         roles.add(from)
         roles.add(to)
@@ -73,7 +74,7 @@ public sealed class GlobalEnv(
      * @sample [org.david.sessionkotlin_lib.dsl.Samples.choice]
      *
      */
-    public open fun choice(at: Role, cases: ChoiceEnv.() -> Unit) {
+    public open fun choice(at: SKRole, cases: ChoiceEnv.() -> Unit) {
         val bEnv = ChoiceEnv(roles, recursionVariables)
         bEnv.cases()
         val b = Choice(at, bEnv.caseMap)
@@ -95,7 +96,7 @@ public sealed class GlobalEnv(
      * @sample [org.david.sessionkotlin_lib.dsl.Samples.exec]
      *
      */
-    public open fun exec(protocolBuilder: GlobalEnv, roleMapper: Map<Role, Role> = emptyMap()) {
+    public open fun exec(protocolBuilder: GlobalEnv, roleMapper: Map<SKRole, SKRole> = emptyMap()) {
         // We must merge the protocols
         val cleanMap = roleMapper.filterKeys { protocolBuilder.roles.contains(it) }
         instructions.addAll(protocolBuilder.instructions.map { it.mapped(cleanMap) })
@@ -114,7 +115,7 @@ public sealed class GlobalEnv(
      * @return a [RecursionTag] to be used in [goto] calls.
      *
      */
-    public open fun miu(label: String): RecursionTag {
+    public open fun miu(label: String = ""): RecursionTag {
         val tag = RecursionTag(label)
         val msg = RecursionDefinition(tag)
         instructions.add(msg)
@@ -150,7 +151,7 @@ public sealed class GlobalEnv(
         printlnIndent(indent, "}")
     }
 
-    internal fun project(role: Role): LocalType {
+    internal fun project(role: SKRole): LocalType {
         if (!roles.contains(role)) {
             throw ProjectionTargetException(role)
         }
@@ -168,6 +169,8 @@ public sealed class GlobalEnv(
             }
         }
     }
+
+    internal fun asGlobalType() = buildGlobalType(instructions)
 }
 
 internal fun buildGlobalType(
@@ -191,7 +194,7 @@ internal fun buildGlobalType(
         }
     }
 
-public fun globalProtocolInternal(name: String = "Proto1", protocolBuilder: GlobalEnv.() -> Unit): RootEnv {
+internal fun globalProtocolInternal(name: String = "Proto1", protocolBuilder: GlobalEnv.() -> Unit): RootEnv {
     val p = RootEnv(name)
     p.protocolBuilder()
     p.validate()
@@ -199,6 +202,14 @@ public fun globalProtocolInternal(name: String = "Proto1", protocolBuilder: Glob
 }
 
 public fun globalProtocol(name: String = "Proto1", protocolBuilder: GlobalEnv.() -> Unit) {
-    val g = globalProtocolInternal(name, protocolBuilder)
-    g.genLocals()
+    generateAPI(globalProtocolInternal(name, protocolBuilder))
 }
+
+internal class RootEnv(
+    internal val name: String,
+) : GlobalEnv(emptySet(), emptySet())
+
+internal class NonRootEnv(
+    roles: Set<SKRole>,
+    recursionVariables: Set<RecursionTag>,
+) : GlobalEnv(roles, recursionVariables)

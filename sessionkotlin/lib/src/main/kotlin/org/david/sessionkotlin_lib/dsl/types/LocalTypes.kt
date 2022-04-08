@@ -1,13 +1,13 @@
 package org.david.sessionkotlin_lib.dsl.types
 
 import org.david.sessionkotlin_lib.dsl.RecursionTag
-import org.david.sessionkotlin_lib.dsl.Role
+import org.david.sessionkotlin_lib.dsl.SKRole
 
 internal sealed class LocalType
-internal data class LocalTypeSend(val to: Role, val type: Class<*>, val cont: LocalType) : LocalType()
-internal data class LocalTypeReceive(val from: Role, val type: Class<*>, val cont: LocalType) : LocalType()
+internal data class LocalTypeSend(val to: SKRole, val type: Class<*>, val cont: LocalType) : LocalType()
+internal data class LocalTypeReceive(val from: SKRole, val type: Class<*>, val cont: LocalType) : LocalType()
 internal data class LocalTypeInternalChoice(val cases: Map<String, LocalType>) : LocalType()
-internal data class LocalTypeExternalChoice(var to: Role, val cases: Map<String, LocalType>) : LocalType()
+internal data class LocalTypeExternalChoice(var to: SKRole, val cases: Map<String, LocalType>) : LocalType()
 internal data class LocalTypeRecursionDefinition(val tag: RecursionTag, val cont: LocalType) : LocalType()
 internal data class LocalTypeRecursion(val tag: RecursionTag) : LocalType()
 internal object LocalTypeEnd : LocalType()

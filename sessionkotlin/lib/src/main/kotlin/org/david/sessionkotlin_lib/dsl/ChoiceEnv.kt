@@ -5,7 +5,7 @@ import org.david.sessionkotlin_lib.dsl.exception.InvalidCaseLabelException
 
 @SessionKotlinDSL
 public class ChoiceEnv(
-    private val roles: Set<Role>,
+    private val roles: Set<SKRole>,
     private val recursionVariables: Set<RecursionTag>,
 ) {
     internal val caseMap = mutableMapOf<String, GlobalEnv>()

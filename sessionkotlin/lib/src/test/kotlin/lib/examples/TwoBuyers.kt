@@ -3,7 +3,7 @@ package lib.examples
 import lib.util.IntClass
 import lib.util.StringClass
 import lib.util.UnitClass
-import org.david.sessionkotlin_lib.dsl.Role
+import org.david.sessionkotlin_lib.dsl.SKRole
 import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.david.sessionkotlin_lib.dsl.types.*
 import org.junit.jupiter.api.Test
@@ -14,9 +14,9 @@ class TwoBuyers {
 
     @Test
     fun main() {
-        val a = Role("Client A")
-        val b = Role("Client B")
-        val seller = Role("Seller")
+        val a = SKRole("Client A")
+        val b = SKRole("Client B")
+        val seller = SKRole("Seller")
 
         val aux = globalProtocolInternal {
             choice(b) {

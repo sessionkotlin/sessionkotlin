@@ -3,7 +3,7 @@ package lib.examples
 import lib.util.BoolClass
 import lib.util.IntClass
 import lib.util.UnitClass
-import org.david.sessionkotlin_lib.dsl.Role
+import org.david.sessionkotlin_lib.dsl.SKRole
 import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.david.sessionkotlin_lib.dsl.types.*
 import org.junit.jupiter.api.Test
@@ -14,10 +14,10 @@ class BuyerBrokerSupplier {
 
     @Test
     fun main() {
-        val applicant = Role("Applicant")
-        val portal = Role("Application Portal")
-        val proc = Role("Processing Department")
-        val finance = Role("Finance Department")
+        val applicant = SKRole("Applicant")
+        val portal = SKRole("Application Portal")
+        val proc = SKRole("Processing Department")
+        val finance = SKRole("Finance Department")
 
         val g = globalProtocolInternal {
             send<Application>(applicant, portal)

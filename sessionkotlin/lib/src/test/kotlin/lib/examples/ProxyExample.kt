@@ -1,6 +1,6 @@
 package lib.examples
 
-import org.david.sessionkotlin_lib.dsl.Role
+import org.david.sessionkotlin_lib.dsl.SKRole
 import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.david.sessionkotlin_lib.dsl.types.*
 import org.junit.jupiter.api.Test
@@ -10,9 +10,9 @@ class ProxyExample {
 
     @Test
     fun main() {
-        val client = Role("Client")
-        val proxy = Role("Proxy")
-        val server = Role("Server")
+        val client = SKRole("Client")
+        val proxy = SKRole("Proxy")
+        val server = SKRole("Server")
 
         val g = globalProtocolInternal {
             send<Request>(client, proxy)

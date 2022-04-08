@@ -4,7 +4,7 @@ import lib.util.IntClass
 import lib.util.StringClass
 import lib.util.UnitClass
 import org.david.sessionkotlin_lib.dsl.RecursionTag
-import org.david.sessionkotlin_lib.dsl.Role
+import org.david.sessionkotlin_lib.dsl.SKRole
 import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.david.sessionkotlin_lib.dsl.types.*
 import org.junit.jupiter.api.Test
@@ -14,9 +14,9 @@ class Booking {
 
     @Test
     fun main() {
-        val client = Role("Client")
-        val agency = Role("Agency")
-        val company = Role("Some company")
+        val client = SKRole("Client")
+        val agency = SKRole("Agency")
+        val company = SKRole("Some company")
 
         lateinit var t: RecursionTag
 

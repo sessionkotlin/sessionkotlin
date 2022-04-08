@@ -1,6 +1,6 @@
 package lib.enabled
 
-import org.david.sessionkotlin_lib.dsl.Role
+import org.david.sessionkotlin_lib.dsl.SKRole
 import org.david.sessionkotlin_lib.dsl.exception.RoleNotEnabledException
 import org.david.sessionkotlin_lib.dsl.exception.UnfinishedRolesException
 import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
@@ -9,10 +9,10 @@ import kotlin.test.assertFailsWith
 
 class EnabledExecTest {
     companion object {
-        val a = Role("A")
-        val b = Role("B")
-        val c = Role("C")
-        val d = Role("D")
+        val a = SKRole("A")
+        val b = SKRole("B")
+        val c = SKRole("C")
+        val d = SKRole("D")
     }
 
     @Test
@@ -56,8 +56,8 @@ class EnabledExecTest {
 
     @Test
     fun `not enabled in exec after map`() {
-        val x = Role("X")
-        val y = Role("Y")
+        val x = SKRole("X")
+        val y = SKRole("Y")
         val subprotocol = globalProtocolInternal {
             send<Int>(x, y)
             send<Int>(y, x)

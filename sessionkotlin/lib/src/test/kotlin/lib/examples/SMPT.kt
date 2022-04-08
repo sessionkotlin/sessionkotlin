@@ -2,7 +2,7 @@ package lib.examples
 
 import lib.util.UnitClass
 import org.david.sessionkotlin_lib.dsl.RecursionTag
-import org.david.sessionkotlin_lib.dsl.Role
+import org.david.sessionkotlin_lib.dsl.SKRole
 import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.david.sessionkotlin_lib.dsl.types.*
 import org.junit.jupiter.api.Test
@@ -11,8 +11,8 @@ import kotlin.test.assertEquals
 class SMPT {
 
     companion object {
-        val c = Role("C")
-        val s = Role("S")
+        val c = SKRole("C")
+        val s = SKRole("S")
         lateinit var tEhlo: RecursionTag
         lateinit var tsecureEhlo: RecursionTag
         lateinit var tAuth: RecursionTag

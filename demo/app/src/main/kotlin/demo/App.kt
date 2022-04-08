@@ -1,52 +1,54 @@
 package demo
 
-
-
 import Proto1_A_1
-import Proto1_A_2_Case1Interface
-import Proto1_A_9_Case2Interface
+import Proto1_A_2_Case1
+import Proto1_A_9_Case2
+
+import Proto1_B_1
+import Proto1_B_4_Branch
+import Proto1_B_4_OK
+import Proto1_B_6_Exit
+
 import org.david.sessionkotlin_lib.api.SKBuffer
-import org.david.sessionkotlin_lib.dsl.*
-import java.io.File
 
 fun main() {
-    val a = Role("A")
-    val b = Role("B")
-
-    globalProtocol {
-        choice(b) {
-            case("Case 1") {
-                send<Int>(b, a)
-                val t = miu("X")
-                choice(a) {
-                    case("OK") {
-                        send<String>(a, b)
-                        goto(t)
-                    }
-                    case("Exit") {
-                        send<Unit>(a, b)
-                    }
-                }
-            }
-            case("Case 2") {
-                send<Long>(b, a)
-            }
-        }
-    }
-
-    val b1 = Proto1_A_1()
+    val a1 = Proto1_A_1()
         .branch()
-
-    when(b1) {
-        is Proto1_A_2_Case1Interface ->
-            b1.receiveFromB(SKBuffer())
-                .branchOK()
-                .sendToB("1")
-                .branchOK()
-                .sendToB("2")
+    when (a1) {
+        is Proto1_A_2_Case1 -> {
+            a1.receiveFromB(SKBuffer())
+                .let {
+                    var t = it
+                    for (i in 0 until 3) {
+                        t = t
+                            .branchOK()
+                            .sendToB("something")
+                    }
+                    t
+                }
                 .branchExit()
                 .sendToB()
-        is Proto1_A_9_Case2Interface ->
-            b1.receiveFromB(SKBuffer())
+        }
+        is Proto1_A_9_Case2 ->
+            a1.receiveFromB(SKBuffer())
     }
+
+    val b1 = Proto1_B_1()
+        .branchCase1()
+        .sendToA(10)
+        .branch()
+
+    do {
+        when (b1) {
+            is Proto1_B_4_OK -> b1
+                .receiveFromA(SKBuffer())
+                .branch()
+
+            is Proto1_B_6_Exit -> {
+                b1.receiveFromA()
+                break
+            }
+        }
+    } while (true)
+
 }

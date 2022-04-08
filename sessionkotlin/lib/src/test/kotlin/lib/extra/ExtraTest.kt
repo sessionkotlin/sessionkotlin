@@ -2,7 +2,7 @@ package lib.extra
 
 import lib.util.UnitClass
 import org.david.sessionkotlin_lib.dsl.RecursionTag
-import org.david.sessionkotlin_lib.dsl.Role
+import org.david.sessionkotlin_lib.dsl.SKRole
 import org.david.sessionkotlin_lib.dsl.exception.InconsistentExternalChoiceException
 import org.david.sessionkotlin_lib.dsl.exception.RoleNotEnabledException
 import org.david.sessionkotlin_lib.dsl.exception.UnfinishedRolesException
@@ -15,9 +15,9 @@ import kotlin.test.assertFailsWith
 class ExtraTest {
 
     companion object {
-        val a = Role("A")
-        val b = Role("B")
-        val c = Role("C")
+        val a = SKRole("A")
+        val b = SKRole("B")
+        val c = SKRole("C")
     }
 
     @Test

@@ -3,7 +3,7 @@ package lib.syntax
 import lib.util.DoubleClass
 import lib.util.IntClass
 import lib.util.StringClass
-import org.david.sessionkotlin_lib.dsl.Role
+import org.david.sessionkotlin_lib.dsl.SKRole
 import org.david.sessionkotlin_lib.dsl.exception.DuplicateCaseLabelException
 import org.david.sessionkotlin_lib.dsl.exception.SendingtoSelfException
 import org.david.sessionkotlin_lib.dsl.exception.TerminalInstructionException
@@ -19,10 +19,10 @@ import kotlin.test.assertFailsWith
 class SyntaxBasicTest {
 
     companion object {
-        val a = Role("A")
-        val b = Role("B")
-        val c = Role("C")
-        val d = Role("D")
+        val a = SKRole("A")
+        val b = SKRole("B")
+        val c = SKRole("C")
+        val d = SKRole("D")
     }
 
     @Test
@@ -95,7 +95,7 @@ class SyntaxBasicTest {
 
     @Test
     fun `two buyers`() {
-        val s = Role("S")
+        val s = SKRole("S")
 
         globalProtocolInternal {
             send<String>(a, s)

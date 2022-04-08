@@ -3,7 +3,7 @@ package lib.unfinished
 import lib.util.IntClass
 import lib.util.LongClass
 import lib.util.StringClass
-import org.david.sessionkotlin_lib.dsl.Role
+import org.david.sessionkotlin_lib.dsl.SKRole
 import org.david.sessionkotlin_lib.dsl.exception.UnfinishedRolesException
 import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.david.sessionkotlin_lib.dsl.types.LEnd
@@ -15,10 +15,10 @@ import kotlin.test.assertFailsWith
 
 class UnfinishedExecTest {
     companion object {
-        val a = Role("A")
-        val b = Role("B")
-        val c = Role("C")
-        val d = Role("D")
+        val a = SKRole("A")
+        val b = SKRole("B")
+        val c = SKRole("C")
+        val d = SKRole("D")
     }
 
     @Test

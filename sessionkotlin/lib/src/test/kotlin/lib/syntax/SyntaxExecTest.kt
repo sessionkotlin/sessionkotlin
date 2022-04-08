@@ -3,7 +3,7 @@ package lib.syntax
 import lib.util.IntClass
 import lib.util.StringClass
 import lib.util.UnitClass
-import org.david.sessionkotlin_lib.dsl.Role
+import org.david.sessionkotlin_lib.dsl.SKRole
 import org.david.sessionkotlin_lib.dsl.exception.SendingtoSelfException
 import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.david.sessionkotlin_lib.dsl.types.*
@@ -14,10 +14,10 @@ import kotlin.test.assertFailsWith
 class SyntaxExecTest {
 
     companion object {
-        val a = Role("A")
-        val b = Role("B")
-        val c = Role("C")
-        val d = Role("D")
+        val a = SKRole("A")
+        val b = SKRole("B")
+        val c = SKRole("C")
+        val d = SKRole("D")
     }
 
     @Test
@@ -88,7 +88,7 @@ class SyntaxExecTest {
         val subprotocol = globalProtocolInternal {
             send<Int>(a, c)
         }
-        val x = Role("X")
+        val x = SKRole("X")
 
         val g = globalProtocolInternal {
             choice(a) {

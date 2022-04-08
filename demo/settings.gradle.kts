@@ -8,4 +8,5 @@
  */
 
 rootProject.name = "demo"
+include("protocols")
 include("app")

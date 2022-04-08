@@ -1,6 +1,6 @@
 package lib.misc
 
-import org.david.sessionkotlin_lib.dsl.Role
+import org.david.sessionkotlin_lib.dsl.SKRole
 import org.david.sessionkotlin_lib.dsl.exception.ProjectionTargetException
 import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.david.sessionkotlin_lib.dsl.types.asFormattedString
@@ -10,9 +10,9 @@ import kotlin.test.assertFailsWith
 
 class MiscTest {
     companion object {
-        val a = Role("A")
-        val b = Role("B")
-        val c = Role("C")
+        val a = SKRole("A")
+        val b = SKRole("B")
+        val c = SKRole("C")
     }
 
     @Test

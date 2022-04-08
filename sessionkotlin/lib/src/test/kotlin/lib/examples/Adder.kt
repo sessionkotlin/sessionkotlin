@@ -3,7 +3,7 @@ package lib.examples
 import lib.util.IntClass
 import lib.util.UnitClass
 import org.david.sessionkotlin_lib.dsl.RecursionTag
-import org.david.sessionkotlin_lib.dsl.Role
+import org.david.sessionkotlin_lib.dsl.SKRole
 import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.david.sessionkotlin_lib.dsl.types.*
 import org.junit.jupiter.api.Test
@@ -13,8 +13,8 @@ class Adder {
 
     @Test
     fun main() {
-        val c = Role("Client")
-        val s = Role("Server")
+        val c = SKRole("Client")
+        val s = SKRole("Server")
         lateinit var t: RecursionTag
 
         val g = globalProtocolInternal {

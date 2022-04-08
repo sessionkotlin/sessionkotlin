@@ -6,7 +6,7 @@ import org.david.sessionkotlin_lib.util.printlnIndent
 
 internal sealed interface Instruction {
     fun dump(indent: Int)
-    fun mapped(mapping: Map<Role, Role>): Instruction
+    fun mapped(mapping: Map<SKRole, SKRole>): Instruction
 }
 
 internal sealed interface TerminalInstruction : Instruction {
@@ -14,8 +14,8 @@ internal sealed interface TerminalInstruction : Instruction {
 }
 
 internal data class Send(
-    internal val from: Role,
-    internal val to: Role,
+    internal val from: SKRole,
+    internal val to: SKRole,
     internal val type: Class<*>,
 ) : Instruction {
 
@@ -29,7 +29,7 @@ internal data class Send(
         printlnIndent(indent, "Send<${type.simpleName}>[$from -> $to]")
     }
 
-    override fun mapped(mapping: Map<Role, Role>): Instruction =
+    override fun mapped(mapping: Map<SKRole, SKRole>): Instruction =
         Send(
             mapping.getOrKey(from),
             mapping.getOrKey(to),
@@ -38,7 +38,7 @@ internal data class Send(
 }
 
 internal class Choice(
-    internal val at: Role,
+    internal val at: SKRole,
     internal val caseMap: MutableMap<String, GlobalEnv>,
 ) : TerminalInstruction {
     override fun simpleName(): String = "Choice at $at"
@@ -54,7 +54,7 @@ internal class Choice(
         printlnIndent(indent, "]")
     }
 
-    override fun mapped(mapping: Map<Role, Role>): Instruction {
+    override fun mapped(mapping: Map<SKRole, SKRole>): Instruction {
 
         val newCaseMap = mutableMapOf<String, GlobalEnv>()
         for (case in caseMap) {
@@ -76,7 +76,7 @@ internal class RecursionDefinition(internal val tag: RecursionTag) : Instruction
         printlnIndent(indent, "miu_$tag")
     }
 
-    override fun mapped(mapping: Map<Role, Role>): Instruction =
+    override fun mapped(mapping: Map<SKRole, SKRole>): Instruction =
         RecursionDefinition(tag)
 }
 
@@ -86,6 +86,6 @@ internal class Recursion(internal val tag: RecursionTag) : TerminalInstruction {
         printlnIndent(indent, "$tag")
     }
 
-    override fun mapped(mapping: Map<Role, Role>): Instruction =
+    override fun mapped(mapping: Map<SKRole, SKRole>): Instruction =
         Recursion(tag)
 }

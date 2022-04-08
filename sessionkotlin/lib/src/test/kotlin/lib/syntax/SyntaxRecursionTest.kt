@@ -5,7 +5,7 @@ import lib.util.LongClass
 import lib.util.StringClass
 import lib.util.UnitClass
 import org.david.sessionkotlin_lib.dsl.RecursionTag
-import org.david.sessionkotlin_lib.dsl.Role
+import org.david.sessionkotlin_lib.dsl.SKRole
 import org.david.sessionkotlin_lib.dsl.exception.TerminalInstructionException
 import org.david.sessionkotlin_lib.dsl.exception.UndefinedRecursionVariableException
 import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
@@ -17,10 +17,10 @@ import kotlin.test.assertFailsWith
 class SyntaxRecursionTest {
 
     companion object {
-        val a = Role("A")
-        val b = Role("B")
-        val c = Role("C")
-        val d = Role("D")
+        val a = SKRole("A")
+        val b = SKRole("B")
+        val c = SKRole("C")
+        val d = SKRole("D")
     }
 
     @Test
@@ -369,5 +369,24 @@ class SyntaxRecursionTest {
         )
         assertEquals(g.project(a), lA)
         assertEquals(g.project(b), lB)
+    }
+
+    @Test
+    fun `same rec label`() {
+        globalProtocolInternal {
+            val t1 = miu("X")
+            send<Int>(a, b)
+            val t2 = miu("X")
+            choice(a) {
+                case("1") {
+                    send<Long>(a, b)
+                    goto(t1)
+                }
+                case("2") {
+                    send<String>(a, b)
+                    goto(t2)
+                }
+            }
+        }
     }
 }
