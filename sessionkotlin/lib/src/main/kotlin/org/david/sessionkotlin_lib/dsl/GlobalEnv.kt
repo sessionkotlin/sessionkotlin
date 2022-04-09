@@ -194,6 +194,15 @@ internal fun buildGlobalType(
         }
     }
 
+internal class RootEnv(
+    internal val name: String,
+) : GlobalEnv(emptySet(), emptySet())
+
+internal class NonRootEnv(
+    roles: Set<SKRole>,
+    recursionVariables: Set<RecursionTag>,
+) : GlobalEnv(roles, recursionVariables)
+
 internal fun globalProtocolInternal(name: String = "Proto1", protocolBuilder: GlobalEnv.() -> Unit): RootEnv {
     val p = RootEnv(name)
     p.protocolBuilder()
@@ -204,12 +213,3 @@ internal fun globalProtocolInternal(name: String = "Proto1", protocolBuilder: Gl
 public fun globalProtocol(name: String = "Proto1", protocolBuilder: GlobalEnv.() -> Unit) {
     generateAPI(globalProtocolInternal(name, protocolBuilder))
 }
-
-internal class RootEnv(
-    internal val name: String,
-) : GlobalEnv(emptySet(), emptySet())
-
-internal class NonRootEnv(
-    roles: Set<SKRole>,
-    recursionVariables: Set<RecursionTag>,
-) : GlobalEnv(roles, recursionVariables)
