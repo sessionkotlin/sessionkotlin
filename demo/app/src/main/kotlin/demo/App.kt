@@ -10,6 +10,18 @@ import Proto1_B_4_OK
 import Proto1_B_6_Exit
 
 import org.david.sessionkotlin_lib.api.SKBuffer
+import java.nio.channels.Channel
+
+class SKEndpoint(): AutoCloseable {
+
+    fun connect(c: Channel) {
+
+    }
+
+    override fun close() {
+        TODO("Not yet implemented")
+    }
+}
 
 fun main() {
     val a1 = Proto1_A_1()

@@ -12,10 +12,12 @@ plugins {
 
 val kotlinPoetVersion: String by project
 val kotlinVersion: String by project
+val kotlinxCoroutinesVersion: String by project
 
 dependencies {
     testImplementation(kotlin("test"))
     implementation("com.squareup:kotlinpoet:$kotlinPoetVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
 }
 
 tasks.test {
