@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.kapt3.base.Kapt.kapt
+
 group = "org.david"
 version = "0.0.1"
 
@@ -8,6 +10,7 @@ plugins {
     id("org.jetbrains.dokka") version "1.6.10"
     `maven-publish`
     id("org.jlleitschuh.gradle.ktlint")
+    kotlin("plugin.serialization") version "1.6.10"
 }
 
 val kotlinPoetVersion: String by project
@@ -18,6 +21,7 @@ dependencies {
     testImplementation(kotlin("test"))
     implementation("com.squareup:kotlinpoet:$kotlinPoetVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
+    implementation("io.ktor:ktor-network:2.0.0")
 }
 
 tasks.test {
