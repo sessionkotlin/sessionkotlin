@@ -1,4 +1,4 @@
-import org.jetbrains.kotlin.kapt3.base.Kapt.kapt
+
 
 group = "org.david"
 version = "0.0.1"

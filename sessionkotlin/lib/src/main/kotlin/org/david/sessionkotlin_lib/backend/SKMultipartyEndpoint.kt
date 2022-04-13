@@ -1,27 +1,50 @@
-package org.david.sessionkotlin_lib.api
+package org.david.sessionkotlin_lib.backend
 
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
-import io.ktor.util.*
 import io.ktor.utils.io.*
-import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import org.david.sessionkotlin_lib.backend.exception.AlreadyConnectedException
+import org.david.sessionkotlin_lib.backend.exception.BinaryEndpointsException
+import org.david.sessionkotlin_lib.backend.exception.NotConnectedException
 import org.david.sessionkotlin_lib.dsl.SKRole
 import java.io.Closeable
 import java.nio.ByteBuffer
-import java.util.*
 
-public class NotConnectedException(role: SKRole) : RuntimeException("Not connected to $role")
-public class AlreadyConnectedException(role: SKRole) : RuntimeException("Already connected to $role")
+internal data class SKBinaryChannel(val input: Channel<SKMessage>, val output: Channel<SKMessage>) : Closeable {
+    suspend fun receive(): SKMessage = input.receive()
+    suspend fun send(msg: SKMessage) = output.send(msg)
+    override fun close() {
+        output.close()
+    }
+}
 
-public class SKChannel {
-    internal val chan = Channel<SKMessage>(Channel.UNLIMITED)
+/**
+ * Creates a bidirectional channel between two roles.
+ */
+public class SKChannel(private val role1: SKRole, private val role2: SKRole) {
+
+    private val chanA = Channel<SKMessage>(Channel.UNLIMITED)
+    private val chanB = Channel<SKMessage>(Channel.UNLIMITED)
+
+    private val mapping = mapOf(
+        role1 to SKBinaryChannel(chanA, chanB),
+        role2 to SKBinaryChannel(chanB, chanA)
+    )
+
+    internal fun getEndpoints(role: SKRole): SKBinaryChannel =
+        try {
+            mapping.getValue(role)
+        } catch (e: NoSuchElementException) {
+            throw BinaryEndpointsException(role, role1, role2)
+        }
 }
 
 public class SKEndpoint : AutoCloseable {
     private val connections = mutableMapOf<SKRole, SKBinaryEndpoint>()
-    private val selectorManager = ActorSelectorManager(Dispatchers.IO)
+    private val selectorManager = ActorSelectorManager(Dispatchers.Default)
+    private val objectFormatter = ObjectFormatter()
 
     override fun close() {
         for (ch in connections.values) {
@@ -46,7 +69,7 @@ public class SKEndpoint : AutoCloseable {
         val socket = aSocket(selectorManager)
             .tcp()
             .connect(hostname, port)
-        connections[role] = SKBinarySocketEndpoint(socket)
+        connections[role] = SKBinarySocketEndpoint(socket, objectFormatter)
     }
 
     public suspend fun accept(role: SKRole, port: Int) {
@@ -58,14 +81,14 @@ public class SKEndpoint : AutoCloseable {
             .bind(InetSocketAddress("localhost", port))
             .accept()
 
-        connections[role] = SKBinarySocketEndpoint(socket)
+        connections[role] = SKBinarySocketEndpoint(socket, objectFormatter)
     }
 
     public fun connect(role: SKRole, chan: SKChannel) {
         if (role in connections) {
             throw AlreadyConnectedException(role)
         }
-        connections[role] = SKBinaryChannelEndpoint(chan.chan)
+        connections[role] = SKBinaryChannelEndpoint(chan.getEndpoints(role))
     }
 }
 
@@ -74,12 +97,13 @@ internal interface SKBinaryEndpoint : Closeable {
     suspend fun writeMsg(msg: SKMessage)
 }
 
-internal class SKBinarySocketEndpoint(private var s: Socket) : SKBinaryEndpoint {
+internal class SKBinarySocketEndpoint(
+    private var s: Socket,
+    private val objFormatter: SKMessageFormatter,
+) : SKBinaryEndpoint {
 
-    // ObjectOutputStream's constructor must always come before ObjectInputStream's constructor
     private val outputStream = s.openWriteChannel(autoFlush = true)
     private val inputStream = s.openReadChannel()
-    private val objFormatter = ObjectFormatter()
 
     override fun close() {
         s.close()
@@ -87,40 +111,19 @@ internal class SKBinarySocketEndpoint(private var s: Socket) : SKBinaryEndpoint 
 
     override suspend fun readMsg(): SKMessage {
         val size = inputStream.readInt()
-        println("read: $size")
         val b = ByteBuffer.wrap(ByteArray(size))
-
-        var total = 0
-        while(total < size) {
-            println("trying to read: " + (size - total))
-            inputStream.read(size - total) {
-                total += it.remaining()
-                println("read remaining: ${it.remaining()}")
-                b.put(it)
-            }
-        }
+        inputStream.readFully(b)
         return objFormatter.fromBytes(b.array())
     }
 
     override suspend fun writeMsg(msg: SKMessage) {
         val msgBytes = objFormatter.toBytes(msg)
-        println("write: " + msgBytes.size)
         outputStream.writeInt(msgBytes.size)
-
-        var remainder = msgBytes.size
-        while(remainder > 0) {
-            println("trying to write: " + remainder)
-            outputStream.write(remainder) {
-                remainder -= it.remaining()
-                println("write remaining: ${it.remaining()}")
-                it.put(msgBytes)
-            }
-        }
-
+        outputStream.writeFully(msgBytes)
     }
 }
 
-internal class SKBinaryChannelEndpoint(private var chan: Channel<SKMessage>) : SKBinaryEndpoint {
+internal class SKBinaryChannelEndpoint(private var chan: SKBinaryChannel) : SKBinaryEndpoint {
     override suspend fun readMsg(): SKMessage = chan.receive()
 
     override suspend fun writeMsg(msg: SKMessage) {

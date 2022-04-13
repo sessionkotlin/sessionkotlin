@@ -11,3 +11,13 @@
 
 - Se tanto o backend de comunicação, como a DSL (definição protocolo global) e a geração da API forem testados
   individualmente, basta criar um exemplo grande de um projeto que usa tudo (uma espécie de "demo" ou "template").
+
+
+- Ktor's sockets como um dos backends de comunicação (para além dos canais). Oferecem uma API assíncrona para envio/receção.
+  O canal de escrita tem autoFlush=true porque as mensagens são muito pequenas.
+
+
+- É possível misturar sockets e channels usando a mesma sintaxe (suspending style).
+
+
+- Os canais têm buffer "ilimitado". A escrita é assíncrona, e a leitura pode suspender.
