@@ -11,6 +11,8 @@ repositories {
 
 dependencies {
     api("org.david:sessionkotlin_lib:0.0.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
+
 }
 
 application {

@@ -1,5 +1,5 @@
 package org.david.sessionkotlin_lib.backend.exception
 
-import org.david.sessionkotlin_lib.dsl.SKRole
+import org.david.sessionkotlin_lib.api.SKGenRole
 
-public class AlreadyConnectedException(role: SKRole) : SessionKotlinBackendException("Already connected to $role")
+public class AlreadyConnectedException(role: SKGenRole) : SessionKotlinBackendException("Already connected to $role")

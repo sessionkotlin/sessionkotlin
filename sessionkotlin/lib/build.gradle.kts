@@ -1,16 +1,13 @@
-
-
 group = "org.david"
 version = "0.0.1"
 
 plugins {
     kotlin("jvm")
     `java-library`
-    jacoco
-    id("org.jetbrains.dokka") version "1.6.10"
     `maven-publish`
-    id("org.jlleitschuh.gradle.ktlint")
-    kotlin("plugin.serialization") version "1.6.10"
+    jacoco // Test Coverage
+    id("org.jetbrains.dokka") version "1.6.10" // Generate documentation
+    id("org.jlleitschuh.gradle.ktlint") // Linter
 }
 
 val kotlinPoetVersion: String by project

@@ -2,7 +2,7 @@ package org.david.sessionkotlin_lib.api
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import org.david.sessionkotlin_lib.backend.SKBuffer
+import org.david.sessionkotlin_lib.backend.*
 import org.david.sessionkotlin_lib.dsl.RecursionTag
 import org.david.sessionkotlin_lib.dsl.RootEnv
 import org.david.sessionkotlin_lib.dsl.SKRole
@@ -20,9 +20,12 @@ private data class ICNames(val interfaceClassName: ClassName, val className: Cla
 private data class FunSpecs(val abstractSpec: FunSpec, val overrideSpec: FunSpec)
 private data class GenRet(val interfaceClassPair: ICNames, val counter: Int)
 
+private val roleMap = mutableMapOf<SKRole, ClassName>()
+
 internal fun generateAPI(globalEnv: RootEnv) {
     val outputDirectory = File("build/generated/sessionkotlin/main/kotlin")
     val globalType = globalEnv.asGlobalType()
+    genRoles(globalEnv.roles, outputDirectory) // populates roleMap
     globalEnv.roles.forEach {
         APIGenerator(globalEnv.name, it, globalType.project(it))
             .writeTo(outputDirectory)
@@ -35,9 +38,37 @@ private fun genEndClass(outputDirectory: File) {
         packageName = "",
         fileName = endClassName.simpleName
     )
-    fileSpecBuilder.addComment(GENERATED_COMMENT)
+    fileSpecBuilder.addFileComment(GENERATED_COMMENT)
     val classBuilder = TypeSpec.classBuilder(endClassName)
+        .primaryConstructor(
+            FunSpec.constructorBuilder()
+                .addParameter(
+                    ParameterSpec
+                        .builder("e", SKMPEndpoint::class)
+                        .build()
+                )
+                .build()
+        )
     fileSpecBuilder.addType(classBuilder.build())
+    fileSpecBuilder.build().writeTo(outputDirectory)
+}
+
+private fun genRoles(roles: Set<SKRole>, outputDirectory: File) {
+    val fileSpecBuilder = FileSpec.builder(
+        packageName = "",
+        fileName = "Roles"
+    )
+    fileSpecBuilder.addFileComment(GENERATED_COMMENT)
+    roles.forEach {
+        val className = ClassName("", it.toString())
+        roleMap[it] = className
+        fileSpecBuilder
+            .addType(
+                TypeSpec.objectBuilder(className)
+                    .addSuperinterface(SKGenRole::class)
+                    .build()
+            )
+    }
     fileSpecBuilder.build().writeTo(outputDirectory)
 }
 
@@ -56,7 +87,7 @@ private class APIGenerator(
         .builder(
             packageName = "",
             fileName = buildClassName(protocolName, role)
-        ).addComment(GENERATED_COMMENT)
+        ).addFileComment(GENERATED_COMMENT)
 
     private fun genLocals(
         l: LocalType,
@@ -81,6 +112,21 @@ private class APIGenerator(
         val classBuilder = TypeSpec
             .classBuilder(className)
             .addSuperinterface(interfaceName)
+            .primaryConstructor(
+                FunSpec.constructorBuilder()
+                    .addParameter(
+                        ParameterSpec
+                            .builder("e", SKMPEndpoint::class)
+                            .build()
+                    )
+                    .build()
+            ).addProperty(
+                PropertySpec.builder("e", SKMPEndpoint::class)
+                    .initializer("e")
+                    .addModifiers(KModifier.PRIVATE)
+                    .build()
+            )
+
         if (stateIndex > initialStateCount)
             classBuilder.addModifiers(KModifier.PRIVATE)
 
@@ -89,19 +135,31 @@ private class APIGenerator(
             is LocalTypeRecursion -> GenRet(recursionMap.getValue(l.tag), stateIndex)
             is LocalTypeRecursionDefinition -> genLocals(l.cont, stateIndex, l.tag)
             is LocalTypeSend -> {
+                classBuilder.superclass(SKOutputEndpoint::class)
+                    .addSuperclassConstructorParameter("e")
                 val ret = genLocals(l.cont, stateIndex + 1)
                 val methodName = "sendTo${l.to}"
-                val codeBlock = CodeBlock.builder()
-                    .addStatement("println(\"Send to ${l.to}\")")
-                    .addStatement("return (${ret.interfaceClassPair.className.constructorReference()})()")
-                    .build()
                 val parameter = if (l.type != Unit::class.java)
                     ParameterSpec
                         .builder("arg", l.type.kotlin)
                         .build()
                 else null
 
-                val functions = genMsgPassing(methodName, codeBlock, parameter, ret.interfaceClassPair.interfaceClassName)
+                val codeBlock = CodeBlock.builder()
+                    .let {
+                        val pName = parameter?.name ?: "Unit"
+                        it.addStatement("super.send(${roleMap[l.to]}, $pName)")
+                        it
+                    }
+                    .addStatement("return (${ret.interfaceClassPair.className.constructorReference()})(e)")
+                    .build()
+
+                val functions = genMsgPassing(
+                    methodName,
+                    codeBlock,
+                    parameter,
+                    ret.interfaceClassPair.interfaceClassName
+                )
                 interfaceBuilder.addFunction(functions.abstractSpec)
                 classBuilder.addFunction(functions.overrideSpec)
                 fileSpecBuilder.addType(interfaceBuilder.build())
@@ -109,19 +167,31 @@ private class APIGenerator(
                 GenRet(ICNames(interfaceName, className), ret.counter)
             }
             is LocalTypeReceive -> {
+                classBuilder.superclass(SKInputEndpoint::class)
+                    .addSuperclassConstructorParameter("e")
                 val ret = genLocals(l.cont, stateIndex + 1)
                 val methodName = "receiveFrom${l.from}"
-                val codeBlock = CodeBlock.builder()
-                    .addStatement("println(\"Receive from ${l.from}\")")
-                    .addStatement("return (${ret.interfaceClassPair.className.constructorReference()})()")
-                    .build()
                 val parameter = if (l.type != Unit::class.java)
                     ParameterSpec
                         .builder("buf", SKBuffer::class.parameterizedBy(l.type.kotlin))
                         .build()
                 else null
 
-                val functions = genMsgPassing(methodName, codeBlock, parameter, ret.interfaceClassPair.interfaceClassName)
+                val codeBlock = CodeBlock.builder()
+                    .let {
+                        val pName = parameter?.name ?: "Unit"
+                        it.addStatement("super.receive(${roleMap[l.from]}, $pName)")
+                        it
+                    }
+                    .addStatement("return (${ret.interfaceClassPair.className.constructorReference()})(e)")
+                    .build()
+
+                val functions = genMsgPassing(
+                    methodName,
+                    codeBlock,
+                    parameter,
+                    ret.interfaceClassPair.interfaceClassName
+                )
                 interfaceBuilder.addFunction(functions.abstractSpec)
                 classBuilder.addFunction(functions.overrideSpec)
                 fileSpecBuilder.addType(interfaceBuilder.build())
@@ -129,6 +199,8 @@ private class APIGenerator(
                 GenRet(ICNames(interfaceName, className), ret.counter)
             }
             is LocalTypeExternalChoice -> {
+                classBuilder.superclass(SKExternalEndpoint::class)
+                    .addSuperclassConstructorParameter("e")
                 val branchInterfaceName = ClassName(
                     "",
                     buildClassName(protocolName, role, stateIndex + 1) + "_Branch"
@@ -138,6 +210,7 @@ private class APIGenerator(
                     .addModifiers(KModifier.SEALED)
 
                 var newIndex = stateIndex + 1
+                val whenBlock = CodeBlock.builder()
                 for ((k, v) in l.cases) {
                     val ret = genLocals(
                         v,
@@ -145,20 +218,24 @@ private class APIGenerator(
                         superInterface = branchInterfaceName,
                         branch = k
                     )
+                    whenBlock.addStatement("\"$k\" -> (${ret.interfaceClassPair.className.constructorReference()})(e)")
+                    ret.interfaceClassPair.className
                     newIndex = ret.counter + 1
                 }
 
                 val methodName = "branch"
                 val abstractFunction = FunSpec.builder(methodName)
                     .returns(branchInterfaceName)
-                    .addModifiers(KModifier.ABSTRACT)
+                    .addModifiers(KModifier.ABSTRACT, KModifier.SUSPEND)
 
                 val function = FunSpec.builder(methodName)
                     .returns(branchInterfaceName)
-                    .addModifiers(KModifier.OVERRIDE)
+                    .addModifiers(KModifier.OVERRIDE, KModifier.SUSPEND)
                     .let {
-                        it.addStatement("println(\"External choice\")")
-                        it.addStatement("TODO()")
+                        it.beginControlFlow("return when(super.receiveBranch(${roleMap[l.to]}))")
+                        it.addCode(whenBlock.build())
+                        it.addStatement("else -> throw RuntimeException(\"This shouldn't happen\")")
+                        it.endControlFlow()
                         it
                     }
 
@@ -171,6 +248,8 @@ private class APIGenerator(
                 GenRet(ICNames(interfaceName, className), newIndex)
             }
             is LocalTypeInternalChoice -> {
+                classBuilder.superclass(SKInternalEndpoint::class)
+                    .addSuperclassConstructorParameter("e")
                 var counter = stateIndex + 1
                 for ((k, v) in l.cases) {
                     val ret = genLocals(v, counter)
@@ -180,14 +259,14 @@ private class APIGenerator(
 
                     val abstractFunction = FunSpec.builder(methodName)
                         .returns(ret.interfaceClassPair.interfaceClassName)
-                        .addModifiers(KModifier.ABSTRACT)
+                        .addModifiers(KModifier.ABSTRACT, KModifier.SUSPEND)
 
                     val function = FunSpec.builder(methodName)
                         .returns(ret.interfaceClassPair.interfaceClassName)
-                        .addModifiers(KModifier.OVERRIDE)
+                        .addModifiers(KModifier.OVERRIDE, KModifier.SUSPEND)
                         .let {
-                            it.addStatement("println(\"Internal choice\")")
-                            it.addStatement("TODO()")
+                            it.addStatement("super.sendBranch(TODO())")
+                            it.addStatement("return (${ret.interfaceClassPair.className.constructorReference()})(e)")
                             it
                         }
 
@@ -207,7 +286,7 @@ private class APIGenerator(
     }
 }
 
-private fun APIGenerator.genMsgPassing(
+private fun genMsgPassing(
     methodName: String,
     codeBlock: CodeBlock,
     parameter: ParameterSpec?,
@@ -215,9 +294,9 @@ private fun APIGenerator.genMsgPassing(
 ): FunSpecs {
     val abstractFunction = FunSpec.builder(methodName)
         .returns(nextInterface)
-        .addModifiers(KModifier.ABSTRACT)
+        .addModifiers(KModifier.ABSTRACT, KModifier.SUSPEND)
     val function = FunSpec.builder(methodName)
-        .addModifiers(KModifier.OVERRIDE)
+        .addModifiers(KModifier.OVERRIDE, KModifier.SUSPEND)
         .returns(nextInterface)
         .addCode(codeBlock)
     if (parameter != null) {

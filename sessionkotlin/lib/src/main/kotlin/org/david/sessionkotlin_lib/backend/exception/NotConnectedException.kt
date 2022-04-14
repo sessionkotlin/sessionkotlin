@@ -1,5 +1,5 @@
 package org.david.sessionkotlin_lib.backend.exception
 
-import org.david.sessionkotlin_lib.dsl.SKRole
+import org.david.sessionkotlin_lib.api.SKGenRole
 
-public class NotConnectedException(role: SKRole) : SessionKotlinBackendException("Not connected to $role")
+public class NotConnectedException(role: SKGenRole) : SessionKotlinBackendException("Not connected to $role")
