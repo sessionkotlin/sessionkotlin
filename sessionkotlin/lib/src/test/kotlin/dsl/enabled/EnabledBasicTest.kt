@@ -5,6 +5,7 @@ import dsl.util.LongClass
 import dsl.util.StringClass
 import org.david.sessionkotlin_lib.dsl.SKRole
 import org.david.sessionkotlin_lib.dsl.exception.RoleNotEnabledException
+import org.david.sessionkotlin_lib.dsl.exception.UnfinishedRolesException
 import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
 import org.david.sessionkotlin_lib.dsl.types.*
 import org.junit.jupiter.api.Test
@@ -146,7 +147,7 @@ class EnabledBasicTest {
 
     @Test
     fun `role not enabled to choose not mergeable`() {
-        assertFailsWith<RoleNotEnabledException> {
+        assertFailsWith<UnfinishedRolesException> {
             globalProtocolInternal {
                 choice(b) {
                     case("Case1") {

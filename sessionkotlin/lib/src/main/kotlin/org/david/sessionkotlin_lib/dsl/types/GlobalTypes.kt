@@ -7,14 +7,16 @@ import org.david.sessionkotlin_lib.dsl.exception.RoleNotEnabledException
 import org.david.sessionkotlin_lib.dsl.exception.UnfinishedRolesException
 
 internal abstract class GlobalType {
-    internal abstract fun project(role: SKRole, state: State = State()): LocalType
+    internal abstract fun project(role: SKRole, state: State = State(role)): LocalType
 }
 
 internal data class State(
-    var enabled: Boolean = true,
+    val role: SKRole,
     var sentWhileDisabled: Boolean = false,
     var enabledBy: SKRole? = null,
-)
+) {
+    fun enabled() = enabledBy != null && enabledBy != role
+}
 
 internal class GlobalTypeSend(
     private val from: SKRole,
@@ -25,14 +27,13 @@ internal class GlobalTypeSend(
     override fun project(role: SKRole, state: State): LocalType =
         when (role) {
             from -> {
-                if (!state.enabled) {
+                if (!state.enabled()) {
                     state.sentWhileDisabled = true
                 }
                 LocalTypeSend(to, type, cont.project(role, state))
             }
             to -> {
-                if (!state.enabled) {
-                    state.enabled = true
+                if (!state.enabled()) {
                     state.enabledBy = from
                 }
                 LocalTypeReceive(from, type, cont.project(role, state))
@@ -48,21 +49,23 @@ internal class GlobalTypeBranch(
     override fun project(role: SKRole, state: State): LocalType {
         when (role) {
             at -> {
-                if (!state.enabled) {
+                if (!state.enabled()) {
                     state.sentWhileDisabled = true
-                    state.enabled = true
+                    state.enabledBy = at
                 }
                 val states = cases.mapValues { state.copy() }
                 return LocalTypeInternalChoice(cases.mapValues { it.value.project(role, states.getValue(it.key)) })
             }
             else -> {
-                val newState = State(enabled = false)
+                val newState = State(role)
 
                 val states = cases.mapValues { newState.copy() }
                 val localType =
                     LocalTypeExternalChoice(at, cases.mapValues { it.value.project(role, states.getValue(it.key)) })
 
-                val enabledBy: List<SKRole> = states.values.mapNotNull { it.enabledBy }
+                val enabledBy: List<SKRole> = states.values
+                    .mapNotNull { it.enabledBy }
+                    .filter { it != state.role }
 
                 // Check if the role was enabled by different roles in different cases
                 if (enabledBy.toSet().size > 1) {
@@ -75,15 +78,10 @@ internal class GlobalTypeBranch(
                     }
                 }
 
-                val c = states.values.count { it.enabled }
+                val c = states.values.count { it.enabled() }
                 // Check if role is enabled in some but not all cases
                 if (c != 0 && c != cases.size) {
                     throw UnfinishedRolesException(role)
-                }
-
-                // Role becomes enabled if enabled in all cases
-                if (!state.enabled) {
-                    state.enabled = states.values.all { it.enabled }
                 }
 
                 // Erase empty choice
@@ -136,7 +134,7 @@ internal class GlobalTypeRecursion(
     private val tag: RecursionTag,
 ) : GlobalType() {
     override fun project(role: SKRole, state: State): LocalType {
-        if (!state.enabled) {
+        if (!state.enabled()) {
             state.sentWhileDisabled = true
         }
         return LocalTypeRecursion(tag)
