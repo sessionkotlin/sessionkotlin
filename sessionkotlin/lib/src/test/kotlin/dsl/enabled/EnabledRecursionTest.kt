@@ -125,12 +125,12 @@ class EnabledRecursionTest {
             t,
             LocalTypeInternalChoice(
                 mapOf(
-                    "1" to LocalTypeSend(b, UnitClass, LocalTypeRecursion(t)),
-                    "2" to LocalTypeSend(b, IntClass, LEnd)
+                    "1" to LocalTypeSend(b, UnitClass, LocalTypeRecursion(t), "1"),
+                    "2" to LocalTypeSend(b, IntClass, LEnd, "2")
                 )
             )
         )
-        assertEquals(g.project(a), lA)
+        assertEquals(lA, g.project(a))
     }
 
     @Test

@@ -2,7 +2,8 @@ package org.david.sessionkotlin_lib.api
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import org.david.sessionkotlin_lib.backend.*
+import org.david.sessionkotlin_lib.backend.SKBuffer
+import org.david.sessionkotlin_lib.backend.SKMPEndpoint
 import org.david.sessionkotlin_lib.dsl.RecursionTag
 import org.david.sessionkotlin_lib.dsl.RootEnv
 import org.david.sessionkotlin_lib.dsl.SKRole
@@ -49,6 +50,12 @@ private fun genEndClass(outputDirectory: File) {
                 )
                 .build()
         )
+        .addAnnotation(
+            AnnotationSpec
+                .builder(ClassName("", "Suppress"))
+                .addMember("%S", "unused_parameter")
+                .build()
+        )
     fileSpecBuilder.addType(classBuilder.build())
     fileSpecBuilder.build().writeTo(outputDirectory)
 }
@@ -65,7 +72,7 @@ private fun genRoles(roles: Set<SKRole>, outputDirectory: File) {
         fileSpecBuilder
             .addType(
                 TypeSpec.objectBuilder(className)
-                    .addSuperinterface(SKGenRole::class)
+                    .superclass(SKGenRole::class)
                     .build()
             )
     }
@@ -104,7 +111,7 @@ private class APIGenerator(
         }
         val interfaceBuilder = TypeSpec
             .interfaceBuilder(interfaceName)
-            .addModifiers(KModifier.SEALED)
+
         if (superInterface != null) {
             interfaceBuilder.addSuperinterface(superInterface)
         }
@@ -148,7 +155,8 @@ private class APIGenerator(
                 val codeBlock = CodeBlock.builder()
                     .let {
                         val pName = parameter?.name ?: "Unit"
-                        it.addStatement("super.send(${roleMap[l.to]}, $pName)")
+//                        val label = if (l.sendBranch)
+                        it.addStatement("super.send(${roleMap[l.to]}, $pName, %S)", l.label)
                         it
                     }
                     .addStatement("return (${ret.interfaceClassPair.className.constructorReference()})(e)")
@@ -248,8 +256,8 @@ private class APIGenerator(
                 GenRet(ICNames(interfaceName, className), newIndex)
             }
             is LocalTypeInternalChoice -> {
-                classBuilder.superclass(SKInternalEndpoint::class)
-                    .addSuperclassConstructorParameter("e")
+                classBuilder.superclass(SKEndpoint::class)
+//                    .addSuperclassConstructorParameter("e")
                 var counter = stateIndex + 1
                 for ((k, v) in l.cases) {
                     val ret = genLocals(v, counter)
@@ -265,7 +273,6 @@ private class APIGenerator(
                         .returns(ret.interfaceClassPair.interfaceClassName)
                         .addModifiers(KModifier.OVERRIDE, KModifier.SUSPEND)
                         .let {
-                            it.addStatement("super.sendBranch(TODO())")
                             it.addStatement("return (${ret.interfaceClassPair.className.constructorReference()})(e)")
                             it
                         }

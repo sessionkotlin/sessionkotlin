@@ -14,6 +14,8 @@ internal data class State(
     val role: SKRole,
     var sentWhileDisabled: Boolean = false,
     var enabledBy: SKRole? = null,
+    var activeRoles: MutableSet<SKRole> = mutableSetOf(),
+    var label: String? = null
 ) {
     fun enabled() = enabledBy != null && enabledBy != role
 }
@@ -30,7 +32,12 @@ internal class GlobalTypeSend(
                 if (!state.enabled()) {
                     state.sentWhileDisabled = true
                 }
-                LocalTypeSend(to, type, cont.project(role, state))
+                if (!state.activeRoles.contains(to)) {
+                    state.activeRoles.add(to)
+                    LocalTypeSend(to, type, cont.project(role, state), label = state.label)
+                } else {
+                    LocalTypeSend(to, type, cont.project(role, state))
+                }
             }
             to -> {
                 if (!state.enabled()) {
@@ -38,7 +45,10 @@ internal class GlobalTypeSend(
                 }
                 LocalTypeReceive(from, type, cont.project(role, state))
             }
-            else -> cont.project(role, state)
+            else -> {
+                state.activeRoles.add(to)
+                cont.project(role, state)
+            }
         }
 }
 
@@ -53,13 +63,13 @@ internal class GlobalTypeBranch(
                     state.sentWhileDisabled = true
                     state.enabledBy = at
                 }
-                val states = cases.mapValues { state.copy() }
+                val states = cases.mapValues { state.copy(label = it.key, activeRoles = mutableSetOf(at)) }
                 return LocalTypeInternalChoice(cases.mapValues { it.value.project(role, states.getValue(it.key)) })
             }
             else -> {
                 val newState = State(role)
 
-                val states = cases.mapValues { newState.copy() }
+                val states = cases.mapValues { newState.copy(label = it.key, activeRoles = mutableSetOf(at)) }
                 val localType =
                     LocalTypeExternalChoice(at, cases.mapValues { it.value.project(role, states.getValue(it.key)) })
 

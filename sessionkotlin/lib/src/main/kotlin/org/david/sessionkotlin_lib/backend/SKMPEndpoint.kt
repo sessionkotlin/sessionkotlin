@@ -3,16 +3,18 @@ package org.david.sessionkotlin_lib.backend
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import org.david.sessionkotlin_lib.api.SKGenRole
 import org.david.sessionkotlin_lib.backend.channel.SKBinaryChannelEndpoint
 import org.david.sessionkotlin_lib.backend.channel.SKChannel
 import org.david.sessionkotlin_lib.backend.exception.AlreadyConnectedException
 import org.david.sessionkotlin_lib.backend.exception.NotConnectedException
+import org.david.sessionkotlin_lib.backend.exception.ReadClosedChannelException
 import org.david.sessionkotlin_lib.backend.socket.SKBinarySocketEndpoint
 
 public class SKMPEndpoint : AutoCloseable {
     private val connections = mutableMapOf<SKGenRole, SKBinaryEndpoint>()
-    private val selectorManager = ActorSelectorManager(Dispatchers.Default)
+    private val selectorManager = ActorSelectorManager(Dispatchers.IO)
     private val objectFormatter = ObjectFormatter()
 
     override fun close() {
@@ -27,8 +29,12 @@ public class SKMPEndpoint : AutoCloseable {
     }
 
     internal suspend fun receive(role: SKGenRole): SKMessage {
-        val ch = connections[role] ?: throw NotConnectedException(role)
-        return ch.readMsg()
+        try {
+            val ch = connections[role] ?: throw NotConnectedException(role)
+            return ch.readMsg()
+        } catch (e: ClosedReceiveChannelException) {
+            throw ReadClosedChannelException(role)
+        }
     }
 
     public suspend fun request(role: SKGenRole, hostname: String, port: Int) {

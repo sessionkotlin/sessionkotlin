@@ -2,8 +2,14 @@ package demo
 
 import A
 import B
+import C
 import Simple_A_1
 import Simple_B_1
+import Simple_B_2_1
+import Simple_B_5_2
+import Simple_C_1
+import Simple_C_2_1
+import Simple_C_4_2
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.david.sessionkotlin_lib.backend.SKBuffer
@@ -11,79 +17,66 @@ import org.david.sessionkotlin_lib.backend.SKMPEndpoint
 import org.david.sessionkotlin_lib.backend.channel.SKChannel
 
 
-//
-//fun main() {
-//    val chan = SKChannel(A, B)
-//    runBlocking {
-//        launch {
-//            SKEndpoint().use { e ->
-//                e.connect(B, chan)
-//                val a1 = Proto1_A_1(e)
-//                    .branch()
-//                when (a1) {
-//                    is Proto1_A_2_Case1 -> {
-//                        a1.receiveFromB(SKBuffer())
-//                            .branchOK()
-//                            .sendToB("abc")
-//                            .branchOK()
-//                            .sendToB("def")
-//                            .branchExit()
-//                            .sendToB()
-//                    }
-//                    is Proto1_A_9_Case2 ->
-//                        a1.receiveFromB(SKBuffer())
-//                }
-//            }
-//        }
-//
-//        launch {
-//            runBlocking {
-//                SKEndpoint().use { e ->
-//                    e.connect(A, chan)
-//                    val b1 = Proto1_B_1(e)
-//                        .branchCase1()
-//                        .sendToA(10)
-//                        .branch()
-//
-//                    do {
-//                        when (b1) {
-//                            is Proto1_B_4_OK -> b1
-//                                .receiveFromA(SKBuffer())
-//                                .branch()
-//
-//                            is Proto1_B_6_Exit -> {
-//                                b1.receiveFromA()
-//                                break
-//                            }
-//                        }
-//                    } while (true)
-//                }
-//            }
-//        }
-//    }
-//}
-
 fun main() {
-    val chan = SKChannel(A, B)
+    val chanAB = SKChannel(A, B)
+//    val chanBC = SKChannel(B, C)
+
     runBlocking {
         launch {
-            val buf = SKBuffer<Int>()
+            // A
             SKMPEndpoint().use {
-                it.connect(B, chan)
+                it.connect(B, chanAB)
                 Simple_A_1(it)
-                    .receiveFromB(buf)
-                    .sendToB((buf.value?:0) * 2)
+                    .branch2()
+                    .sendToB("helloo")
             }
         }
         launch {
-            val buf = SKBuffer<Int>()
-            SKMPEndpoint().use {
-                it.connect(A, chan)
-                Simple_B_1(it)
-                    .sendToA(12)
-                    .receiveFromA(buf)
+            // B
+            SKMPEndpoint().use { e ->
+                e.connect(A, chanAB)
+//                it.connect(C, chanBC)
+                e.accept(C, 9999)
+                val b = Simple_B_1(e)
+                    .branch()
+                when (b) {
+                    is Simple_B_2_1 -> b.let {
+                        val buf = SKBuffer<Int>()
+                        it
+                            .receiveFromA(buf)
+                            .sendToC(buf.value * 2)
+                    }
+                    is Simple_B_5_2 -> b.let {
+                        val buf = SKBuffer<String>()
+                        it
+                            .receiveFromA(buf)
+                            .sendToC(buf.value + ", and hello from B")
+                    }
+                }
             }
-            println(buf.value)
+        }
+        launch {
+            // C
+            SKMPEndpoint().use { e ->
+                e.request(B, "localhost", 9999)
+//                it.connect(B, chanBC)
+
+                val b = Simple_C_1(e)
+                    .branch()
+                when (b) {
+                    is Simple_C_2_1 -> b.let {
+                        val bufInt = SKBuffer<Int>()
+                        it.receiveFromB(bufInt)
+                        println("Received int: ${bufInt.value}")
+                    }
+                    is Simple_C_4_2 -> b
+                        .let {
+                            val bufString = SKBuffer<String>()
+                            it.receiveFromB(bufString)
+                            println("Received string: ${bufString.value}")
+                        }
+                }
+            }
         }
     }
 }

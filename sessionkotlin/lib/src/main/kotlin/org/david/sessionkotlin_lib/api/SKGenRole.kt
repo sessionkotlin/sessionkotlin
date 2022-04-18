@@ -1,3 +1,7 @@
 package org.david.sessionkotlin_lib.api
 
-public interface SKGenRole
+public abstract class SKGenRole {
+    override fun toString(): String {
+        return this::class.simpleName ?: super.toString()
+    }
+}

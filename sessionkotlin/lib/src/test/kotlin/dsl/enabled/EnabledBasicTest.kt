@@ -124,8 +124,8 @@ class EnabledBasicTest {
                 }
             }
         }
-        val lC = LocalTypeSend(d, StringClass, LEnd)
-        assertEquals(g.project(c), lC)
+        val lC = LocalTypeSend(d, StringClass, LEnd, "Case1")
+        assertEquals(lC, g.project(c))
     }
 
     @Test
@@ -179,9 +179,9 @@ class EnabledBasicTest {
             }
         }
         val lA = LocalTypeInternalChoice(
-            mapOf("SubCase1" to LocalTypeSend(b, IntClass, LEnd))
+            mapOf("SubCase1" to LocalTypeSend(b, IntClass, LEnd, "SubCase1"))
         )
-        assertEquals(g.project(a), lA)
+        assertEquals(lA, g.project(a))
     }
 
     @Test

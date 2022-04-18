@@ -4,7 +4,24 @@ import org.david.sessionkotlin_lib.dsl.RecursionTag
 import org.david.sessionkotlin_lib.dsl.SKRole
 
 internal sealed class LocalType
-internal data class LocalTypeSend(val to: SKRole, val type: Class<*>, val cont: LocalType) : LocalType()
+internal data class LocalTypeSend(val to: SKRole, val type: Class<*>, val cont: LocalType, val label: String? = null) : LocalType() {
+    override fun equals(other: Any?): Boolean {
+        if (other !is LocalTypeSend) return false
+        return to == other.to &&
+            type == other.type &&
+            cont == other.cont &&
+            ((label == null && other.label == null) || (label != null && other.label != null))
+    }
+
+    override fun hashCode(): Int {
+        var result = to.hashCode()
+        result = 31 * result + type.hashCode()
+        result = 31 * result + cont.hashCode()
+        result = 31 * result + (label != null).hashCode()
+        return result
+    }
+}
+
 internal data class LocalTypeReceive(val from: SKRole, val type: Class<*>, val cont: LocalType) : LocalType()
 internal data class LocalTypeInternalChoice(val cases: Map<String, LocalType>) : LocalType()
 internal data class LocalTypeExternalChoice(var to: SKRole, val cases: Map<String, LocalType>) : LocalType()

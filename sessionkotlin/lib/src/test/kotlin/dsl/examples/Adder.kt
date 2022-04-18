@@ -37,9 +37,10 @@ class Adder {
                 mapOf(
                     "Continue" to LocalTypeSend(
                         s, IntClass,
-                        LocalTypeSend(s, IntClass, LocalTypeReceive(s, IntClass, LocalTypeRecursion(t)))
+                        LocalTypeSend(s, IntClass, LocalTypeReceive(s, IntClass, LocalTypeRecursion(t))),
+                        "Continue"
                     ),
-                    "Quit" to LocalTypeSend(s, UnitClass, LEnd)
+                    "Quit" to LocalTypeSend(s, UnitClass, LEnd, "Quit")
                 )
             )
         )
@@ -56,7 +57,7 @@ class Adder {
                 )
             )
         )
-        assertEquals(g.project(c), lC)
-        assertEquals(g.project(s), lS)
+        assertEquals(lC, g.project(c))
+        assertEquals(lS, g.project(s))
     }
 }

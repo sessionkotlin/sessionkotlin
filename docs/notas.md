@@ -31,3 +31,8 @@
 
 - A linearidade é protegida em runtime: cada endpoint só pode ser usado uma vez.
   Se o utilizador tentar usar uma segunda vez, ocorre uma exceção.
+
+
+- Tanto os canais como os sockets são fechados automaticamente.
+  Quando alguem tenta ler de uma conexão fechada é lançada logo uma exceção.
+  Assim, se algum participante não terminar o protocolo, os outros não ficam à espera.

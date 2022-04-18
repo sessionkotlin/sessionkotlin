@@ -17,6 +17,7 @@ public sealed class GlobalEnv(
     internal var instructions = mutableListOf<Instruction>()
     internal val roles = roles.toMutableSet()
     internal val recursionVariables = recursionVariables.toMutableSet()
+    private var recursionCounter = 1
 
     /**
      *
@@ -108,14 +109,14 @@ public sealed class GlobalEnv(
      *
      * Recursion definition.
      *
-     * @param label unique recursion label
+     * @param label unique recursion label (optional)
      *
      * @sample [org.david.sessionkotlin_lib.dsl.Samples.goto]
      *
      * @return a [RecursionTag] to be used in [goto] calls.
      *
      */
-    public open fun miu(label: String = ""): RecursionTag {
+    public open fun miu(label: String = "X${recursionCounter++}"): RecursionTag {
         val tag = RecursionTag(label)
         val msg = RecursionDefinition(tag)
         instructions.add(msg)

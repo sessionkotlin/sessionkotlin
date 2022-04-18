@@ -53,7 +53,8 @@ class Booking {
                     "Book" to LocalTypeSend(
                         agency,
                         StringClass,
-                        LocalTypeReceive(agency, IntClass, LocalTypeRecursion(t))
+                        LocalTypeReceive(agency, IntClass, LocalTypeRecursion(t)),
+                        "Book"
                     ),
                     "Terminate" to LocalTypeInternalChoice(
                         mapOf(
@@ -64,9 +65,10 @@ class Booking {
                                     company,
                                     PaymentInfo::class.java,
                                     LocalTypeReceive(company, UnitClass, LEnd)
-                                )
+                                ),
+                                "Confirm"
                             ),
-                            "Cancel" to LocalTypeSend(agency, UnitClass, LEnd)
+                            "Cancel" to LocalTypeSend(agency, UnitClass, LEnd, "Cancel")
 
                         )
                     )
@@ -82,7 +84,7 @@ class Booking {
                     "Book" to LocalTypeReceive(
                         client,
                         StringClass,
-                        LocalTypeSend(client, IntClass, LocalTypeSend(company, UnitClass, LocalTypeRecursion(t)))
+                        LocalTypeSend(client, IntClass, LocalTypeSend(company, UnitClass, LocalTypeRecursion(t), "Book"))
                     ),
                     "Terminate" to LocalTypeExternalChoice(
                         client,
@@ -93,13 +95,14 @@ class Booking {
                                 LocalTypeSend(
                                     company,
                                     UnitClass,
-                                    LEnd
+                                    LEnd,
+                                    "Confirm"
                                 )
                             ),
                             "Cancel" to LocalTypeReceive(
                                 client,
                                 UnitClass,
-                                LocalTypeSend(company, UnitClass, LEnd)
+                                LocalTypeSend(company, UnitClass, LEnd, "Cancel")
                             )
 
                         )
@@ -139,9 +142,9 @@ class Booking {
                 )
             )
         )
-        assertEquals(g.project(client), lClient)
-        assertEquals(g.project(agency), lAgency)
-        assertEquals(g.project(company), lCompany)
+        assertEquals(lClient, g.project(client))
+        assertEquals(lAgency, g.project(agency))
+        assertEquals(lCompany, g.project(company))
     }
 
     class PaymentInfo

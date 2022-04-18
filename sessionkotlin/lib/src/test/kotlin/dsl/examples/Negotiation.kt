@@ -62,10 +62,11 @@ class Negotiation {
                                 mapOf(
                                     "Accept2" to LocalTypeSend(
                                         seller, UnitClass,
-                                        LocalTypeReceive(seller, UnitClass, LEnd)
+                                        LocalTypeReceive(seller, UnitClass, LEnd),
+                                        "Accept2"
                                     ),
-                                    "Reject2" to LocalTypeSend(seller, UnitClass, LEnd),
-                                    "Haggle2" to LocalTypeSend(seller, IntClass, LocalTypeRecursion(t))
+                                    "Reject2" to LocalTypeSend(seller, UnitClass, LEnd, "Reject2"),
+                                    "Haggle2" to LocalTypeSend(seller, IntClass, LocalTypeRecursion(t), "Haggle2")
                                 )
                             )
                         )
@@ -79,8 +80,8 @@ class Negotiation {
                 t,
                 LocalTypeInternalChoice(
                     mapOf(
-                        "Accept1" to LocalTypeSend(buyer, UnitClass, LocalTypeReceive(buyer, UnitClass, LEnd)),
-                        "Reject1" to LocalTypeSend(buyer, UnitClass, LEnd),
+                        "Accept1" to LocalTypeSend(buyer, UnitClass, LocalTypeReceive(buyer, UnitClass, LEnd), "Accept1"),
+                        "Reject1" to LocalTypeSend(buyer, UnitClass, LEnd, "Reject1"),
                         "Haggle1" to LocalTypeSend(
                             buyer, IntClass,
                             LocalTypeExternalChoice(
@@ -93,13 +94,14 @@ class Negotiation {
                                     "Reject2" to LocalTypeReceive(buyer, UnitClass, LEnd),
                                     "Haggle2" to LocalTypeReceive(buyer, IntClass, LocalTypeRecursion(t))
                                 )
-                            )
+                            ),
+                            "Haggle1"
                         )
                     )
                 )
             )
         )
-        assertEquals(g.project(buyer), lBuyer)
-        assertEquals(g.project(seller), lSeller)
+        assertEquals(lBuyer, g.project(buyer))
+        assertEquals(lSeller, g.project(seller))
     }
 }

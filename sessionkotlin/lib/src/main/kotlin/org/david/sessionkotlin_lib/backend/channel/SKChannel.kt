@@ -6,7 +6,7 @@ import org.david.sessionkotlin_lib.backend.SKMessage
 import org.david.sessionkotlin_lib.backend.exception.BinaryEndpointsException
 
 /**
- * Creates a bidirectional channel between two roles.
+ * Declares a bidirectional channel between two roles.
  */
 public class SKChannel(private val role1: SKGenRole, private val role2: SKGenRole) {
 

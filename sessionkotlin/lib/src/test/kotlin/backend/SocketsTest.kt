@@ -16,9 +16,9 @@ import kotlin.test.assertFailsWith
 
 class SocketsTest {
     companion object {
-        object A : SKGenRole
-        object B : SKGenRole
-        object C : SKGenRole
+        object A : SKGenRole()
+        object B : SKGenRole()
+        object C : SKGenRole()
 
         val payloads = listOf<Any>("Hello world", 10, 10L, 2.3)
         private var atomicPort = AtomicInteger(9000)

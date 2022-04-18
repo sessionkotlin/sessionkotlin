@@ -44,9 +44,10 @@ class UnfinishedExecTest {
             LocalTypeReceive(
                 a, IntClass,
                 LocalTypeSend(c, LongClass, LEnd)
-            )
+            ),
+            "1"
         )
-        assertEquals(g.project(b), lB)
+        assertEquals(lB, g.project(b))
     }
 
     @Test

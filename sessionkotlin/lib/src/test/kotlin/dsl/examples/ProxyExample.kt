@@ -51,12 +51,12 @@ class ProxyExample {
                         "Ok" to LocalTypeReceive(
                             server,
                             Response::class.java,
-                            LocalTypeSend(client, Response::class.java, LEnd)
+                            LocalTypeSend(client, Response::class.java, LEnd, "Ok")
                         ),
                         "Error" to LocalTypeReceive(
                             server,
                             Error::class.java,
-                            LocalTypeSend(client, Error::class.java, LEnd)
+                            LocalTypeSend(client, Error::class.java, LEnd, "Error")
                         )
                     )
                 )
@@ -66,15 +66,15 @@ class ProxyExample {
             proxy, Request::class.java,
             LocalTypeInternalChoice(
                 mapOf(
-                    "Ok" to LocalTypeSend(proxy, Response::class.java, LEnd),
-                    "Error" to LocalTypeSend(proxy, Error::class.java, LEnd)
+                    "Ok" to LocalTypeSend(proxy, Response::class.java, LEnd, "Ok"),
+                    "Error" to LocalTypeSend(proxy, Error::class.java, LEnd, "Error")
                 )
             )
         )
 
-        assertEquals(g.project(client), lClient)
-        assertEquals(g.project(proxy), lProxy)
-        assertEquals(g.project(server), lServer)
+        assertEquals(lClient, g.project(client))
+        assertEquals(lProxy, g.project(proxy))
+        assertEquals(lServer, g.project(server))
     }
 
     data class Request(

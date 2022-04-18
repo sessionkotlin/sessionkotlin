@@ -239,8 +239,8 @@ class SyntaxRecursionTest {
                                 t2,
                                 LocalTypeInternalChoice(
                                     mapOf(
-                                        "2.1" to LocalTypeSend(b, IntClass, LocalTypeRecursion(t2)),
-                                        "2.2" to LocalTypeSend(b, UnitClass, LocalTypeRecursion(t1))
+                                        "2.1" to LocalTypeSend(b, IntClass, LocalTypeRecursion(t2), "2.1"),
+                                        "2.2" to LocalTypeSend(b, UnitClass, LocalTypeRecursion(t1), "2.2")
                                     )
                                 )
                             )
@@ -251,7 +251,7 @@ class SyntaxRecursionTest {
                 )
             )
         )
-        assertEquals(g.project(a), lA)
+        assertEquals(lA, g.project(a))
     }
 
     @Test
@@ -319,9 +319,10 @@ class SyntaxRecursionTest {
                         "1" to LocalTypeSend(
                             b,
                             LongClass,
-                            LocalTypeRecursion(x)
+                            LocalTypeRecursion(x),
+                            "1"
                         ),
-                        "2" to LocalTypeSend(b, StringClass, LocalTypeEnd)
+                        "2" to LocalTypeSend(b, StringClass, LocalTypeEnd, "2")
                     )
                 )
             )
@@ -340,8 +341,8 @@ class SyntaxRecursionTest {
                 )
             )
         )
-        assertEquals(g.project(a), lA)
-        assertEquals(g.project(b), lB)
+        assertEquals(lA, g.project(a))
+        assertEquals(lB, g.project(b))
     }
 
     @Test
@@ -358,7 +359,7 @@ class SyntaxRecursionTest {
         }
         val lA = LocalTypeInternalChoice(
             mapOf(
-                "1" to LocalTypeSend(b, LongClass, LocalTypeReceive(b, LongClass, LEnd))
+                "1" to LocalTypeSend(b, LongClass, LocalTypeReceive(b, LongClass, LEnd), "1")
             )
         )
         val lB = LocalTypeExternalChoice(
@@ -367,8 +368,8 @@ class SyntaxRecursionTest {
                 "1" to LocalTypeReceive(a, LongClass, LocalTypeSend(a, LongClass, LEnd))
             )
         )
-        assertEquals(g.project(a), lA)
-        assertEquals(g.project(b), lB)
+        assertEquals(lA, g.project(a))
+        assertEquals(lB, g.project(b))
     }
 
     @Test

@@ -154,8 +154,8 @@ class ConsistencyBasicTest {
                 )
             )
         )
-        assertEquals(g.project(a), lA)
-        assertEquals(g.project(b), lB)
+        assertEquals(lA, g.project(a))
+        assertEquals(lB, g.project(b))
     }
 
     @Test
@@ -188,15 +188,17 @@ class ConsistencyBasicTest {
                     b,
                     LongClass,
                     LocalTypeSend(
-                        c, LongClass, LEnd
-                    )
+                        c, LongClass, LEnd, "1"
+                    ),
+                    "1"
                 ),
                 "2" to LocalTypeSend(
                     b,
                     IntClass,
                     LocalTypeSend(
-                        c, BoolClass, LEnd
-                    )
+                        c, BoolClass, LEnd, "2"
+                    ),
+                    "2"
                 ),
             )
         )
@@ -228,8 +230,8 @@ class ConsistencyBasicTest {
                     LongClass,
                     LocalTypeInternalChoice(
                         mapOf(
-                            "1.1" to LocalTypeSend(b, IntClass, LEnd),
-                            "1.2" to LocalTypeSend(b, StringClass, LEnd)
+                            "1.1" to LocalTypeSend(b, IntClass, LEnd, "1.1"),
+                            "1.2" to LocalTypeSend(b, StringClass, LEnd, "1.2")
                         )
                     )
                 ),

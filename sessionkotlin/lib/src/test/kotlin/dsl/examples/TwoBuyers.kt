@@ -84,16 +84,21 @@ class TwoBuyers {
                         "Ok" to LocalTypeSend(
                             seller,
                             Address::class.java,
-                            LocalTypeReceive(seller, Date::class.java, LocalTypeSend(a, Date::class.java, LEnd))
+                            LocalTypeReceive(seller, Date::class.java, LocalTypeSend(a, Date::class.java, LEnd, "Ok")),
+                            "Ok"
                         ),
-                        "Quit" to LocalTypeSend(seller, UnitClass, LocalTypeSend(a, UnitClass, LEnd)),
+                        "Quit" to LocalTypeSend(
+                            seller, UnitClass,
+                            LocalTypeSend(a, UnitClass, LEnd, "Quit"),
+                            "Quit"
+                        ),
                     )
                 )
             )
         )
-        assertEquals(g.project(a), lA)
-        assertEquals(g.project(seller), lS)
-        assertEquals(g.project(b), lB)
+        assertEquals(lA, g.project(a))
+        assertEquals(lS, g.project(seller))
+        assertEquals(lB, g.project(b))
     }
 
     class Address

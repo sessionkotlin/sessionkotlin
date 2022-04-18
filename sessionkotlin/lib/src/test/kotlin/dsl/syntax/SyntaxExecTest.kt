@@ -126,9 +126,10 @@ class SyntaxExecTest {
                 "1" to LocalTypeSend(
                     a,
                     StringClass,
-                    LocalTypeReceive(a, StringClass, LocalTypeEnd)
+                    LocalTypeReceive(a, StringClass, LocalTypeEnd),
+                    "1"
                 ),
-                "2" to LocalTypeSend(a, UnitClass, LocalTypeEnd)
+                "2" to LocalTypeSend(a, UnitClass, LocalTypeEnd, "2")
             )
         )
         val lA = LocalTypeExternalChoice(
@@ -138,7 +139,7 @@ class SyntaxExecTest {
                 "2" to LocalTypeReceive(b, UnitClass, LocalTypeEnd)
             )
         )
-        assertEquals(g.project(a), lA)
-        assertEquals(g.project(b), lB)
+        assertEquals(lA, g.project(a))
+        assertEquals(lB, g.project(b))
     }
 }

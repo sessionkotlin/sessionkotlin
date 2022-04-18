@@ -58,9 +58,10 @@ class BuyerBrokerSupplier {
                             "Approved" to LocalTypeSend(
                                 finance,
                                 IntClass,
-                                LocalTypeReceive(finance, IntClass, LocalTypeSend(applicant, IntClass, LEnd))
+                                LocalTypeReceive(finance, IntClass, LocalTypeSend(applicant, IntClass, LEnd, "Approved")),
+                                "Approved"
                             ),
-                            "Denied" to LocalTypeSend(finance, UnitClass, LocalTypeSend(applicant, UnitClass, LEnd))
+                            "Denied" to LocalTypeSend(finance, UnitClass, LocalTypeSend(applicant, UnitClass, LEnd, "Denied"), "Denied")
                         )
                     )
                 )
@@ -79,10 +80,10 @@ class BuyerBrokerSupplier {
             )
         )
 
-        assertEquals(g.project(applicant), lApplicant)
-        assertEquals(g.project(portal), lPortal)
-        assertEquals(g.project(proc), lProc)
-        assertEquals(g.project(finance), lFinance)
+        assertEquals(lApplicant, g.project(applicant))
+        assertEquals(lPortal, g.project(portal))
+        assertEquals(lProc, g.project(proc))
+        assertEquals(lFinance, g.project(finance))
     }
 
     data class Application(

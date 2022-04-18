@@ -67,9 +67,9 @@ class ConsistencyExecTest {
             mapOf(
                 "1" to LocalTypeSend(
                     c, IntClass,
-                    LocalTypeReceive(c, IntClass, LEnd)
+                    LocalTypeReceive(c, IntClass, LEnd), "1"
                 ),
-                "2" to LocalTypeSend(c, IntClass, LEnd)
+                "2" to LocalTypeSend(c, IntClass, LEnd, "2")
             )
         )
         val lC = LocalTypeExternalChoice(
@@ -82,7 +82,7 @@ class ConsistencyExecTest {
                 "2" to LocalTypeReceive(b, IntClass, LEnd)
             )
         )
-        assertEquals(g.project(b), lB)
-        assertEquals(g.project(c), lC)
+        assertEquals(lB, g.project(b))
+        assertEquals(lC, g.project(c))
     }
 }
