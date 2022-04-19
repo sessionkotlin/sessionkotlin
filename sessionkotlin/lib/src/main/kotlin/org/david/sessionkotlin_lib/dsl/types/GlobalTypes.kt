@@ -14,8 +14,8 @@ internal data class State(
     val role: SKRole,
     var sentWhileDisabled: Boolean = false,
     var enabledBy: SKRole? = null,
-    var activeRoles: MutableSet<SKRole> = mutableSetOf(),
-    var label: String? = null
+    var activeRoles: MutableSet<SKRole> = mutableSetOf(),  // roles that received messages in the choice case
+    var label: String? = null  // label for the current choice case
 ) {
     fun enabled() = enabledBy != null && enabledBy != role
 }
