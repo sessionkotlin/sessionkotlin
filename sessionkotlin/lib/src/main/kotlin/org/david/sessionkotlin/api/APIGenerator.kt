@@ -2,6 +2,7 @@ package org.david.sessionkotlin.api
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import org.david.sessionkotlin.api.exception.NoMessageLabelException
 import org.david.sessionkotlin.backend.SKBuffer
 import org.david.sessionkotlin.backend.SKMPEndpoint
 import org.david.sessionkotlin.dsl.RecursionTag
@@ -9,6 +10,7 @@ import org.david.sessionkotlin.dsl.RootEnv
 import org.david.sessionkotlin.dsl.SKRole
 import org.david.sessionkotlin.dsl.types.*
 import org.david.sessionkotlin.util.asClassname
+import org.david.sessionkotlin.util.capitalized
 import java.io.File
 
 private const val GENERATED_COMMENT = "This is a generated file. Do not change it."
@@ -97,6 +99,11 @@ private class APIGenerator(
             fileName = buildClassName(protocolName, role)
         ).addFileComment(GENERATED_COMMENT)
 
+    private val callbacksInterfaceName = ClassName("", buildClassName(protocolName + "Callbacks", role))
+    private val callbacksClassName = ClassName("", buildClassName(protocolName + "CallbacksClass", role))
+    private val callbacksInterface = TypeSpec.interfaceBuilder(callbacksInterfaceName)
+    private val callbacksFunction = FunSpec.builder("start")
+
     private fun genLocals(
         l: LocalType,
         stateIndex: Int,
@@ -173,6 +180,17 @@ private class APIGenerator(
                 classBuilder.addFunction(functions.overrideSpec)
                 fileSpecBuilder.addType(interfaceBuilder.build())
                 fileSpecBuilder.addType(classBuilder.build())
+
+                if (l.label != null) {
+                    callbacksInterface.addFunction(
+                        FunSpec.builder("onSend${l.label.capitalized()}To${l.to}")
+                            .addModifiers(KModifier.ABSTRACT)
+                            .build()
+                    )
+                } else {
+                    throw NoMessageLabelException(l.asString())
+                }
+
                 GenRet(ICNames(interfaceName, className), ret.counter)
             }
             is LocalTypeReceive -> {
@@ -188,8 +206,8 @@ private class APIGenerator(
 
                 val codeBlock = CodeBlock.builder()
                     .let {
-                        val pName = parameter?.name ?: "Unit"
-                        it.addStatement("super.receive(${roleMap[l.from]}, $pName)")
+                        val p = parameter?.name ?: "SKBuffer<Unit>()"
+                        it.addStatement("super.receive(${roleMap[l.from]}, $p)")
                         it
                     }
                     .addStatement("return (${ret.interfaceClassPair.className.constructorReference()})(e)")
@@ -205,6 +223,17 @@ private class APIGenerator(
                 classBuilder.addFunction(functions.overrideSpec)
                 fileSpecBuilder.addType(interfaceBuilder.build())
                 fileSpecBuilder.addType(classBuilder.build())
+
+                if (l.label != null) {
+                    callbacksInterface.addFunction(
+                        FunSpec.builder("onReceive${l.label.capitalized()}From${l.from}")
+                            .addModifiers(KModifier.ABSTRACT)
+                            .build()
+                    )
+                } else {
+                    throw NoMessageLabelException(l.asString())
+                }
+
                 GenRet(ICNames(interfaceName, className), ret.counter)
             }
             is LocalTypeExternalChoice -> {
@@ -291,6 +320,49 @@ private class APIGenerator(
     fun writeTo(outputDirectory: File) {
         genLocals(localType, initialStateCount)
         fileSpecBuilder.build().writeTo(outputDirectory)
+
+        val classBuilder = TypeSpec
+            .classBuilder(callbacksClassName)
+            .addFunction(callbacksFunction.build())
+            .primaryConstructor(
+                FunSpec.constructorBuilder()
+                    .addParameter(
+                        ParameterSpec
+                            .builder("e", SKMPEndpoint::class)
+                            .build()
+                    )
+                    .addParameter(
+                        ParameterSpec
+                            .builder("callbacks", callbacksInterfaceName)
+                            .build()
+                    )
+                    .build()
+            ).addProperty(
+                PropertySpec.builder("e", SKMPEndpoint::class)
+                    .initializer("e")
+                    .addModifiers(KModifier.PRIVATE)
+                    .build()
+            ).addProperty(
+                PropertySpec.builder("callbacks", callbacksInterfaceName)
+                    .initializer("callbacks")
+                    .addModifiers(KModifier.PRIVATE)
+                    .build()
+            )
+        FileSpec
+            .builder(
+                packageName = "",
+                fileName = callbacksClassName.simpleName
+            ).addFileComment(GENERATED_COMMENT)
+            .addType(classBuilder.build())
+            .build().writeTo(outputDirectory)
+
+        FileSpec
+            .builder(
+                packageName = "",
+                fileName = callbacksInterfaceName.simpleName
+            ).addFileComment(GENERATED_COMMENT)
+            .addType(callbacksInterface.build())
+            .build().writeTo(outputDirectory)
     }
 }
 

@@ -44,7 +44,7 @@ internal class GlobalTypeSend(
                 if (!state.enabled()) {
                     state.enabledBy = from
                 }
-                LocalTypeReceive(from, type, cont.project(role, state))
+                LocalTypeReceive(from, type, cont.project(role, state), label = label)
             }
             else -> {
                 state.activeRoles.add(to)

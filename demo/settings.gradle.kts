@@ -9,5 +9,5 @@
 
 rootProject.name = "demo"
 include("protocols")
-include("appFluent")
-include("appCallbacks")
+include("app_fluent")
+include("app_callbacks")

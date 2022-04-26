@@ -9,7 +9,7 @@ internal data class LocalTypeSend(
     val type: Class<*>,
     val cont: LocalType,
     val branch: String? = null,
-    val label: String? = null
+    val label: String? = null,
 ) : LocalType() {
     override fun equals(other: Any?): Boolean {
         if (other !is LocalTypeSend) return false
@@ -29,7 +29,13 @@ internal data class LocalTypeSend(
     }
 }
 
-internal data class LocalTypeReceive(val from: SKRole, val type: Class<*>, val cont: LocalType) : LocalType()
+internal data class LocalTypeReceive(
+    val from: SKRole,
+    val type: Class<*>,
+    val cont: LocalType,
+    val label: String? = null,
+) : LocalType()
+
 internal data class LocalTypeInternalChoice(val cases: Map<String, LocalType>) : LocalType()
 internal data class LocalTypeExternalChoice(var to: SKRole, val cases: Map<String, LocalType>) : LocalType()
 internal data class LocalTypeRecursionDefinition(val tag: RecursionTag, val cont: LocalType) : LocalType()

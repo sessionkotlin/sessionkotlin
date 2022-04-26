@@ -13,13 +13,13 @@ fun main() {
         val t = miu()
         choice(a) {
             case("1") {
-                send<Int>(a, b)
-                send<Int>(b, c)
+                send<Unit>(a, b, "val1")
+                send<Int>(b, c, "val2")
                 goto(t)
             }
             case("2") {
-                send<String>(a, b)
-                send<String>(b, c)
+                send<String>(a, b, "val3")
+                send<String>(b, c, "val4")
             }
         }
     }

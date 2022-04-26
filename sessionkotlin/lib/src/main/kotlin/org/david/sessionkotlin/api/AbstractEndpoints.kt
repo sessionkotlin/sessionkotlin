@@ -1,5 +1,6 @@
 package org.david.sessionkotlin.api
 
+import org.david.sessionkotlin.api.exception.SKLinearException
 import org.david.sessionkotlin.backend.SKBranch
 import org.david.sessionkotlin.backend.SKBuffer
 import org.david.sessionkotlin.backend.SKMPEndpoint
@@ -19,6 +20,7 @@ public abstract class SKOutputEndpoint(private val e: SKMPEndpoint) : SKEndpoint
     public suspend fun <T> send(role: SKGenRole, payload: T, label: String? = null) {
         use()
         if (label != null) {
+
             e.send(role, SKBranch(label))
         }
         e.send(role, SKPayload(payload))

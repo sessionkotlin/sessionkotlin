@@ -44,7 +44,7 @@ fun main() {
                     is Simple_B_2_1 -> b.let {
                         val buf = SKBuffer<Int>()
                         it
-                            .receiveFromA(buf)
+                            .receiveFromA()
                             .sendToC(buf.value * 2)
                     }
                     is Simple_B_5_2 -> b.let {
