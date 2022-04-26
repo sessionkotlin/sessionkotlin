@@ -1,11 +1,11 @@
 package dsl.unfinished
 
 import dsl.util.UnitClass
-import org.david.sessionkotlin_lib.dsl.SKRole
-import org.david.sessionkotlin_lib.dsl.exception.UnfinishedRolesException
-import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
-import org.david.sessionkotlin_lib.dsl.types.LEnd
-import org.david.sessionkotlin_lib.dsl.types.LocalTypeSend
+import org.david.sessionkotlin.dsl.SKRole
+import org.david.sessionkotlin.dsl.exception.UnfinishedRolesException
+import org.david.sessionkotlin.dsl.globalProtocolInternal
+import org.david.sessionkotlin.dsl.types.LEnd
+import org.david.sessionkotlin.dsl.types.LocalTypeSend
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

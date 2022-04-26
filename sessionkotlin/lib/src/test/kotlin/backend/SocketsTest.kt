@@ -2,13 +2,13 @@ package backend
 
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.david.sessionkotlin_lib.api.SKGenRole
-import org.david.sessionkotlin_lib.backend.SKMPEndpoint
-import org.david.sessionkotlin_lib.backend.SKPayload
-import org.david.sessionkotlin_lib.backend.channel.SKChannel
-import org.david.sessionkotlin_lib.backend.exception.AlreadyConnectedException
-import org.david.sessionkotlin_lib.backend.exception.BinaryEndpointsException
-import org.david.sessionkotlin_lib.backend.exception.NotConnectedException
+import org.david.sessionkotlin.api.SKGenRole
+import org.david.sessionkotlin.backend.SKMPEndpoint
+import org.david.sessionkotlin.backend.SKPayload
+import org.david.sessionkotlin.backend.channel.SKChannel
+import org.david.sessionkotlin.backend.exception.AlreadyConnectedException
+import org.david.sessionkotlin.backend.exception.BinaryEndpointsException
+import org.david.sessionkotlin.backend.exception.NotConnectedException
 import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals

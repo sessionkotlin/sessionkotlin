@@ -3,10 +3,10 @@ package dsl.syntax
 import dsl.util.IntClass
 import dsl.util.StringClass
 import dsl.util.UnitClass
-import org.david.sessionkotlin_lib.dsl.SKRole
-import org.david.sessionkotlin_lib.dsl.exception.SendingtoSelfException
-import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
-import org.david.sessionkotlin_lib.dsl.types.*
+import org.david.sessionkotlin.dsl.SKRole
+import org.david.sessionkotlin.dsl.exception.SendingToSelfException
+import org.david.sessionkotlin.dsl.globalProtocolInternal
+import org.david.sessionkotlin.dsl.types.*
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -54,7 +54,7 @@ class SyntaxExecTest {
 
     @Test
     fun `same role sending and receiving 2`() {
-        assertFailsWith<SendingtoSelfException> {
+        assertFailsWith<SendingToSelfException> {
             val x = globalProtocolInternal {
                 send<Int>(b, c)
             }
@@ -67,7 +67,7 @@ class SyntaxExecTest {
 
     @Test
     fun `same role sending and receiving 3`() {
-        assertFailsWith<SendingtoSelfException> {
+        assertFailsWith<SendingToSelfException> {
             val x = globalProtocolInternal {
                 choice(a) {
                     case("1") {

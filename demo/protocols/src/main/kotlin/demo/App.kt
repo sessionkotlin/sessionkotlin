@@ -1,6 +1,8 @@
 package demo
 
-import org.david.sessionkotlin_lib.dsl.*
+import org.david.sessionkotlin.dsl.SKRole
+import org.david.sessionkotlin.dsl.globalProtocol
+
 
 fun main() {
     val a = SKRole("A")

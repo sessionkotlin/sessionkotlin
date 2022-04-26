@@ -1,13 +1,13 @@
 package dsl.extra
 
 import dsl.util.UnitClass
-import org.david.sessionkotlin_lib.dsl.RecursionTag
-import org.david.sessionkotlin_lib.dsl.SKRole
-import org.david.sessionkotlin_lib.dsl.exception.InconsistentExternalChoiceException
-import org.david.sessionkotlin_lib.dsl.exception.RoleNotEnabledException
-import org.david.sessionkotlin_lib.dsl.exception.UnfinishedRolesException
-import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
-import org.david.sessionkotlin_lib.dsl.types.*
+import org.david.sessionkotlin.dsl.RecursionTag
+import org.david.sessionkotlin.dsl.SKRole
+import org.david.sessionkotlin.dsl.exception.InconsistentExternalChoiceException
+import org.david.sessionkotlin.dsl.exception.RoleNotEnabledException
+import org.david.sessionkotlin.dsl.exception.UnfinishedRolesException
+import org.david.sessionkotlin.dsl.globalProtocolInternal
+import org.david.sessionkotlin.dsl.types.*
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

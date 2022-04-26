@@ -1,8 +1,8 @@
 package backend
 
-import org.david.sessionkotlin_lib.api.SKGenRole
-import org.david.sessionkotlin_lib.backend.channel.SKChannel
-import org.david.sessionkotlin_lib.backend.exception.BinaryEndpointsException
+import org.david.sessionkotlin.api.SKGenRole
+import org.david.sessionkotlin.backend.channel.SKChannel
+import org.david.sessionkotlin.backend.exception.BinaryEndpointsException
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFailsWith
 
@@ -141,5 +141,4 @@ class SKChannelTest {
             chan1.getEndpoints(C)
         }
     }
-
 }

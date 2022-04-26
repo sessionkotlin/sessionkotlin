@@ -1,8 +1,8 @@
 package dsl.unfinished
 
-import org.david.sessionkotlin_lib.dsl.SKRole
-import org.david.sessionkotlin_lib.dsl.exception.UnfinishedRolesException
-import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
+import org.david.sessionkotlin.dsl.SKRole
+import org.david.sessionkotlin.dsl.exception.UnfinishedRolesException
+import org.david.sessionkotlin.dsl.globalProtocolInternal
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFailsWith
 

@@ -1,6 +1,6 @@
 package dsl.misc
 
-import org.david.sessionkotlin_lib.dsl.Samples
+import org.david.sessionkotlin.dsl.Samples
 import org.junit.jupiter.api.Test
 
 class SampleTest {

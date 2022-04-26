@@ -3,10 +3,10 @@ package dsl.examples
 import dsl.util.IntClass
 import dsl.util.StringClass
 import dsl.util.UnitClass
-import org.david.sessionkotlin_lib.dsl.RecursionTag
-import org.david.sessionkotlin_lib.dsl.SKRole
-import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
-import org.david.sessionkotlin_lib.dsl.types.*
+import org.david.sessionkotlin.dsl.RecursionTag
+import org.david.sessionkotlin.dsl.SKRole
+import org.david.sessionkotlin.dsl.globalProtocolInternal
+import org.david.sessionkotlin.dsl.types.*
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 

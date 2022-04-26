@@ -40,3 +40,6 @@
 
 - É possível criar um SKChannel definindo apenas um ou nenhum dos participantes,
 adiando a sua definição até à tentativa de uso.
+
+
+- Para gerar a API de callbacks, as mensagens têm de ser anotadas com uma label, usada no nome do método.

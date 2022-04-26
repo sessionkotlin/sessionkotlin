@@ -3,15 +3,15 @@ package dsl.syntax
 import dsl.util.DoubleClass
 import dsl.util.IntClass
 import dsl.util.StringClass
-import org.david.sessionkotlin_lib.dsl.SKRole
-import org.david.sessionkotlin_lib.dsl.exception.DuplicateCaseLabelException
-import org.david.sessionkotlin_lib.dsl.exception.SendingtoSelfException
-import org.david.sessionkotlin_lib.dsl.exception.TerminalInstructionException
-import org.david.sessionkotlin_lib.dsl.globalProtocolInternal
-import org.david.sessionkotlin_lib.dsl.types.LEnd
-import org.david.sessionkotlin_lib.dsl.types.LocalTypeExternalChoice
-import org.david.sessionkotlin_lib.dsl.types.LocalTypeReceive
-import org.david.sessionkotlin_lib.dsl.types.LocalTypeSend
+import org.david.sessionkotlin.dsl.SKRole
+import org.david.sessionkotlin.dsl.exception.DuplicateCaseLabelException
+import org.david.sessionkotlin.dsl.exception.SendingToSelfException
+import org.david.sessionkotlin.dsl.exception.TerminalInstructionException
+import org.david.sessionkotlin.dsl.globalProtocolInternal
+import org.david.sessionkotlin.dsl.types.LEnd
+import org.david.sessionkotlin.dsl.types.LocalTypeExternalChoice
+import org.david.sessionkotlin.dsl.types.LocalTypeReceive
+import org.david.sessionkotlin.dsl.types.LocalTypeSend
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -58,7 +58,7 @@ class SyntaxBasicTest {
 
     @Test
     fun `same role sending and receiving`() {
-        assertFailsWith<SendingtoSelfException> {
+        assertFailsWith<SendingToSelfException> {
             globalProtocolInternal {
                 send<Int>(a, a)
             }

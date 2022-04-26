@@ -12,9 +12,10 @@ import Simple_C_2_1
 import Simple_C_4_2
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.david.sessionkotlin_lib.backend.SKBuffer
-import org.david.sessionkotlin_lib.backend.SKMPEndpoint
-import org.david.sessionkotlin_lib.backend.channel.SKChannel
+import org.david.sessionkotlin.backend.SKBuffer
+import org.david.sessionkotlin.backend.SKMPEndpoint
+import org.david.sessionkotlin.backend.channel.SKChannel
+
 
 
 fun main() {
