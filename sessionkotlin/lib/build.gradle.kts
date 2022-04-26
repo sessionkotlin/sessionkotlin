@@ -4,14 +4,21 @@ version = "0.0.1"
 plugins {
     kotlin("jvm")
     `java-library`
-    jacoco
-    id("org.jetbrains.dokka") version "1.6.10"
     `maven-publish`
-    id("org.jlleitschuh.gradle.ktlint")
+    jacoco // Test Coverage
+    id("org.jetbrains.dokka") version "1.6.10" // Generate documentation
+    id("org.jlleitschuh.gradle.ktlint") // Linter
 }
+
+val kotlinPoetVersion: String by project
+val kotlinVersion: String by project
+val kotlinxCoroutinesVersion: String by project
 
 dependencies {
     testImplementation(kotlin("test"))
+    implementation("com.squareup:kotlinpoet:$kotlinPoetVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
+    implementation("io.ktor:ktor-network:2.0.0")
 }
 
 tasks.test {
@@ -49,8 +56,13 @@ ktlint {
     disabledRules.set(setOf("no-wildcard-imports"))
 }
 
+kotlin {
+    explicitApi()
+}
+
 java {
     withJavadocJar()
+    withSourcesJar()
 }
 
 publishing {
@@ -58,7 +70,7 @@ publishing {
 
         create<MavenPublication>("maven") {
             groupId = project.group as String
-            artifactId = "${rootProject.name}_${project.name}"
+            artifactId = rootProject.name
             version = project.version as String
 
             from(components["java"])
