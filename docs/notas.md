@@ -36,3 +36,7 @@
 - Tanto os canais como os sockets são fechados automaticamente.
   Quando alguem tenta ler de uma conexão fechada é lançada logo uma exceção.
   Assim, se algum participante não terminar o protocolo, os outros não ficam à espera.
+
+
+- É possível criar um SKChannel definindo apenas um ou nenhum dos participantes,
+adiando a sua definição até à tentativa de uso.
