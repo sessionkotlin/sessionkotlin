@@ -17,7 +17,6 @@ import org.david.sessionkotlin.backend.SKMPEndpoint
 import org.david.sessionkotlin.backend.channel.SKChannel
 
 
-
 fun main() {
     val chanAB = SKChannel(A, B)
 //    val chanBC = SKChannel(B, C)
@@ -30,26 +29,27 @@ fun main() {
                 Simple_A_1(it)
                     .branch1()
                     .sendToB(2)
+//                    .branch2()
+//                    .sendToB("bye!")
             }
         }
         launch {
             // B
             SKMPEndpoint().use { e ->
                 e.connect(A, chanAB)
-//                it.connect(C, chanBC)
                 e.accept(C, 9999)
-                val b = Simple_B_1(e)
-                    .branch()
-                when (b) {
-                    is Simple_B_2_1 -> b.let {
+
+                val b1 = Simple_B_1(e)
+                when (val b2 = b1.branch()) {
+                    is Simple_B_2_1 -> {
                         val buf = SKBuffer<Int>()
-                        it
+                        b2
                             .receiveFromA(buf)
                             .sendToC(buf.value * 2)
                     }
-                    is Simple_B_5_2 -> b.let {
+                    is Simple_B_5_2 -> {
                         val buf = SKBuffer<String>()
-                        it
+                        b2
                             .receiveFromA(buf)
                             .sendToC(buf.value + ", and hello from B")
                     }

@@ -28,13 +28,10 @@ fun main() {
             val callbacks = object : SimpleCallbacks_A {
                 override fun onChoose1(): Choice1 = Choice1.Choice1_1
                 override fun onSendVal1ToB(): Int = 10
-                override fun onSendVal3ToB(): String {
-                    TODO()
-                }
+                override fun onSendVal3ToB(): String = TODO()
             }
             SimpleCallbacksClass_A(callbacks).use { e ->
-                e.connect(A, chanAB)
-                e.accept(C, 9999)
+                e.connect(B, chanAB)
                 e.start()
             }
         }
@@ -63,7 +60,6 @@ fun main() {
             // C
             SKMPEndpoint().use { e ->
                 e.request(B, "localhost", 9999)
-//                it.connect(B, chanBC)
 
                 val b = Simple_C_1(e)
                     .branch()

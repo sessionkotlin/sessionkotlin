@@ -10,12 +10,12 @@ fun main() {
     val c = SKRole("C")
 
     globalProtocol("Simple") {
-        val t = miu()
+//        val t = miu()
         choice(a) {
             case("1") {
                 send<Int>(a, b, "val1")
                 send<Int>(b, c, "val2")
-                goto(t)
+//                goto(t)
             }
             case("2") {
                 send<String>(a, b, "val3")

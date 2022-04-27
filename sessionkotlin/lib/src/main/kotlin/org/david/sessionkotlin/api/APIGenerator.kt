@@ -104,7 +104,6 @@ private class APIGenerator(
     private val callbacksInterfaceName = ClassName("", buildClassName(protocolName + "Callbacks", role))
     private val callbacksClassName = ClassName("", buildClassName(protocolName + "CallbacksClass", role))
     private val callbacksInterface = TypeSpec.interfaceBuilder(callbacksInterfaceName)
-    private val callbacksFunction = FunSpec.builder("start").addModifiers(KModifier.SUSPEND)
     private val callbacksInterfaceFile = FileSpec
         .builder(
             packageName = "",
@@ -115,6 +114,7 @@ private class APIGenerator(
     private fun genLocals(
         l: LocalType,
         stateIndex: Int,
+        callbackCode: CodeBlock.Builder,
         tag: RecursionTag? = null,
         superInterface: ClassName? = null,
         branch: String? = null,
@@ -157,11 +157,12 @@ private class APIGenerator(
         return when (l) {
             LocalTypeEnd -> GenRet(ICNames(endClassName, endClassName), stateIndex)
             is LocalTypeRecursion -> GenRet(recursionMap.getValue(l.tag), stateIndex)
-            is LocalTypeRecursionDefinition -> genLocals(l.cont, stateIndex, l.tag)
+            is LocalTypeRecursionDefinition -> genLocals(l.cont, stateIndex, callbackCode, l.tag)
             is LocalTypeSend -> {
                 classBuilder.superclass(SKOutputEndpoint::class)
                     .addSuperclassConstructorParameter("e")
-                val ret = genLocals(l.cont, stateIndex + 1)
+                val nextCallbackCode = CodeBlock.builder()
+                val ret = genLocals(l.cont, stateIndex + 1, nextCallbackCode)
                 val methodName = "sendTo${l.to}"
                 val parameter = if (l.type != Unit::class.java)
                     ParameterSpec
@@ -199,7 +200,7 @@ private class APIGenerator(
                             .build()
                     )
                     if (l.branch != null) {
-                        callbacksFunction.addCode(
+                        callbackCode.add(
                             CodeBlock.builder()
                                 .addStatement(
                                     "super.sendProtected(%L, %T(\"%L\"))",
@@ -210,7 +211,7 @@ private class APIGenerator(
                                 .build()
                         )
                     }
-                    callbacksFunction.addCode(
+                    callbackCode.add(
                         CodeBlock.builder()
                             .addStatement(
                                 "super.sendProtected(%L, %T(%L.%L()))",
@@ -220,6 +221,7 @@ private class APIGenerator(
                             )
                             .build()
                     )
+                    callbackCode.add(nextCallbackCode.build())
                 } else {
                     throw NoMessageLabelException(l.asString())
                 }
@@ -229,7 +231,8 @@ private class APIGenerator(
             is LocalTypeReceive -> {
                 classBuilder.superclass(SKInputEndpoint::class)
                     .addSuperclassConstructorParameter("e")
-                val ret = genLocals(l.cont, stateIndex + 1)
+                val nextCallbackCode = CodeBlock.builder()
+                val ret = genLocals(l.cont, stateIndex + 1, nextCallbackCode)
                 val methodName = "receiveFrom${l.from}"
                 val parameter = if (l.type != Unit::class.java)
                     ParameterSpec
@@ -275,7 +278,7 @@ private class APIGenerator(
                             }
                             .build()
                     )
-                    callbacksFunction.addCode(
+                    callbackCode.add(
                         CodeBlock.builder()
                             .addStatement(
                                 "%L.%L((super.receiveProtected(%L) as %T).payload)",
@@ -285,6 +288,7 @@ private class APIGenerator(
                             )
                             .build()
                     )
+                    callbackCode.add(nextCallbackCode.build())
                 } else {
                     throw NoMessageLabelException(l.asString())
                 }
@@ -304,17 +308,31 @@ private class APIGenerator(
 
                 var newIndex = stateIndex + 1
                 val whenBlock = CodeBlock.builder()
+                callbackCode.beginControlFlow(
+                    "when((super.receiveProtected(%L) as %T).label)",
+                    roleMap[l.to]!!, SKBranch::class
+                )
+
                 for ((k, v) in l.cases) {
+                    val nextCallbackCode = CodeBlock.builder()
+                    callbackCode.add("\"%L\" -> ", k)
+                    callbackCode.beginControlFlow("")
+
                     val ret = genLocals(
                         v,
                         newIndex,
+                        nextCallbackCode,
                         superInterface = branchInterfaceName,
                         branch = k
                     )
-                    whenBlock.addStatement("\"$k\" -> %T(e)", ret.interfaceClassPair.className)
+                    callbackCode.add(nextCallbackCode.build())
+                    callbackCode.endControlFlow()
+
+                    whenBlock.addStatement("\"%L\" -> %T(e)", k, ret.interfaceClassPair.className)
                     ret.interfaceClassPair.className
                     newIndex = ret.counter + 1
                 }
+                callbackCode.endControlFlow()
 
                 val methodName = "branch"
                 val abstractFunction = FunSpec.builder(methodName)
@@ -346,16 +364,25 @@ private class APIGenerator(
                 var counter = stateIndex + 1
                 val choiceEnumClassname = ClassName("", "Choice$stateIndex")
                 val choiceEnum = TypeSpec.enumBuilder(choiceEnumClassname)
+                val choiceFunctionName = "onChoose$stateIndex"
                 callbacksInterface.addFunction(
-                    FunSpec.builder("onChoose$stateIndex")
+                    FunSpec.builder(choiceFunctionName)
                         .addModifiers(KModifier.ABSTRACT)
                         .returns(choiceEnumClassname)
                         .build()
                 )
+                callbackCode.beginControlFlow("when(%L.%L())", callbacksParameterName, choiceFunctionName)
 
                 for ((k, v) in l.cases) {
-                    choiceEnum.addEnumConstant("Choice${stateIndex}_$k")
-                    val ret = genLocals(v, counter)
+                    val nextCallbackCode = CodeBlock.builder()
+                    val enumConstant = "Choice${stateIndex}_$k"
+                    callbackCode.add("%T.%L -> ", choiceEnumClassname, enumConstant)
+                    callbackCode.beginControlFlow("")
+                    choiceEnum.addEnumConstant(enumConstant)
+                    val ret = genLocals(v, counter, nextCallbackCode)
+                    callbackCode.add(nextCallbackCode.build())
+                    callbackCode.endControlFlow()
+
                     counter = ret.counter + 1
 
                     val methodName = "branch$k"
@@ -375,6 +402,8 @@ private class APIGenerator(
                     interfaceBuilder.addFunction(abstractFunction.build())
                     classBuilder.addFunction(function.build())
                 }
+                callbackCode.endControlFlow()
+
                 callbacksInterfaceFile.addType(choiceEnum.build())
                 fileSpecBuilder.addType(interfaceBuilder.build())
                 fileSpecBuilder.addType(classBuilder.build())
@@ -384,13 +413,18 @@ private class APIGenerator(
     }
 
     fun writeTo(outputDirectory: File) {
-        genLocals(localType, initialStateCount)
+        val codeBlock = CodeBlock.builder()
+        genLocals(localType, initialStateCount, codeBlock)
         fileSpecBuilder.build().writeTo(outputDirectory)
 
         val classBuilder = TypeSpec
             .classBuilder(callbacksClassName)
             .superclass(SKMPEndpoint::class)
-            .addFunction(callbacksFunction.build())
+            .addFunction(
+                FunSpec.builder("start")
+                    .addModifiers(KModifier.SUSPEND)
+                    .addCode(codeBlock.build()).build()
+            )
             .primaryConstructor(
                 FunSpec.constructorBuilder()
                     .addParameter(
