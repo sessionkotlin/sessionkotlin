@@ -173,7 +173,7 @@ private class APIGenerator(
                 val codeBlock = CodeBlock.builder()
                     .let {
                         val pName = parameter?.name ?: "Unit"
-                        it.addStatement("super.send(%L, %S, %S)", roleMap[l.to], pName, l.branch)
+                        it.addStatement("super.send(%L, %L, %S)", roleMap[l.to], pName, l.branch)
                         it
                     }
                     .addStatement("return %T(e)", ret.interfaceClassPair.className)

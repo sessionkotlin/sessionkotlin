@@ -25,10 +25,12 @@ fun main() {
     runBlocking {
         launch {
             // A
+            var index = 0
             val callbacks = object : SimpleCallbacks_A {
-                override fun onChoose1(): Choice1 = Choice1.Choice1_1
+                override fun onChoose1(): Choice1 =
+                    if (index++ == 0) Choice1.Choice1_1 else Choice1.Choice1_2
                 override fun onSendVal1ToB(): Int = 10
-                override fun onSendVal3ToB(): String = TODO()
+                override fun onSendVal3ToB(): String = "something"
             }
             SimpleCallbacksClass_A(callbacks).use { e ->
                 e.connect(B, chanAB)
