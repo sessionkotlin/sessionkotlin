@@ -103,6 +103,11 @@ private class APIGenerator(
     private val callbacksClassName = ClassName("", buildClassName(protocolName + "CallbacksClass", role))
     private val callbacksInterface = TypeSpec.interfaceBuilder(callbacksInterfaceName)
     private val callbacksFunction = FunSpec.builder("start").addModifiers(KModifier.SUSPEND)
+    private val callbacksInterfaceFile = FileSpec
+        .builder(
+            packageName = "",
+            fileName = callbacksInterfaceName.simpleName
+        ).addFileComment(GENERATED_COMMENT)
 
     private fun genLocals(
         l: LocalType,
@@ -295,7 +300,17 @@ private class APIGenerator(
                 classBuilder.superclass(SKEndpoint::class)
 //                    .addSuperclassConstructorParameter("e")
                 var counter = stateIndex + 1
+                val choiceEnumClassname = ClassName("", "Choice$stateIndex")
+                val choiceEnum = TypeSpec.enumBuilder(choiceEnumClassname)
+                callbacksInterface.addFunction(
+                    FunSpec.builder("onChoose$stateIndex")
+                        .addModifiers(KModifier.ABSTRACT)
+                        .returns(choiceEnumClassname)
+                        .build()
+                )
+
                 for ((k, v) in l.cases) {
+                    choiceEnum.addEnumConstant("Choice${stateIndex}_$k")
                     val ret = genLocals(v, counter)
                     counter = ret.counter + 1
 
@@ -316,6 +331,7 @@ private class APIGenerator(
                     interfaceBuilder.addFunction(abstractFunction.build())
                     classBuilder.addFunction(function.build())
                 }
+                callbacksInterfaceFile.addType(choiceEnum.build())
                 fileSpecBuilder.addType(interfaceBuilder.build())
                 fileSpecBuilder.addType(classBuilder.build())
                 GenRet(ICNames(interfaceName, className), counter)
@@ -362,13 +378,10 @@ private class APIGenerator(
             .addType(classBuilder.build())
             .build().writeTo(outputDirectory)
 
-        FileSpec
-            .builder(
-                packageName = "",
-                fileName = callbacksInterfaceName.simpleName
-            ).addFileComment(GENERATED_COMMENT)
+        callbacksInterfaceFile
             .addType(callbacksInterface.build())
-            .build().writeTo(outputDirectory)
+            .build()
+            .writeTo(outputDirectory)
     }
 }
 

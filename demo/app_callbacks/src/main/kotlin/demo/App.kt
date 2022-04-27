@@ -3,7 +3,10 @@ package demo
 import A
 import B
 import C
+import Choice1
+import SimpleCallbacksClass_A
 import SimpleCallbacksClass_B
+import SimpleCallbacks_A
 import SimpleCallbacks_B
 import Simple_A_1
 import Simple_C_1
@@ -23,11 +26,18 @@ fun main() {
     runBlocking {
         launch {
             // A
-            SKMPEndpoint().use {
-                it.connect(B, chanAB)
-                Simple_A_1(it)
-                    .branch1()
-                    .sendToB(10)
+            SKMPEndpoint().use { e ->
+                e.connect(A, chanAB)
+                e.accept(C, 9999)
+                val callbacks = object : SimpleCallbacks_A {
+                    override fun onChoose1(): Choice1 = Choice1.Choice1_1
+                    override fun onSendVal1ToB(): Int = 10
+                    override fun onSendVal3ToB(): String {
+                        TODO()
+                    }
+                }
+                SimpleCallbacksClass_A(e, callbacks)
+                    .start()
             }
         }
         launch {
