@@ -17,11 +17,11 @@ public open class SKEndpoint {
 }
 
 public abstract class SKOutputEndpoint(private val e: SKMPEndpoint) : SKEndpoint() {
-    public suspend fun <T> send(role: SKGenRole, payload: T, label: String? = null) {
+    public suspend fun <T> send(role: SKGenRole, payload: T, branch: String? = null) {
         use()
-        if (label != null) {
+        if (branch != null) {
 
-            e.send(role, SKBranch(label))
+            e.send(role, SKBranch(branch))
         }
         e.send(role, SKPayload(payload))
     }

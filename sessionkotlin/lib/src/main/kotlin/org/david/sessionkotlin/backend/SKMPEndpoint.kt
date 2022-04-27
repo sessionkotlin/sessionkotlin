@@ -12,7 +12,7 @@ import org.david.sessionkotlin.backend.exception.NotConnectedException
 import org.david.sessionkotlin.backend.exception.ReadClosedChannelException
 import org.david.sessionkotlin.backend.socket.SKBinarySocketEndpoint
 
-public class SKMPEndpoint : AutoCloseable {
+public open class SKMPEndpoint : AutoCloseable {
     private val connections = mutableMapOf<SKGenRole, SKBinaryEndpoint>()
     private val selectorManager = ActorSelectorManager(Dispatchers.IO)
     private val objectFormatter = ObjectFormatter()
@@ -23,12 +23,16 @@ public class SKMPEndpoint : AutoCloseable {
         }
     }
 
-    internal suspend fun send(role: SKGenRole, msg: SKMessage) {
+    internal suspend fun send(role: SKGenRole, msg: SKMessage): Unit = sendProtected(role, msg)
+
+    protected suspend fun sendProtected(role: SKGenRole, msg: SKMessage) {
         val ch = connections[role] ?: throw NotConnectedException(role)
         ch.writeMsg(msg)
     }
 
-    internal suspend fun receive(role: SKGenRole): SKMessage {
+    internal suspend fun receive(role: SKGenRole): SKMessage = receiveProtected(role)
+
+    protected suspend fun receiveProtected(role: SKGenRole): SKMessage {
         try {
             val ch = connections[role] ?: throw NotConnectedException(role)
             return ch.readMsg()
