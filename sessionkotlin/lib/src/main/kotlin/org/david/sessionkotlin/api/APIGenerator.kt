@@ -102,7 +102,7 @@ private class APIGenerator(
     private val callbacksInterfaceName = ClassName("", buildClassName(protocolName + "Callbacks", role))
     private val callbacksClassName = ClassName("", buildClassName(protocolName + "CallbacksClass", role))
     private val callbacksInterface = TypeSpec.interfaceBuilder(callbacksInterfaceName)
-    private val callbacksFunction = FunSpec.builder("start")
+    private val callbacksFunction = FunSpec.builder("start").addModifiers(KModifier.SUSPEND)
 
     private fun genLocals(
         l: LocalType,
@@ -185,6 +185,7 @@ private class APIGenerator(
                     callbacksInterface.addFunction(
                         FunSpec.builder("onSend${l.label.capitalized()}To${l.to}")
                             .addModifiers(KModifier.ABSTRACT)
+                            .returns(l.type.kotlin)
                             .build()
                     )
                 } else {
@@ -228,6 +229,11 @@ private class APIGenerator(
                     callbacksInterface.addFunction(
                         FunSpec.builder("onReceive${l.label.capitalized()}From${l.from}")
                             .addModifiers(KModifier.ABSTRACT)
+                            .let {
+                                if (parameter != null)
+                                    it.addParameter(ParameterSpec.builder("value", l.type.kotlin).build())
+                                it
+                            }
                             .build()
                     )
                 } else {

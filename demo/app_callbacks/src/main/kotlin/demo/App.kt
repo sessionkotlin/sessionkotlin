@@ -3,14 +3,15 @@ package demo
 import A
 import B
 import C
-import SimpleCallbacksClass_A
 import SimpleCallbacksClass_B
-import SimpleCallbacksClass_C
-import SimpleCallbacks_A
 import SimpleCallbacks_B
-import SimpleCallbacks_C
+import Simple_A_1
+import Simple_C_1
+import Simple_C_2_1
+import Simple_C_4_2
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.david.sessionkotlin.backend.SKBuffer
 import org.david.sessionkotlin.backend.SKMPEndpoint
 import org.david.sessionkotlin.backend.channel.SKChannel
 
@@ -22,21 +23,11 @@ fun main() {
     runBlocking {
         launch {
             // A
-            SKMPEndpoint().use {e ->
-                e.connect(B, chanAB)
-                val callbacks = object : SimpleCallbacks_A {
-                    override fun onSendVal1ToB() {
-                        TODO("Not yet implemented")
-                    }
-
-                    override fun onSendVal3ToB() {
-                        TODO("Not yet implemented")
-                    }
-
-                }
-
-                SimpleCallbacksClass_A(e, callbacks)
-                    .start()
+            SKMPEndpoint().use {
+                it.connect(B, chanAB)
+                Simple_A_1(it)
+                    .branch1()
+                    .sendToB(10)
             }
         }
         launch {
@@ -45,23 +36,21 @@ fun main() {
                 e.connect(A, chanAB)
                 e.accept(C, 9999)
                 val callbacks = object : SimpleCallbacks_B {
-                    override fun onSendVal2ToC() {
-                        TODO("Not yet implemented")
+                    var receivedInt = -1
+                    var receivedString = ""
+
+                    override fun onReceiveVal1FromA(value: Int) {
+                        receivedInt = value
                     }
 
-                    override fun onReceiveVal1FromA() {
-                        TODO("Not yet implemented")
+                    override fun onSendVal2ToC(): Int = receivedInt + 2
+
+                    override fun onReceiveVal3FromA(value: String) {
+                        receivedString = value
                     }
 
-                    override fun onSendVal4ToC() {
-                        TODO("Not yet implemented")
-                    }
-
-                    override fun onReceiveVal3FromA() {
-                        TODO("Not yet implemented")
-                    }
+                    override fun onSendVal4ToC(): String = "$receivedString. Hello from B"
                 }
-
                 SimpleCallbacksClass_B(e, callbacks)
                     .start()
 
@@ -71,19 +60,23 @@ fun main() {
             // C
             SKMPEndpoint().use { e ->
                 e.request(B, "localhost", 9999)
+//                it.connect(B, chanBC)
 
-                val callbacks = object : SimpleCallbacks_C {
-                    override fun onReceiveVal2FromB() {
-                        TODO("Not yet implemented")
+                val b = Simple_C_1(e)
+                    .branch()
+                when (b) {
+                    is Simple_C_2_1 -> b.let {
+                        val bufInt = SKBuffer<Int>()
+                        it.receiveFromB(bufInt)
+                        println("Received int: ${bufInt.value}")
                     }
-
-                    override fun onReceiveVal4FromB() {
-                        TODO("Not yet implemented")
-                    }
+                    is Simple_C_4_2 -> b
+                        .let {
+                            val bufString = SKBuffer<String>()
+                            it.receiveFromB(bufString)
+                            println("Received string: ${bufString.value}")
+                        }
                 }
-
-                SimpleCallbacksClass_C(e, callbacks)
-                    .start()
             }
         }
     }

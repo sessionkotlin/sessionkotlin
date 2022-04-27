@@ -28,8 +28,8 @@ fun main() {
             SKMPEndpoint().use {
                 it.connect(B, chanAB)
                 Simple_A_1(it)
-                    .branch2()
-                    .sendToB("helloo")
+                    .branch1()
+                    .sendToB(2)
             }
         }
         launch {
@@ -44,7 +44,7 @@ fun main() {
                     is Simple_B_2_1 -> b.let {
                         val buf = SKBuffer<Int>()
                         it
-                            .receiveFromA()
+                            .receiveFromA(buf)
                             .sendToC(buf.value * 2)
                     }
                     is Simple_B_5_2 -> b.let {
