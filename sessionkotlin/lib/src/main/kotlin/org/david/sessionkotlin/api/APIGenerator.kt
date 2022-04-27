@@ -154,10 +154,22 @@ private class APIGenerator(
             classBuilder.addModifiers(KModifier.PRIVATE)
         }
 
+        fun recursionVariable(tag: RecursionTag) = "var$tag"
+
         return when (l) {
             LocalTypeEnd -> GenRet(ICNames(endClassName, endClassName), stateIndex)
-            is LocalTypeRecursion -> GenRet(recursionMap.getValue(l.tag), stateIndex)
-            is LocalTypeRecursionDefinition -> genLocals(l.cont, stateIndex, callbackCode, l.tag)
+            is LocalTypeRecursion -> {
+                callbackCode.addStatement("%L = true", recursionVariable(l.tag))
+                GenRet(recursionMap.getValue(l.tag), stateIndex)
+            }
+            is LocalTypeRecursionDefinition -> {
+                callbackCode.beginControlFlow("do")
+                callbackCode.addStatement("var %L = %L", recursionVariable(l.tag), false)
+                val ret = genLocals(l.cont, stateIndex, callbackCode, l.tag)
+                callbackCode.endControlFlow()
+                callbackCode.add("while(%L)", recursionVariable(l.tag))
+                ret
+            }
             is LocalTypeSend -> {
                 classBuilder.superclass(SKOutputEndpoint::class)
                     .addSuperclassConstructorParameter("e")

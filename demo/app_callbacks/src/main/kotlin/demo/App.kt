@@ -6,8 +6,10 @@ import C
 import Choice1
 import SimpleCallbacksClass_A
 import SimpleCallbacksClass_B
+import SimpleCallbacksClass_C
 import SimpleCallbacks_A
 import SimpleCallbacks_B
+import SimpleCallbacks_C
 import Simple_A_1
 import Simple_C_1
 import Simple_C_2_1
@@ -28,7 +30,7 @@ fun main() {
             var index = 0
             val callbacks = object : SimpleCallbacks_A {
                 override fun onChoose1(): Choice1 =
-                    if (index++ == 0) Choice1.Choice1_1 else Choice1.Choice1_2
+                    if (index++ < 2) Choice1.Choice1_1 else Choice1.Choice1_2
                 override fun onSendVal1ToB(): Int = 10
                 override fun onSendVal3ToB(): String = "something"
             }
@@ -60,24 +62,13 @@ fun main() {
         }
         launch {
             // C
-            SKMPEndpoint().use { e ->
+            val callbacks = object : SimpleCallbacks_C {
+                override fun onReceiveVal2FromB(value: Int) = println(value)
+                override fun onReceiveVal4FromB(value: String) = println(value)
+            }
+            SimpleCallbacksClass_C(callbacks).use { e ->
                 e.request(B, "localhost", 9999)
-
-                val b = Simple_C_1(e)
-                    .branch()
-                when (b) {
-                    is Simple_C_2_1 -> b.let {
-                        val bufInt = SKBuffer<Int>()
-                        it.receiveFromB(bufInt)
-                        println("Received int: ${bufInt.value}")
-                    }
-                    is Simple_C_4_2 -> b
-                        .let {
-                            val bufString = SKBuffer<String>()
-                            it.receiveFromB(bufString)
-                            println("Received string: ${bufString.value}")
-                        }
-                }
+                e.start()
             }
         }
     }
