@@ -33,10 +33,10 @@ class ConsistencyExecTest {
         assertFailsWith<InconsistentExternalChoiceException> {
             globalProtocolInternal {
                 choice(b) {
-                    case("Case1") {
+                    branch("Case1") {
                         exec(case1)
                     }
-                    case("Case2") {
+                    branch("Case2") {
                         exec(case2)
                     }
                 }
@@ -55,10 +55,10 @@ class ConsistencyExecTest {
         }
         val g = globalProtocolInternal {
             choice(b) {
-                case("1") {
+                branch("1") {
                     exec(case1, mapOf(a to b))
                 }
-                case("2") {
+                branch("2") {
                     exec(case2)
                 }
             }

@@ -11,3 +11,6 @@ internal fun Map<SKRole, SKRole>.getOrKey(key: SKRole): SKRole = this.getOrDefau
 internal fun String.asClassname() =
     this.replace(" ", "")
         .replaceFirstChar(Char::titlecase)
+
+internal fun String.capitalized() =
+    replaceFirstChar(Char::titlecase)

@@ -70,19 +70,19 @@ public sealed class GlobalEnv(
      * Declares an internal choice at [at].
      *
      * @param [at] role that makes the decision
-     * @param [cases] block that defines the choices
+     * @param [branches] block that defines the choices
      *
      *
      * @sample [org.david.sessionkotlin.dsl.Samples.choice]
      *
      */
-    public open fun choice(at: SKRole, cases: ChoiceEnv.() -> Unit) {
+    public open fun choice(at: SKRole, branches: ChoiceEnv.() -> Unit) {
         val bEnv = ChoiceEnv(roles, recursionVariables)
-        bEnv.cases()
-        val b = Choice(at, bEnv.caseMap)
+        bEnv.branches()
+        val b = Choice(at, bEnv.branchMap)
 
         roles.add(at)
-        for (g in b.caseMap.values) {
+        for (g in b.branchMap.values) {
             roles.addAll(g.roles)
         }
         instructions.add(b)
@@ -175,6 +175,9 @@ public sealed class GlobalEnv(
     internal fun asGlobalType() = buildGlobalType(instructions)
 }
 
+/**
+ * Recursively builds a [GlobalType] from a list of [Instruction].
+ */
 internal fun buildGlobalType(
     instructions: MutableList<Instruction>,
 ): GlobalType =
@@ -189,29 +192,43 @@ internal fun buildGlobalType(
         }
 
         when (head) {
-            is Send -> GlobalTypeSend(head.from, head.to, head.type, head.label, buildGlobalType(tail))
-            is Choice -> GlobalTypeBranch(head.at, head.caseMap.mapValues { buildGlobalType(it.value.instructions) })
+            is Send -> GlobalTypeSend(head.from, head.to, head.type, head.msgLabel, buildGlobalType(tail))
+            is Choice -> GlobalTypeChoice(head.at, head.branchMap.mapValues { buildGlobalType(it.value.instructions) })
             is Recursion -> GlobalTypeRecursion(head.tag)
             is RecursionDefinition -> GlobalTypeRecursionDefinition(head.tag, buildGlobalType(tail))
         }
     }
 
+/**
+ * Base environment
+ */
 internal class RootEnv(
-    internal val name: String,
+    internal val protocolName: String,
 ) : GlobalEnv(emptySet(), emptySet())
 
+/**
+ * Environment for choice branches
+ */
 internal class NonRootEnv(
     roles: Set<SKRole>,
     recursionVariables: Set<RecursionTag>,
 ) : GlobalEnv(roles, recursionVariables)
 
-internal fun globalProtocolInternal(name: String = "Proto1", protocolBuilder: GlobalEnv.() -> Unit): RootEnv {
+/**
+ * Global protocol builder.
+ */
+internal fun globalProtocolInternal(name: String = "Proto", protocolBuilder: GlobalEnv.() -> Unit): RootEnv {
     val p = RootEnv(name)
     p.protocolBuilder()
     p.validate()
     return p
 }
 
-public fun globalProtocol(name: String = "Proto1", protocolBuilder: GlobalEnv.() -> Unit) {
+/**
+ * Global protocol builder.
+ *
+ * Generates local APIs.
+ */
+public fun globalProtocol(name: String, protocolBuilder: GlobalEnv.() -> Unit) {
     generateAPI(globalProtocolInternal(name, protocolBuilder))
 }

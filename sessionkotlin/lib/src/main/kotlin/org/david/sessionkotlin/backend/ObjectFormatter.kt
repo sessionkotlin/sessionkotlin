@@ -5,6 +5,11 @@ import java.io.ByteArrayOutputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 
+/**
+ * Default implementation of the message formatter.
+ *
+ * Internally uses [ObjectOutputStream] and [ObjectInputStream].
+ */
 internal class ObjectFormatter : SKMessageFormatter {
 
     override fun toBytes(msg: SKMessage): ByteArray {

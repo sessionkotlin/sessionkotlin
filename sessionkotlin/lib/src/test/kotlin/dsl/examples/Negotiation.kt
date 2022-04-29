@@ -22,24 +22,24 @@ class Negotiation {
             t = miu("X")
 
             choice(seller) {
-                case("Accept1") {
+                branch("Accept1") {
                     send<Unit>(seller, buyer)
                     send<Unit>(buyer, seller)
                 }
-                case("Reject1") {
+                branch("Reject1") {
                     send<Unit>(seller, buyer)
                 }
-                case("Haggle1") {
+                branch("Haggle1") {
                     send<Int>(seller, buyer)
                     choice(buyer) {
-                        case("Accept2") {
+                        branch("Accept2") {
                             send<Unit>(buyer, seller)
                             send<Unit>(seller, buyer)
                         }
-                        case("Reject2") {
+                        branch("Reject2") {
                             send<Unit>(buyer, seller)
                         }
-                        case("Haggle2") {
+                        branch("Haggle2") {
                             send<Int>(buyer, seller)
                             goto(t)
                         }

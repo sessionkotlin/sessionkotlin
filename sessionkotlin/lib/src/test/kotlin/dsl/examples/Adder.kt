@@ -20,13 +20,13 @@ class Adder {
         val g = globalProtocolInternal {
             t = miu("X")
             choice(c) {
-                case("Continue") {
+                branch("Continue") {
                     send<Int>(c, s)
                     send<Int>(c, s)
                     send<Int>(s, c)
                     goto(t)
                 }
-                case("Quit") {
+                branch("Quit") {
                     send<Unit>(c, s)
                 }
             }

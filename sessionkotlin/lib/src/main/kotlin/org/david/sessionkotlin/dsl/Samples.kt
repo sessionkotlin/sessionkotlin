@@ -34,10 +34,10 @@ public class Samples {
 
         globalProtocolInternal {
             choice(b) {
-                case("Ok") {
+                branch("Ok") {
                     send<String>(b, a)
                 }
-                case("Quit") {
+                branch("Quit") {
                     send<Long>(b, a)
                 }
             }
@@ -64,10 +64,10 @@ public class Samples {
         globalProtocolInternal {
             choice(b) {
 
-                case("Case1") {
+                branch("Case1") {
                     exec(case1)
                 }
-                case("Case2") {
+                branch("Case2") {
                     exec(case2, mapOf(z to c))
                 }
             }
@@ -79,14 +79,14 @@ public class Samples {
         val client = SKRole("Client")
 
         globalProtocolInternal {
-            val t = miu("X")
+            val t = miu()
             choice(client) {
 
-                case("Add") {
+                branch("Add") {
                     send<Int>(client, server)
                     goto(t)
                 }
-                case("Result") {
+                branch("Result") {
                     send<String>(client, server)
                     send<Int>(server, client)
                 }

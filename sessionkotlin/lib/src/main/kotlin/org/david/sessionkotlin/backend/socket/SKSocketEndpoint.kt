@@ -2,16 +2,23 @@ package org.david.sessionkotlin.backend.socket
 
 import io.ktor.network.sockets.*
 import io.ktor.utils.io.*
-import org.david.sessionkotlin.backend.SKBinaryEndpoint
+import org.david.sessionkotlin.backend.SKEndpoint
 import org.david.sessionkotlin.backend.SKMessage
 import org.david.sessionkotlin.backend.SKMessageFormatter
 import java.nio.ByteBuffer
 
-internal class SKBinarySocketEndpoint(
+/**
+ * Endpoint implementation with sockets.
+ */
+internal class SKSocketEndpoint(
     private var s: Socket,
     private val objFormatter: SKMessageFormatter,
-) : SKBinaryEndpoint {
+) : SKEndpoint {
 
+    /**
+     * As messages are often very small, we must flush after every send or else
+     * the endpoint would become stuck waiting for more data to fill the buffer before sending.
+     */
     private val outputStream = s.openWriteChannel(autoFlush = true)
     private val inputStream = s.openReadChannel()
 

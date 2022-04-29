@@ -30,12 +30,18 @@ tasks.test {
 }
 tasks.jacocoTestReport {
     dependsOn(tasks.test) // tests are required to run before generating the report
-}
-
-tasks.jacocoTestReport {
     reports {
         csv.required.set(true)
     }
+    classDirectories.setFrom(
+        files(
+            classDirectories.files.map {
+                fileTree(it) {
+                    exclude("org/david/sessionkotlin/api")
+                }
+            }
+        )
+    )
 }
 
 tasks.dokkaHtml {

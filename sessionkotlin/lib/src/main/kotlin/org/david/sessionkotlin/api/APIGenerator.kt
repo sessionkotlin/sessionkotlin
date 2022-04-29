@@ -2,13 +2,17 @@ package org.david.sessionkotlin.api
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import org.david.sessionkotlin.api.exception.NoMessageLabelException
+import org.david.sessionkotlin.backend.SKBranch
 import org.david.sessionkotlin.backend.SKBuffer
 import org.david.sessionkotlin.backend.SKMPEndpoint
+import org.david.sessionkotlin.backend.SKPayload
 import org.david.sessionkotlin.dsl.RecursionTag
 import org.david.sessionkotlin.dsl.RootEnv
 import org.david.sessionkotlin.dsl.SKRole
 import org.david.sessionkotlin.dsl.types.*
 import org.david.sessionkotlin.util.asClassname
+import org.david.sessionkotlin.util.capitalized
 import java.io.File
 
 private const val GENERATED_COMMENT = "This is a generated file. Do not change it."
@@ -29,7 +33,7 @@ internal fun generateAPI(globalEnv: RootEnv) {
     val globalType = globalEnv.asGlobalType()
     genRoles(globalEnv.roles, outputDirectory) // populates roleMap
     globalEnv.roles.forEach {
-        APIGenerator(globalEnv.name.asClassname(), it, globalType.project(it))
+        APIGenerator(globalEnv.protocolName.asClassname(), it, globalType.project(it))
             .writeTo(outputDirectory)
     }
     genEndClass(outputDirectory)
@@ -97,9 +101,20 @@ private class APIGenerator(
             fileName = buildClassName(protocolName, role)
         ).addFileComment(GENERATED_COMMENT)
 
+    private val callbacksInterfaceName = ClassName("", buildClassName(protocolName + "Callbacks", role))
+    private val callbacksClassName = ClassName("", buildClassName(protocolName + "CallbacksClass", role))
+    private val callbacksInterface = TypeSpec.interfaceBuilder(callbacksInterfaceName)
+    private val callbacksInterfaceFile = FileSpec
+        .builder(
+            packageName = "",
+            fileName = callbacksInterfaceName.simpleName
+        ).addFileComment(GENERATED_COMMENT)
+    private val callbacksParameterName = "callbacks"
+
     private fun genLocals(
         l: LocalType,
         stateIndex: Int,
+        callbackCode: CodeBlock.Builder,
         tag: RecursionTag? = null,
         superInterface: ClassName? = null,
         branch: String? = null,
@@ -135,17 +150,31 @@ private class APIGenerator(
                     .build()
             )
 
-        if (stateIndex > initialStateCount)
+        if (stateIndex > initialStateCount) {
             classBuilder.addModifiers(KModifier.PRIVATE)
+        }
+
+        fun recursionVariable(tag: RecursionTag) = "var$tag"
 
         return when (l) {
             LocalTypeEnd -> GenRet(ICNames(endClassName, endClassName), stateIndex)
-            is LocalTypeRecursion -> GenRet(recursionMap.getValue(l.tag), stateIndex)
-            is LocalTypeRecursionDefinition -> genLocals(l.cont, stateIndex, l.tag)
+            is LocalTypeRecursion -> {
+                callbackCode.addStatement("%L = true", recursionVariable(l.tag))
+                GenRet(recursionMap.getValue(l.tag), stateIndex)
+            }
+            is LocalTypeRecursionDefinition -> {
+                callbackCode.beginControlFlow("do")
+                callbackCode.addStatement("var %L = %L", recursionVariable(l.tag), false)
+                val ret = genLocals(l.cont, stateIndex, callbackCode, l.tag)
+                callbackCode.endControlFlow()
+                callbackCode.add("while(%L)", recursionVariable(l.tag))
+                ret
+            }
             is LocalTypeSend -> {
                 classBuilder.superclass(SKOutputEndpoint::class)
                     .addSuperclassConstructorParameter("e")
-                val ret = genLocals(l.cont, stateIndex + 1)
+                val nextCallbackCode = CodeBlock.builder()
+                val ret = genLocals(l.cont, stateIndex + 1, nextCallbackCode)
                 val methodName = "sendTo${l.to}"
                 val parameter = if (l.type != Unit::class.java)
                     ParameterSpec
@@ -156,11 +185,10 @@ private class APIGenerator(
                 val codeBlock = CodeBlock.builder()
                     .let {
                         val pName = parameter?.name ?: "Unit"
-//                        val label = if (l.sendBranch)
-                        it.addStatement("super.send(${roleMap[l.to]}, $pName, %S)", l.branch)
+                        it.addStatement("super.send(%L, %L, %S)", roleMap[l.to], pName, l.branchLabel)
                         it
                     }
-                    .addStatement("return (${ret.interfaceClassPair.className.constructorReference()})(e)")
+                    .addStatement("return %T(e)", ret.interfaceClassPair.className)
                     .build()
 
                 val functions = genMsgPassing(
@@ -173,12 +201,50 @@ private class APIGenerator(
                 classBuilder.addFunction(functions.overrideSpec)
                 fileSpecBuilder.addType(interfaceBuilder.build())
                 fileSpecBuilder.addType(classBuilder.build())
+
+                if (l.msgLabel != null) {
+                    val name = "onSend${l.msgLabel.capitalized()}To${l.to}"
+
+                    callbacksInterface.addFunction(
+                        FunSpec.builder(name)
+                            .addModifiers(KModifier.ABSTRACT)
+                            .returns(l.type.kotlin)
+                            .build()
+                    )
+                    if (l.branchLabel != null) {
+                        callbackCode.add(
+                            CodeBlock.builder()
+                                .addStatement(
+                                    "super.sendProtected(%L, %T(\"%L\"))",
+                                    roleMap[l.to],
+                                    SKBranch::class,
+                                    l.branchLabel
+                                )
+                                .build()
+                        )
+                    }
+                    callbackCode.add(
+                        CodeBlock.builder()
+                            .addStatement(
+                                "super.sendProtected(%L, %T(%L.%L()))",
+                                roleMap[l.to],
+                                SKPayload::class,
+                                callbacksParameterName, name
+                            )
+                            .build()
+                    )
+                    callbackCode.add(nextCallbackCode.build())
+                } else {
+                    throw NoMessageLabelException(l.asString())
+                }
+
                 GenRet(ICNames(interfaceName, className), ret.counter)
             }
             is LocalTypeReceive -> {
                 classBuilder.superclass(SKInputEndpoint::class)
                     .addSuperclassConstructorParameter("e")
-                val ret = genLocals(l.cont, stateIndex + 1)
+                val nextCallbackCode = CodeBlock.builder()
+                val ret = genLocals(l.cont, stateIndex + 1, nextCallbackCode)
                 val methodName = "receiveFrom${l.from}"
                 val parameter = if (l.type != Unit::class.java)
                     ParameterSpec
@@ -188,11 +254,16 @@ private class APIGenerator(
 
                 val codeBlock = CodeBlock.builder()
                     .let {
-                        val pName = parameter?.name ?: "Unit"
-                        it.addStatement("super.receive(${roleMap[l.from]}, $pName)")
+                        if (parameter != null)
+                            it.addStatement("super.receive(%L, %L)", roleMap[l.from], parameter.name)
+                        else
+                            it.addStatement(
+                                "super.receive(%L, %T())", roleMap[l.from],
+                                SKBuffer::class.asClassName().parameterizedBy(Unit::class.asClassName())
+                            )
                         it
                     }
-                    .addStatement("return (${ret.interfaceClassPair.className.constructorReference()})(e)")
+                    .addStatement("return %T(e)", ret.interfaceClassPair.className)
                     .build()
 
                 val functions = genMsgPassing(
@@ -205,6 +276,35 @@ private class APIGenerator(
                 classBuilder.addFunction(functions.overrideSpec)
                 fileSpecBuilder.addType(interfaceBuilder.build())
                 fileSpecBuilder.addType(classBuilder.build())
+
+                if (l.msgLabel != null) {
+                    val name = "onReceive${l.msgLabel.capitalized()}From${l.from}"
+
+                    callbacksInterface.addFunction(
+                        FunSpec.builder(name)
+                            .addModifiers(KModifier.ABSTRACT)
+                            .let {
+                                if (parameter != null)
+                                    it.addParameter(ParameterSpec.builder("value", l.type.kotlin).build())
+                                it
+                            }
+                            .build()
+                    )
+                    callbackCode.add(
+                        CodeBlock.builder()
+                            .addStatement(
+                                "%L.%L((super.receiveProtected(%L) as %T).payload)",
+                                callbacksParameterName, name,
+                                roleMap[l.from],
+                                SKPayload::class.parameterizedBy(l.type.kotlin)
+                            )
+                            .build()
+                    )
+                    callbackCode.add(nextCallbackCode.build())
+                } else {
+                    throw NoMessageLabelException(l.asString())
+                }
+
                 GenRet(ICNames(interfaceName, className), ret.counter)
             }
             is LocalTypeExternalChoice -> {
@@ -220,17 +320,31 @@ private class APIGenerator(
 
                 var newIndex = stateIndex + 1
                 val whenBlock = CodeBlock.builder()
-                for ((k, v) in l.cases) {
+                callbackCode.beginControlFlow(
+                    "when((super.receiveProtected(%L) as %T).label)",
+                    roleMap[l.to]!!, SKBranch::class
+                )
+
+                for ((k, v) in l.branches) {
+                    val nextCallbackCode = CodeBlock.builder()
+                    callbackCode.add("\"%L\" -> ", k)
+                    callbackCode.beginControlFlow("")
+
                     val ret = genLocals(
                         v,
                         newIndex,
+                        nextCallbackCode,
                         superInterface = branchInterfaceName,
                         branch = k
                     )
-                    whenBlock.addStatement("\"$k\" -> (${ret.interfaceClassPair.className.constructorReference()})(e)")
+                    callbackCode.add(nextCallbackCode.build())
+                    callbackCode.endControlFlow()
+
+                    whenBlock.addStatement("\"%L\" -> %T(e)", k, ret.interfaceClassPair.className)
                     ret.interfaceClassPair.className
                     newIndex = ret.counter + 1
                 }
+                callbackCode.endControlFlow()
 
                 val methodName = "branch"
                 val abstractFunction = FunSpec.builder(methodName)
@@ -243,7 +357,7 @@ private class APIGenerator(
                     .let {
                         it.beginControlFlow("return when(super.receiveBranch(${roleMap[l.to]}))")
                         it.addCode(whenBlock.build())
-                        it.addStatement("else -> throw RuntimeException(\"This shouldn't happen\")")
+                        it.addStatement("else -> throw %T(\"This shouldn't happen\")", RuntimeException::class)
                         it.endControlFlow()
                         it
                     }
@@ -260,8 +374,27 @@ private class APIGenerator(
                 classBuilder.superclass(SKEndpoint::class)
 //                    .addSuperclassConstructorParameter("e")
                 var counter = stateIndex + 1
-                for ((k, v) in l.cases) {
-                    val ret = genLocals(v, counter)
+                val choiceEnumClassname = ClassName("", "Choice$stateIndex")
+                val choiceEnum = TypeSpec.enumBuilder(choiceEnumClassname)
+                val choiceFunctionName = "onChoose$stateIndex"
+                callbacksInterface.addFunction(
+                    FunSpec.builder(choiceFunctionName)
+                        .addModifiers(KModifier.ABSTRACT)
+                        .returns(choiceEnumClassname)
+                        .build()
+                )
+                callbackCode.beginControlFlow("when(%L.%L())", callbacksParameterName, choiceFunctionName)
+
+                for ((k, v) in l.branches) {
+                    val nextCallbackCode = CodeBlock.builder()
+                    val enumConstant = "Choice${stateIndex}_$k"
+                    callbackCode.add("%T.%L -> ", choiceEnumClassname, enumConstant)
+                    callbackCode.beginControlFlow("")
+                    choiceEnum.addEnumConstant(enumConstant)
+                    val ret = genLocals(v, counter, nextCallbackCode)
+                    callbackCode.add(nextCallbackCode.build())
+                    callbackCode.endControlFlow()
+
                     counter = ret.counter + 1
 
                     val methodName = "branch$k"
@@ -274,13 +407,16 @@ private class APIGenerator(
                         .returns(ret.interfaceClassPair.interfaceClassName)
                         .addModifiers(KModifier.OVERRIDE, KModifier.SUSPEND)
                         .let {
-                            it.addStatement("return (${ret.interfaceClassPair.className.constructorReference()})(e)")
+                            it.addStatement("return %T(e)", ret.interfaceClassPair.className)
                             it
                         }
 
                     interfaceBuilder.addFunction(abstractFunction.build())
                     classBuilder.addFunction(function.build())
                 }
+                callbackCode.endControlFlow()
+
+                callbacksInterfaceFile.addType(choiceEnum.build())
                 fileSpecBuilder.addType(interfaceBuilder.build())
                 fileSpecBuilder.addType(classBuilder.build())
                 GenRet(ICNames(interfaceName, className), counter)
@@ -289,8 +425,48 @@ private class APIGenerator(
     }
 
     fun writeTo(outputDirectory: File) {
-        genLocals(localType, initialStateCount)
+        val codeBlock = CodeBlock.builder()
+        genLocals(localType, initialStateCount, codeBlock)
         fileSpecBuilder.build().writeTo(outputDirectory)
+
+        val classBuilder = TypeSpec
+            .classBuilder(callbacksClassName)
+            .superclass(SKMPEndpoint::class)
+            .addFunction(
+                FunSpec.builder("start")
+                    .addModifiers(KModifier.SUSPEND)
+                    .addCode(codeBlock.build()).build()
+            )
+            .primaryConstructor(
+                FunSpec.constructorBuilder()
+                    .addParameter(
+                        ParameterSpec
+                            .builder(callbacksParameterName, callbacksInterfaceName)
+                            .build()
+                    )
+                    .build()
+            ).addProperty(
+                PropertySpec.builder(callbacksParameterName, callbacksInterfaceName)
+                    .initializer(callbacksParameterName)
+                    .addModifiers(KModifier.PRIVATE)
+                    .build()
+            )
+        val suppressUnchecked = AnnotationSpec.builder(ClassName("", "Suppress"))
+            .addMember("%S", "unchecked_cast")
+            .build()
+        FileSpec
+            .builder(
+                packageName = "",
+                fileName = callbacksClassName.simpleName
+            ).addFileComment(GENERATED_COMMENT)
+            .addAnnotation(suppressUnchecked)
+            .addType(classBuilder.build())
+            .build().writeTo(outputDirectory)
+
+        callbacksInterfaceFile
+            .addType(callbacksInterface.build())
+            .build()
+            .writeTo(outputDirectory)
     }
 }
 

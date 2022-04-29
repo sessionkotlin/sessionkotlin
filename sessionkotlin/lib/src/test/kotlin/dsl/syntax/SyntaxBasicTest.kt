@@ -4,7 +4,8 @@ import dsl.util.DoubleClass
 import dsl.util.IntClass
 import dsl.util.StringClass
 import org.david.sessionkotlin.dsl.SKRole
-import org.david.sessionkotlin.dsl.exception.DuplicateCaseLabelException
+import org.david.sessionkotlin.dsl.exception.DuplicateBranchLabelException
+import org.david.sessionkotlin.dsl.exception.InvalidBranchLabelException
 import org.david.sessionkotlin.dsl.exception.SendingToSelfException
 import org.david.sessionkotlin.dsl.exception.TerminalInstructionException
 import org.david.sessionkotlin.dsl.globalProtocolInternal
@@ -78,13 +79,13 @@ class SyntaxBasicTest {
     fun `simple choice`() {
         globalProtocolInternal {
             choice(b) {
-                case("Case1") {
+                branch("Case1") {
                     send<String>(b, a)
                     send<String>(b, a)
                 }
-                case("Case2") {
+                branch("Case2") {
                     choice(b) {
-                        case("SubCase1") {
+                        branch("SubCase1") {
                             send<Long>(b, a)
                         }
                     }
@@ -103,11 +104,11 @@ class SyntaxBasicTest {
             send<Int>(s, b)
             send<Int>(a, b)
             choice(b) {
-                case("Ok") {
+                branch("Ok") {
                     send<String>(b, s)
                     send<String>(s, b)
                 }
-                case("Quit") {
+                branch("Quit") {
                     send<String>(b, s)
                 }
             }
@@ -119,10 +120,10 @@ class SyntaxBasicTest {
         assertFailsWith<TerminalInstructionException> {
             globalProtocolInternal {
                 choice(a) {
-                    case("Case1") {
+                    branch("Case1") {
                         send<Unit>(a, b)
                     }
-                    case("Case2") {
+                    branch("Case2") {
                         send<Unit>(a, c)
                     }
                 }
@@ -134,13 +135,13 @@ class SyntaxBasicTest {
 
     @Test
     fun `dupe case labels`() {
-        assertFailsWith<DuplicateCaseLabelException> {
+        assertFailsWith<DuplicateBranchLabelException> {
             globalProtocolInternal {
                 choice(b) {
-                    case("Case1") {
+                    branch("Case1") {
                         send<String>(b, a)
                     }
-                    case("Case1") {
+                    branch("Case1") {
                         send<Int>(b, a)
                         send<Long>(a, b)
                     }
@@ -150,20 +151,20 @@ class SyntaxBasicTest {
     }
 
     @Test
-    fun `dupe case labels nested`() {
+    fun `dupe branch labels nested`() {
         globalProtocolInternal {
             choice(b) {
-                case("Case1") {
+                branch("Case1") {
                     send<String>(b, a)
                 }
-                case("Case2") {
+                branch("Case2") {
                     send<Int>(b, a)
                     send<Long>(a, b)
                     choice(a) {
-                        case("Case2") {
+                        branch("Case2") {
                             send<Int>(a, b)
                         }
-                        case("Case1") {
+                        branch("Case1") {
                             send<Int>(a, b)
                         }
                     }
@@ -176,11 +177,11 @@ class SyntaxBasicTest {
     fun `cumutative sends in choice branches`() {
         globalProtocolInternal {
             choice(b) {
-                case("Case1") {
+                branch("Case1") {
                     send<Int>(b, c)
                     send<String>(b, a)
                 }
-                case("Case2") {
+                branch("Case2") {
                     send<String>(b, a)
                     send<Int>(b, c)
                 }
@@ -192,11 +193,11 @@ class SyntaxBasicTest {
     fun `different actual choice subject`() {
         val g = globalProtocolInternal {
             choice(b) {
-                case("1") {
+                branch("1") {
                     send<String>(b, c)
                     send<String>(c, a)
                 }
-                case("2") {
+                branch("2") {
                     send<Int>(b, c)
                     send<Int>(c, a)
                 }
@@ -216,11 +217,11 @@ class SyntaxBasicTest {
     fun `different actual choice subject 2`() {
         val g = globalProtocolInternal {
             choice(b) {
-                case("1") {
+                branch("1") {
                     send<Int>(b, c)
                     send<Int>(c, a)
                 }
-                case("2") {
+                branch("2") {
                     send<Int>(b, c)
                     send<Int>(c, a)
                 }
@@ -234,5 +235,51 @@ class SyntaxBasicTest {
             )
         )
         assertEquals(g.project(a), lA)
+    }
+
+    @Test
+    fun `space in label`() {
+        assertFailsWith<InvalidBranchLabelException> {
+            globalProtocolInternal {
+                choice(a) {
+                    branch(" Case1") {
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `multiple spaces in label`() {
+        assertFailsWith<InvalidBranchLabelException> {
+            globalProtocolInternal {
+                choice(a) {
+                    branch("C ase 1") {
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `tab in label`() {
+        assertFailsWith<InvalidBranchLabelException> {
+            globalProtocolInternal {
+                choice(a) {
+                    branch("before\tafter") {
+                    }
+                }
+            }
+        }
+    } @Test
+    fun `newline in label`() {
+        assertFailsWith<InvalidBranchLabelException> {
+            globalProtocolInternal {
+                choice(a) {
+                    branch("before\nafter") {
+                    }
+                }
+            }
+        }
     }
 }

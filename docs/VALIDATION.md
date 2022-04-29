@@ -6,7 +6,5 @@
 - In a choice, the choice subject starts as enabled;
 - In a choice, a role must always be enabled by the same role (consistent external choice);
 - In a choice, a role must be enabled exactly zero times or in every branch (no unfinished roles);
-- In a choice, if a disabled role sends a message or is the subject of a choice in some branch, if its behaviour (local
-  type) must be the same for all branches;
-- In a choice, if a branch has a recursive call and a role is disabled, that role's behaviour (local type) must be the
-  same for all branches.
+- In a choice branch, if a disabled role sends a message, is the subject of a choice,
+  or if the branch ends in recursion, its behaviour (local type) must be the same for all branches;

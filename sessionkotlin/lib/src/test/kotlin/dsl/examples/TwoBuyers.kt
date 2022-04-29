@@ -20,12 +20,12 @@ class TwoBuyers {
 
         val aux = globalProtocolInternal {
             choice(b) {
-                case("Ok") {
+                branch("Ok") {
                     send<Address>(b, seller)
                     send<Date>(seller, b)
                     send<Date>(b, a)
                 }
-                case("Quit") {
+                branch("Quit") {
                     send<Unit>(b, seller)
                     send<Unit>(b, a)
                 }
