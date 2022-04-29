@@ -27,12 +27,12 @@ class EnabledRecursionTest {
                 send<Int>(a, b)
                 send<Int>(c, b)
                 choice(b) {
-                    case("1") {
+                    branch("1") {
                         send<Int>(b, c)
                         // 'a' not enabled
                         goto(t)
                     }
-                    case("2") {
+                    branch("2") {
                         send<Int>(b, c)
                     }
                 }
@@ -46,19 +46,19 @@ class EnabledRecursionTest {
             globalProtocolInternal {
                 val t = miu("X")
                 choice(a) {
-                    case("1") {
+                    branch("1") {
                         send<Unit>(a, b)
                         choice(b) {
-                            case("1.1") {
+                            branch("1.1") {
                                 send<Int>(b, c)
                                 goto(t)
                             }
-                            case("1.2") {
+                            branch("1.2") {
                                 send<String>(b, c)
                             }
                         }
                     }
-                    case("2") {
+                    branch("2") {
                         send<Int>(a, b)
                         send<Int>(b, c)
                     }
@@ -73,20 +73,20 @@ class EnabledRecursionTest {
             globalProtocolInternal {
                 val t = miu("X")
                 choice(a) {
-                    case("1") {
+                    branch("1") {
                         send<Unit>(a, b)
                         choice(b) {
-                            case("1.1") {
+                            branch("1.1") {
                                 send<Int>(b, c)
                                 // 'a' not enabled
                                 goto(t)
                             }
-                            case("1.2") {
+                            branch("1.2") {
                                 send<String>(b, c)
                             }
                         }
                     }
-                    case("2") {
+                    branch("2") {
                         send<Int>(a, b)
                         send<Int>(b, c)
                     }
@@ -101,21 +101,21 @@ class EnabledRecursionTest {
         val g = globalProtocolInternal {
             t = miu("X")
             choice(a) {
-                case("1") {
+                branch("1") {
                     send<Unit>(a, b)
                     choice(b) {
                         // 'a' not enabled, but mergeable
-                        case("1.1") {
+                        branch("1.1") {
                             send<Int>(b, c)
                             goto(t)
                         }
-                        case("1.2") {
+                        branch("1.2") {
                             send<String>(b, c)
                             goto(t)
                         }
                     }
                 }
-                case("2") {
+                branch("2") {
                     send<Int>(a, b)
                     send<Int>(b, c)
                 }
@@ -145,15 +145,15 @@ class EnabledRecursionTest {
                 send<Int>(a, b)
 
                 choice(a) {
-                    case("1") {
+                    branch("1") {
                         send<Unit>(a, b)
                         goto(x)
                     }
-                    case("2") {
+                    branch("2") {
                         // 'b' not enabled
                         goto(y)
                     }
-                    case("3") {
+                    branch("3") {
                         send<Long>(a, b)
                     }
                 }

@@ -33,7 +33,7 @@ internal fun generateAPI(globalEnv: RootEnv) {
     val globalType = globalEnv.asGlobalType()
     genRoles(globalEnv.roles, outputDirectory) // populates roleMap
     globalEnv.roles.forEach {
-        APIGenerator(globalEnv.name.asClassname(), it, globalType.project(it))
+        APIGenerator(globalEnv.protocolName.asClassname(), it, globalType.project(it))
             .writeTo(outputDirectory)
     }
     genEndClass(outputDirectory)
@@ -185,7 +185,7 @@ private class APIGenerator(
                 val codeBlock = CodeBlock.builder()
                     .let {
                         val pName = parameter?.name ?: "Unit"
-                        it.addStatement("super.send(%L, %L, %S)", roleMap[l.to], pName, l.branch)
+                        it.addStatement("super.send(%L, %L, %S)", roleMap[l.to], pName, l.branchLabel)
                         it
                     }
                     .addStatement("return %T(e)", ret.interfaceClassPair.className)
@@ -202,8 +202,8 @@ private class APIGenerator(
                 fileSpecBuilder.addType(interfaceBuilder.build())
                 fileSpecBuilder.addType(classBuilder.build())
 
-                if (l.label != null) {
-                    val name = "onSend${l.label.capitalized()}To${l.to}"
+                if (l.msgLabel != null) {
+                    val name = "onSend${l.msgLabel.capitalized()}To${l.to}"
 
                     callbacksInterface.addFunction(
                         FunSpec.builder(name)
@@ -211,14 +211,14 @@ private class APIGenerator(
                             .returns(l.type.kotlin)
                             .build()
                     )
-                    if (l.branch != null) {
+                    if (l.branchLabel != null) {
                         callbackCode.add(
                             CodeBlock.builder()
                                 .addStatement(
                                     "super.sendProtected(%L, %T(\"%L\"))",
                                     roleMap[l.to],
                                     SKBranch::class,
-                                    l.branch
+                                    l.branchLabel
                                 )
                                 .build()
                         )
@@ -277,8 +277,8 @@ private class APIGenerator(
                 fileSpecBuilder.addType(interfaceBuilder.build())
                 fileSpecBuilder.addType(classBuilder.build())
 
-                if (l.label != null) {
-                    val name = "onReceive${l.label.capitalized()}From${l.from}"
+                if (l.msgLabel != null) {
+                    val name = "onReceive${l.msgLabel.capitalized()}From${l.from}"
 
                     callbacksInterface.addFunction(
                         FunSpec.builder(name)
@@ -325,7 +325,7 @@ private class APIGenerator(
                     roleMap[l.to]!!, SKBranch::class
                 )
 
-                for ((k, v) in l.cases) {
+                for ((k, v) in l.branches) {
                     val nextCallbackCode = CodeBlock.builder()
                     callbackCode.add("\"%L\" -> ", k)
                     callbackCode.beginControlFlow("")
@@ -385,7 +385,7 @@ private class APIGenerator(
                 )
                 callbackCode.beginControlFlow("when(%L.%L())", callbacksParameterName, choiceFunctionName)
 
-                for ((k, v) in l.cases) {
+                for ((k, v) in l.branches) {
                     val nextCallbackCode = CodeBlock.builder()
                     val enumConstant = "Choice${stateIndex}_$k"
                     callbackCode.add("%T.%L -> ", choiceEnumClassname, enumConstant)

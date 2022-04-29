@@ -9,6 +9,9 @@ internal sealed interface Instruction {
     fun mapped(mapping: Map<SKRole, SKRole>): Instruction
 }
 
+/**
+ * An instruction that terminates the protocol.
+ */
 internal sealed interface TerminalInstruction : Instruction {
     fun simpleName(): String
 }
@@ -17,7 +20,7 @@ internal data class Send(
     internal val from: SKRole,
     internal val to: SKRole,
     internal val type: Class<*>,
-    internal val label: String?
+    internal val msgLabel: String?
 ) : Instruction {
 
     init {
@@ -27,7 +30,7 @@ internal data class Send(
     }
 
     override fun dump(indent: Int) {
-        printlnIndent(indent, "Send<${type.simpleName}>[$from -> $to]")
+        printlnIndent(indent, "Send($msgLabel)<${type.simpleName}>[$from -> $to]")
     }
 
     override fun mapped(mapping: Map<SKRole, SKRole>): Instruction =
@@ -35,20 +38,20 @@ internal data class Send(
             mapping.getOrKey(from),
             mapping.getOrKey(to),
             type,
-            label
+            msgLabel
         )
 }
 
 internal class Choice(
     internal val at: SKRole,
-    internal val caseMap: MutableMap<String, GlobalEnv>,
+    internal val branchMap: MutableMap<String, GlobalEnv>,
 ) : TerminalInstruction {
     override fun simpleName(): String = "Choice at $at"
 
     override fun dump(indent: Int) {
 
-        printlnIndent(indent, "Choice[$at, cases: ")
-        for (c in caseMap) {
+        printlnIndent(indent, "Choice[$at, branches: ")
+        for (c in branchMap) {
             printlnIndent(indent, "${c.key}:")
             c.value.dump(indent + 2)
         }
@@ -58,18 +61,18 @@ internal class Choice(
 
     override fun mapped(mapping: Map<SKRole, SKRole>): Instruction {
 
-        val newCaseMap = mutableMapOf<String, GlobalEnv>()
-        for (case in caseMap) {
-            val newRoles = case.value.roles.map { mapping.getOrKey(it) }.toSet()
-            val newCaseValue = NonRootEnv(newRoles, case.value.recursionVariables)
+        val newBranchMap = mutableMapOf<String, GlobalEnv>()
+        for (branch in branchMap) {
+            val newRoles = branch.value.roles.map { mapping.getOrKey(it) }.toSet()
+            val newBranchValue = NonRootEnv(newRoles, branch.value.recursionVariables)
 
-            val newInstructions = case.value.instructions.map { it.mapped(mapping) }
-            newCaseValue.instructions = newInstructions.toMutableList()
+            val newInstructions = branch.value.instructions.map { it.mapped(mapping) }
+            newBranchValue.instructions = newInstructions.toMutableList()
 
-            newCaseMap[case.key] = newCaseValue
+            newBranchMap[branch.key] = newBranchValue
         }
 
-        return Choice(mapping.getOrKey(at), newCaseMap)
+        return Choice(mapping.getOrKey(at), newBranchMap)
     }
 }
 

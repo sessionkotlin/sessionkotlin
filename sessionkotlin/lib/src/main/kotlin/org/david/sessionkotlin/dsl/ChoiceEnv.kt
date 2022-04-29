@@ -1,27 +1,36 @@
 package org.david.sessionkotlin.dsl
 
-import org.david.sessionkotlin.dsl.exception.DuplicateCaseLabelException
-import org.david.sessionkotlin.dsl.exception.InvalidCaseLabelException
+import org.david.sessionkotlin.dsl.exception.DuplicateBranchLabelException
+import org.david.sessionkotlin.dsl.exception.InvalidBranchLabelException
 
 @SessionKotlinDSL
 public class ChoiceEnv(
     private val roles: Set<SKRole>,
     private val recursionVariables: Set<RecursionTag>,
 ) {
-    internal val caseMap = mutableMapOf<String, GlobalEnv>()
+    /**
+     * Maps labels to global protocols.
+     */
+    internal val branchMap = mutableMapOf<String, GlobalEnv>()
 
-    public fun case(label: String, protocolBuilder: GlobalEnv.() -> Unit) {
+    /**
+     * Add a branch to a choice.
+     *
+     * @param label the branch label
+     * @param protocolBuilder protocol definition for the branch
+     */
+    public fun branch(label: String, protocolBuilder: GlobalEnv.() -> Unit) {
         val p = NonRootEnv(roles, recursionVariables)
         p.protocolBuilder()
-        if (caseMap.containsKey(label)) {
-            throw DuplicateCaseLabelException(label)
+        if (branchMap.containsKey(label)) {
+            throw DuplicateBranchLabelException(label)
         }
-        if (invalidLabel(label)) {
-            throw InvalidCaseLabelException(label)
+        if (hasWhitespace(label)) {
+            throw InvalidBranchLabelException(label)
         }
-        caseMap[label] = p
+        branchMap[label] = p
     }
 
-    private fun invalidLabel(label: String) =
-        label.contains(" ")
+    private fun hasWhitespace(label: String) =
+        label.any { it.isWhitespace() }
 }

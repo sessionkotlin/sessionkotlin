@@ -20,16 +20,16 @@ class ConsistencyBasicTest {
     }
 
     @Test
-    fun `role not activated in one case`() {
+    fun `role not activated in one branch`() {
         assertFailsWith<InconsistentExternalChoiceException> {
             globalProtocolInternal {
                 choice(b) {
-                    case("Case1") {
+                    branch("Case1") {
                         // 'a' activated
                         send<String>(b, a)
                         send<String>(a, c)
                     }
-                    case("Case2") {
+                    branch("Case2") {
                         // 'a' not activated
                         send<Int>(a, c)
                         send<Int>(c, a)
@@ -40,16 +40,16 @@ class ConsistencyBasicTest {
     }
 
     @Test
-    fun `role not activated in one case 2`() {
+    fun `role not activated in one branch 2`() {
         assertFailsWith<InconsistentExternalChoiceException> {
             globalProtocolInternal {
                 choice(b) {
-                    case("Case1") {
+                    branch("Case1") {
                         send<Int>(b, c)
                         // 'a' enabled by 'c'
                         send<Int>(c, a)
                     }
-                    case("Case2") {
+                    branch("Case2") {
                         send<Int>(b, c)
                         // 'a' enabled by 'b'
                         send<String>(b, a)
@@ -60,16 +60,16 @@ class ConsistencyBasicTest {
     }
 
     @Test
-    fun `role not activated in one case 3`() {
+    fun `role not activated in one branch 3`() {
         assertFailsWith<InconsistentExternalChoiceException> {
             globalProtocolInternal {
                 choice(b) {
-                    case("Case1") {
+                    branch("Case1") {
                         send<String>(b, c)
                         send<String>(b, c)
                         // 'a' not enabled
                     }
-                    case("Case2") {
+                    branch("Case2") {
                         // 'a' enabled by b
                         send<String>(b, a)
                         send<String>(a, c)
@@ -85,11 +85,11 @@ class ConsistencyBasicTest {
         assertFailsWith<InconsistentExternalChoiceException> {
             globalProtocolInternal {
                 choice(b) {
-                    case("Case1") {
+                    branch("Case1") {
                         // 'c' enabled by 'b'
                         send<String>(b, c)
                     }
-                    case("Case2") {
+                    branch("Case2") {
                         send<String>(b, a)
                         // 'c' enabled by 'a'
                         send<String>(a, c)
@@ -110,12 +110,12 @@ class ConsistencyBasicTest {
                 send<Int>(s, b)
                 send<Int>(a, b)
                 choice(b) {
-                    case("Ok") {
+                    branch("Ok") {
                         send<String>(b, s)
                         // 'a' enabled by 's'
                         send<String>(s, a)
                     }
-                    case("Quit") {
+                    branch("Quit") {
                         send<String>(b, a)
                         // 'a' not enabled
                     }
@@ -129,11 +129,11 @@ class ConsistencyBasicTest {
         val g = globalProtocolInternal {
             choice(b) {
                 // 'a' is not enabled in any branch
-                case("1") {
+                branch("1") {
                     send<String>(a, b)
                     send(a, b, BoolClass)
                 }
-                case("2") {
+                branch("2") {
                     send(a, b, StringClass)
                     send<Boolean>(a, b)
                 }
@@ -162,21 +162,21 @@ class ConsistencyBasicTest {
     fun `test enabled by`() {
         val g = globalProtocolInternal {
             choice(a) {
-                case("1") {
+                branch("1") {
                     send<Long>(a, b)
                     send<Long>(a, c)
 
                     // ensure this choice does not override 'a' enabling 'b'
                     choice(c) {
-                        case("1.1") {
+                        branch("1.1") {
                             send<Int>(c, b)
                         }
-                        case("1.2") {
+                        branch("1.2") {
                             send<String>(c, b)
                         }
                     }
                 }
-                case("2") {
+                branch("2") {
                     send<Int>(a, b)
                     send<Boolean>(a, c)
                 }

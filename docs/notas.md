@@ -25,6 +25,9 @@
 - Os canais têm buffer "ilimitado". A escrita é assíncrona, e a leitura pode suspender.
 
 
+- Os canais e sockets tcp garantem que as mensagens não são perdidas e chegam pela ordem de envio.
+
+
 - O scribble usa labels nas mensagens para desambiguar, e faz once-unfolding.
   Aqui, as escolhas são materializadas numa mensagem.
 
@@ -39,7 +42,11 @@
 
 
 - É possível criar um SKChannel definindo apenas um ou nenhum dos participantes,
-adiando a sua definição até à tentativa de uso.
+adiando a sua definição até à tentativa de uso. Internamente, esta classe tem dois canais: cada endpoint envia num
+e recebe no outro (vice-versa) para prevenir que o remetente leia o que enviou.
 
 
 - Para gerar a API de callbacks, as mensagens têm de ser anotadas com uma label, usada no nome do método.
+
+
+- As APIs fluentes e de callbacks completamente compatíveis (i.e. cada endpoint pode usar tanto uma como a outra).

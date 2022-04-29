@@ -34,7 +34,7 @@ class MiscTest {
 
         globalProtocolInternal {
             choice(b) {
-                case("1") {
+                branch("1") {
                     exec(case1)
                     send<Int>(c, a)
                 }
@@ -51,13 +51,15 @@ class MiscTest {
 
         val g = globalProtocolInternal {
             choice(b) {
-                case("1") {
+                branch("1") {
                     exec(case1)
                     send<Int>(c, a)
                 }
             }
         }
         g.project(a).asFormattedString()
+        g.project(b).asFormattedString()
         g.project(a).asString()
+        g.project(b).asString()
     }
 }

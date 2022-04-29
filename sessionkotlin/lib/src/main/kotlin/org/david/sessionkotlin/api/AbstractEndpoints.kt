@@ -6,6 +6,9 @@ import org.david.sessionkotlin.backend.SKBuffer
 import org.david.sessionkotlin.backend.SKMPEndpoint
 import org.david.sessionkotlin.backend.SKPayload
 
+/**
+ * Linear endpoint. Throws [SKLinearException] when [SKEndpoint.use] is called twice.
+ */
 public open class SKEndpoint {
     private var used = false
     internal fun use() {
@@ -17,6 +20,13 @@ public open class SKEndpoint {
 }
 
 public abstract class SKOutputEndpoint(private val e: SKMPEndpoint) : SKEndpoint() {
+
+    /**
+     * Sends a message with payload of type [T] to the target [role].
+     *
+     * If [branch] is not null, sends a message with it,
+     * before sending the message with the [payload].
+     */
     public suspend fun <T> send(role: SKGenRole, payload: T, branch: String? = null) {
         use()
         if (branch != null) {
@@ -29,6 +39,11 @@ public abstract class SKOutputEndpoint(private val e: SKMPEndpoint) : SKEndpoint
 
 @Suppress("unchecked_cast")
 public abstract class SKInputEndpoint(private val e: SKMPEndpoint) : SKEndpoint() {
+
+    /**
+     * Receives a message with payload of type [T] from [role]
+     * and assigns its payload to [buf]'s value.
+     */
     public suspend fun <T : Any> receive(role: SKGenRole, buf: SKBuffer<T>) {
         use()
         val msg = e.receive(role)
@@ -44,6 +59,10 @@ public abstract class SKInputEndpoint(private val e: SKMPEndpoint) : SKEndpoint(
 // }
 
 public abstract class SKExternalEndpoint(private val e: SKMPEndpoint) : SKEndpoint() {
+
+    /**
+     * Receives a branch message from [role].
+     */
     public suspend fun receiveBranch(role: SKGenRole): String {
         use()
         val msg = e.receive(role)

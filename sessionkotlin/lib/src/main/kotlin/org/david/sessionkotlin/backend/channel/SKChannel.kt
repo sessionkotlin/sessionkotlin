@@ -9,7 +9,6 @@ import org.david.sessionkotlin.backend.exception.BinaryEndpointsException
  * Declares a bidirectional channel between two roles.
  *
  * If a role is not specified, its definition is deferred until [getEndpoints] is invoked.
- *
  */
 public class SKChannel(private var role1: SKGenRole? = null, private var role2: SKGenRole? = null) {
 

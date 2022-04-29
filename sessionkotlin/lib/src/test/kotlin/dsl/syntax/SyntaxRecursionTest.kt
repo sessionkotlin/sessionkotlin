@@ -74,7 +74,7 @@ class SyntaxRecursionTest {
                 send<Int>(b, a)
                 goto(t)
                 choice(c) {
-                    case("Case1") {
+                    branch("Case1") {
                         send<Int>(c, b)
                     }
                 }
@@ -102,11 +102,11 @@ class SyntaxRecursionTest {
             globalProtocolInternal {
                 send<Int>(a, b)
                 choice(b) {
-                    case("1") {
+                    branch("1") {
                         send<Int>(b, c)
                         goto(t)
                     }
-                    case("2") {
+                    branch("2") {
                         send<Int>(b, c)
                     }
                 }
@@ -120,7 +120,7 @@ class SyntaxRecursionTest {
             globalProtocolInternal {
                 val t = miu("X")
                 choice(b) {
-                    case("1") {
+                    branch("1") {
                         goto(t)
                         send<Int>(b, a)
                     }
@@ -141,12 +141,12 @@ class SyntaxRecursionTest {
             send<Int>(a, b)
             exec(aux)
             choice(b) {
-                case("1") {
+                branch("1") {
                     send<Int>(b, c)
                     send<Int>(b, a)
                     goto(t)
                 }
-                case("2") {
+                branch("2") {
                     send<Int>(b, a)
                     send<Int>(b, c)
                 }
@@ -202,25 +202,25 @@ class SyntaxRecursionTest {
             t1 = miu("X")
             send<Unit>(a, b)
             choice(b) {
-                case("1") {
+                branch("1") {
                     send<Int>(b, a)
                     goto(t1)
                 }
-                case("2") {
+                branch("2") {
                     send<Int>(b, a)
                     t2 = miu("Y")
                     choice(a) {
-                        case("2.1") {
+                        branch("2.1") {
                             send<Int>(a, b)
                             goto(t2)
                         }
-                        case("2.2") {
+                        branch("2.2") {
                             send<Unit>(a, b)
                             goto(t1)
                         }
                     }
                 }
-                case("3") {
+                branch("3") {
                     send<String>(b, a)
                 }
             }
@@ -262,7 +262,7 @@ class SyntaxRecursionTest {
             send<Unit>(c, d)
 
             choice(a) {
-                case("1") {
+                branch("1") {
                     send<Unit>(a, b)
                     // 'c' and 'd' can 'unpack' this choice
                     goto(t)
@@ -299,12 +299,12 @@ class SyntaxRecursionTest {
             x = miu("X")
             send<Int>(a, b)
             choice(a) {
-                case("1") {
+                branch("1") {
                     miu("Y")
                     send<Long>(a, b)
                     goto(x)
                 }
-                case("2") {
+                branch("2") {
                     send<String>(a, b)
                 }
             }
@@ -350,7 +350,7 @@ class SyntaxRecursionTest {
         val g = globalProtocolInternal {
             miu("X")
             choice(a) {
-                case("1") {
+                branch("1") {
                     send<Long>(a, b)
                     miu("Y")
                     send<Long>(b, a)
@@ -379,11 +379,11 @@ class SyntaxRecursionTest {
             send<Int>(a, b)
             val t2 = miu("X")
             choice(a) {
-                case("1") {
+                branch("1") {
                     send<Long>(a, b)
                     goto(t1)
                 }
-                case("2") {
+                branch("2") {
                     send<String>(a, b)
                     goto(t2)
                 }

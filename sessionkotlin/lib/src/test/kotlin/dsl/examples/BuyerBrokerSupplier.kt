@@ -25,12 +25,12 @@ class BuyerBrokerSupplier {
             send<Boolean>(proc, portal)
 
             choice(portal) {
-                case("Approved") {
+                branch("Approved") {
                     send<Int>(portal, finance)
                     send<Int>(finance, portal)
                     send<Int>(portal, applicant)
                 }
-                case("Denied") {
+                branch("Denied") {
                     send<Unit>(portal, finance)
                     send<Unit>(portal, applicant)
                 }

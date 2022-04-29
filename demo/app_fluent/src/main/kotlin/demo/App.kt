@@ -18,7 +18,6 @@ import org.david.sessionkotlin.backend.SKBuffer
 import org.david.sessionkotlin.backend.SKMPEndpoint
 import org.david.sessionkotlin.backend.channel.SKChannel
 
-
 fun main() {
     val chanAB = SKChannel(A, B)
 //    val chanBC = SKChannel(B, C)

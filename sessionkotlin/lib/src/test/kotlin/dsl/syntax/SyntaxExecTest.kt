@@ -70,7 +70,7 @@ class SyntaxExecTest {
         assertFailsWith<SendingToSelfException> {
             val x = globalProtocolInternal {
                 choice(a) {
-                    case("1") {
+                    branch("1") {
                         send<Int>(a, b)
                     }
                 }
@@ -92,10 +92,10 @@ class SyntaxExecTest {
 
         val g = globalProtocolInternal {
             choice(a) {
-                case("1") {
+                branch("1") {
                     exec(subprotocol)
                 }
-                case("2") {
+                branch("2") {
                     // 'x' to 'c' is ignored
                     exec(subprotocol, mapOf(x to c))
                 }
@@ -108,11 +108,11 @@ class SyntaxExecTest {
     fun `reversed roles`() {
         val subprotocol = globalProtocolInternal {
             choice(a) {
-                case("1") {
+                branch("1") {
                     send<String>(a, b)
                     send<String>(b, a)
                 }
-                case("2") {
+                branch("2") {
                     send<Unit>(a, b)
                 }
             }

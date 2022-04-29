@@ -35,37 +35,37 @@ class SMPT {
         tMail1 = miu("tMail1")
 
         choice(c) {
-            case("Mail") {
+            branch("Mail") {
                 send<Mail>(c, s)
                 choice(s) {
-                    case("Quit") {
+                    branch("Quit") {
                         send<Code501>(s, c)
                         goto(tMail1)
                     }
-                    case("250") {
+                    branch("250") {
                         send<Code250>(s, c)
                         tMail2 = miu("tMail2")
                         choice(c) {
-                            case("Recipient") {
+                            branch("Recipient") {
                                 send<Recipient>(c, s)
                                 send<Code250>(s, c)
                                 goto(tMail2)
                             }
-                            case("Data") {
+                            branch("Data") {
                                 send<Data>(c, s)
                                 send<Code354>(s, c)
                                 tMail3 = miu("tMail3")
 
                                 choice(c) {
-                                    case("Data") {
+                                    branch("Data") {
                                         send<Dataline>(c, s)
                                         goto(tMail3)
                                     }
-                                    case("Subject") {
+                                    branch("Subject") {
                                         send<Subject>(c, s)
                                         goto(tMail3)
                                     }
-                                    case("End") {
+                                    branch("End") {
                                         send<EndOfData>(c, s)
                                         send<Code250>(s, c)
                                         goto(tMail1)
@@ -76,7 +76,7 @@ class SMPT {
                     }
                 }
             }
-            case("Quit") {
+            branch("Quit") {
                 send<Unit>(c, s)
                 send<Code221>(s, c)
             }
@@ -85,77 +85,77 @@ class SMPT {
     private val auth = globalProtocolInternal {
         tAuth = miu("tAuth")
         choice(c) {
-            case("Continue") {
+            branch("Continue") {
                 send<Auth>(c, s)
                 choice(s) {
-                    case("235") {
+                    branch("235") {
                         send<Code235>(s, c)
                         exec(mail)
                     }
-                    case("535") {
+                    branch("535") {
                         send<Code535>(s, c)
                         goto(tAuth)
                     }
                 }
             }
-            case("Quit") {
+            branch("Quit") {
                 send<Unit>(c, s)
             }
         }
     }
     private val secureEhlo = globalProtocolInternal {
         choice(c) {
-            case("Continue") {
+            branch("Continue") {
                 send<Ehlo>(c, s)
                 tsecureEhlo = miu("tsecureEhlo")
 
                 choice(s) {
-                    case("250") {
+                    branch("250") {
                         send<Code250d>(s, c)
                         goto(tsecureEhlo)
                     }
-                    case("250d") {
+                    branch("250d") {
                         send<Code250>(s, c)
                         exec(auth)
                     }
                 }
             }
-            case("Quit") {
+            branch("Quit") {
                 send<Unit>(c, s)
             }
         }
     }
     private val startTLS = globalProtocolInternal {
         choice(c) {
-            case("Continue") {
+            branch("Continue") {
                 send<Unit>(c, s)
                 send<Code220>(s, c)
                 // Do TLS handshake here
                 exec(secureEhlo)
             }
-            case("Quit") {
+            branch("Quit") {
                 send<Unit>(c, s)
             }
         }
     }
     private val ehlo = globalProtocolInternal {
         choice(c) {
-            case("Continue") {
+            branch("Continue") {
                 send<Ehlo>(c, s)
                 tEhlo = miu("tEhlo")
 
                 choice(s) {
-                    case("250") {
+                    branch("250") {
                         send<Code250d>(s, c)
                         goto(tEhlo)
                     }
-                    case("250d") {
+                    branch("250d") {
                         send<Code250>(s, c)
                         exec(startTLS)
                     }
                 }
             }
-            case("Quit") {
+            branch("Quit") {
                 send<Unit>(c, s)
             }
         }

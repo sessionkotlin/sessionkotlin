@@ -23,21 +23,21 @@ class Booking {
         val g = globalProtocolInternal {
             t = miu("X")
             choice(client) {
-                case("Book") {
+                branch("Book") {
                     send<String>(client, agency)
                     send<Int>(agency, client)
                     send<Unit>(agency, company) // dummy message
                     goto(t)
                 }
-                case("Terminate") {
+                branch("Terminate") {
                     choice(client) {
-                        case("Confirm") {
+                        branch("Confirm") {
                             send<Unit>(client, agency)
                             send<Unit>(agency, company)
                             send<PaymentInfo>(client, company)
                             send<Unit>(company, client)
                         }
-                        case("Cancel") {
+                        branch("Cancel") {
                             send<Unit>(client, agency)
                             send<Unit>(agency, company)
                         }

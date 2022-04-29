@@ -20,11 +20,11 @@ class ProxyExample {
             send<Request>(proxy, server)
 
             choice(server) {
-                case("Ok") {
+                branch("Ok") {
                     send<Response>(server, proxy)
                     send<Response>(proxy, client)
                 }
-                case("Error") {
+                branch("Error") {
                     send<Error>(server, proxy)
                     send<Error>(proxy, client)
                 }
