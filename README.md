@@ -5,7 +5,49 @@ Multiparty Session Types in Kotlin
 ![master](https://github.com/d-costa/session-kotlin/actions/workflows/test_master.yml/badge.svg)
 ![master coverage](../badges/jacoco.svg)
 
-## Try it out
+## Add as dependency
+
+### Gradle
+
+build.gradle.kts:
+
+```kotlin
+dependencies {
+    api("org.david:sessionkotlin:0.0.2") // or the latest version
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        name = "GitHubPackages"
+        url = uri("https://maven.pkg.github.com/d-costa/sessionkotlin")
+    }
+}
+
+```
+
+### Maven
+
+```xml
+
+<dependencies>
+    <dependency>
+        <groupId>org.david</groupId>
+        <artifactId>sessionkotlin</artifactId>
+        <version>0.0.2</version>
+    </dependency>
+</dependencies>
+
+<repositories>
+<repository>
+    <id>GitHubPackages</id>
+    <url>https://maven.pkg.github.com/d-costa/sessionkotlin</url>
+</repository>
+</repositories>
+```
+
+## Local development
 
 1. Build and publish the library:
 

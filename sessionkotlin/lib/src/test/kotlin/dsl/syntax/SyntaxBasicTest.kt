@@ -174,7 +174,7 @@ class SyntaxBasicTest {
     }
 
     @Test
-    fun `cumutative sends in choice branches`() {
+    fun `commutative sends in choice branches`() {
         globalProtocolInternal {
             choice(b) {
                 branch("Case1") {

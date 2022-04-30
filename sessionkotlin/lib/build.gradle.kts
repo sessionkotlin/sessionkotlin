@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.*
+
 group = "org.david"
 version = "0.0.1"
 
@@ -18,7 +21,7 @@ dependencies {
     testImplementation(kotlin("test"))
     implementation("com.squareup:kotlinpoet:$kotlinPoetVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
-    implementation("io.ktor:ktor-network:2.0.0")
+    implementation("io.ktor:ktor-network:2.0.1")
 }
 
 tasks.test {
@@ -90,6 +93,23 @@ publishing {
                         url.set("https://opensource.org/licenses/MIT")
                     }
                 }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            // Load GitHub credentials
+            val props = Properties()
+            val envFile = File(rootDir.path + "/.env")
+            if (envFile.exists())
+                props.load(FileInputStream(envFile))
+
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/d-costa/sessionkotlin")
+            credentials {
+                username = props.getProperty("USERNAME") ?: System.getenv("USERNAME")
+                password = props.getProperty("TOKEN") ?: System.getenv("TOKEN")
             }
         }
     }
