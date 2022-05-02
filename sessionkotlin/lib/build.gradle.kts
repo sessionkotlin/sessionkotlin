@@ -13,6 +13,10 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint") // Linter
 }
 
+repositories {
+    mavenCentral()
+}
+
 val kotlinPoetVersion: String by project
 val kotlinVersion: String by project
 val kotlinxCoroutinesVersion: String by project
@@ -102,10 +106,10 @@ publishing {
             // Load GitHub credentials
             val props = Properties()
             val envFile = File(rootDir.path + "/.env")
-            if (envFile.exists())
+            if (envFile.exists()) {
                 props.load(FileInputStream(envFile))
-
-            name = "GitHubPackages"
+            }
+            name = "SessionKotlin-GithubPackages"
             url = uri("https://maven.pkg.github.com/d-costa/sessionkotlin")
             credentials {
                 username = props.getProperty("USERNAME") ?: System.getenv("USERNAME")

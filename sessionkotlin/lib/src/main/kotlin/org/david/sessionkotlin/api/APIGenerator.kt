@@ -28,12 +28,12 @@ private data class GenRet(val interfaceClassPair: ICNames, val counter: Int)
 
 private val roleMap = mutableMapOf<SKRole, ClassName>()
 
-internal fun generateAPI(globalEnv: RootEnv) {
+internal fun generateAPI(globalEnv: RootEnv, callbacks: Boolean) {
     val outputDirectory = File("build/generated/sessionkotlin/main/kotlin")
     val globalType = globalEnv.asGlobalType()
     genRoles(globalEnv.roles, outputDirectory) // populates roleMap
     globalEnv.roles.forEach {
-        APIGenerator(globalEnv.protocolName.asClassname(), it, globalType.project(it))
+        APIGenerator(globalEnv.protocolName.asClassname(), it, globalType.project(it), callbacks)
             .writeTo(outputDirectory)
     }
     genEndClass(outputDirectory)
@@ -88,6 +88,7 @@ private class APIGenerator(
     private val protocolName: String,
     val role: SKRole,
     private val localType: LocalType,
+    private val genCallbacks: Boolean
 ) {
 
     companion object {
@@ -235,7 +236,8 @@ private class APIGenerator(
                     )
                     callbackCode.add(nextCallbackCode.build())
                 } else {
-                    throw NoMessageLabelException(l.asString())
+                    if (genCallbacks)
+                        throw NoMessageLabelException(l.asString())
                 }
 
                 GenRet(ICNames(interfaceName, className), ret.counter)
@@ -451,22 +453,26 @@ private class APIGenerator(
                     .addModifiers(KModifier.PRIVATE)
                     .build()
             )
-        val suppressUnchecked = AnnotationSpec.builder(ClassName("", "Suppress"))
-            .addMember("%S", "unchecked_cast")
-            .build()
-        FileSpec
-            .builder(
-                packageName = "",
-                fileName = callbacksClassName.simpleName
-            ).addFileComment(GENERATED_COMMENT)
-            .addAnnotation(suppressUnchecked)
-            .addType(classBuilder.build())
-            .build().writeTo(outputDirectory)
 
-        callbacksInterfaceFile
-            .addType(callbacksInterface.build())
-            .build()
-            .writeTo(outputDirectory)
+        if (genCallbacks) {
+            val suppressUnchecked = AnnotationSpec.builder(ClassName("", "Suppress"))
+                .addMember("%S", "unchecked_cast")
+                .build()
+
+            FileSpec
+                .builder(
+                    packageName = "",
+                    fileName = callbacksClassName.simpleName
+                ).addFileComment(GENERATED_COMMENT)
+                .addAnnotation(suppressUnchecked)
+                .addType(classBuilder.build())
+                .build().writeTo(outputDirectory)
+
+            callbacksInterfaceFile
+                .addType(callbacksInterface.build())
+                .build()
+                .writeTo(outputDirectory)
+        }
     }
 }
 

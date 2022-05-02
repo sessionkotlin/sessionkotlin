@@ -13,14 +13,14 @@ build.gradle.kts:
 
 ```kotlin
 dependencies {
-    api("org.david:sessionkotlin:0.0.2") // or the latest version
+1    api("org.david:sessionkotlin:0.0.1") // or the latest version
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
 }
 
 repositories {
     mavenCentral()
     maven {
-        name = "GitHubPackages"
+        name = "SessionKotlin-GithubPackages"
         url = uri("https://maven.pkg.github.com/d-costa/sessionkotlin")
     }
 }
@@ -35,13 +35,13 @@ repositories {
     <dependency>
         <groupId>org.david</groupId>
         <artifactId>sessionkotlin</artifactId>
-        <version>0.0.2</version>
+        <version>0.0.1</version>
     </dependency>
 </dependencies>
 
 <repositories>
 <repository>
-    <id>GitHubPackages</id>
+    <id>SessionKotlin-GithubPackages</id>
     <url>https://maven.pkg.github.com/d-costa/sessionkotlin</url>
 </repository>
 </repositories>

@@ -229,6 +229,6 @@ internal fun globalProtocolInternal(name: String = "Proto", protocolBuilder: Glo
  *
  * Generates local APIs.
  */
-public fun globalProtocol(name: String, protocolBuilder: GlobalEnv.() -> Unit) {
-    generateAPI(globalProtocolInternal(name, protocolBuilder))
+public fun globalProtocol(name: String, callbacks: Boolean = false, protocolBuilder: GlobalEnv.() -> Unit) {
+    generateAPI(globalProtocolInternal(name, protocolBuilder), callbacks)
 }

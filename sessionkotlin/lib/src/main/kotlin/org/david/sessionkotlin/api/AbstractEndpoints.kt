@@ -27,7 +27,7 @@ public abstract class SKOutputEndpoint(private val e: SKMPEndpoint) : SKEndpoint
      * If [branch] is not null, sends a message with it,
      * before sending the message with the [payload].
      */
-    public suspend fun <T> send(role: SKGenRole, payload: T, branch: String? = null) {
+    protected suspend fun <T> send(role: SKGenRole, payload: T, branch: String? = null) {
         use()
         if (branch != null) {
 
@@ -44,7 +44,7 @@ public abstract class SKInputEndpoint(private val e: SKMPEndpoint) : SKEndpoint(
      * Receives a message with payload of type [T] from [role]
      * and assigns its payload to [buf]'s value.
      */
-    public suspend fun <T : Any> receive(role: SKGenRole, buf: SKBuffer<T>) {
+    protected suspend fun <T : Any> receive(role: SKGenRole, buf: SKBuffer<T>) {
         use()
         val msg = e.receive(role)
         buf.value = (msg as SKPayload<T>).payload
@@ -63,7 +63,7 @@ public abstract class SKExternalEndpoint(private val e: SKMPEndpoint) : SKEndpoi
     /**
      * Receives a branch message from [role].
      */
-    public suspend fun receiveBranch(role: SKGenRole): String {
+    protected suspend fun receiveBranch(role: SKGenRole): String {
         use()
         val msg = e.receive(role)
         return (msg as SKBranch).label

@@ -10,7 +10,7 @@ fun main() {
     val b = SKRole("B")
     val c = SKRole("C")
 
-    globalProtocol("Simple") {
+    globalProtocol("Simple", true) {
         val t = miu()
         choice(a) {
             branch("1") {

@@ -31,7 +31,7 @@ fun main() {
             val callbacks = object : SimpleCallbacks_A {
                 override fun onChoose1(): Choice1 =
                     if (index++ < 2) Choice1.Choice1_1 else Choice1.Choice1_2
-                override fun onSendVal1ToB(): Int = 10
+                override fun onSendVal1ToB(): Int = if (index < 2) 10 else 11
                 override fun onSendVal3ToB(): String = "something"
             }
             SimpleCallbacksClass_A(callbacks).use { e ->

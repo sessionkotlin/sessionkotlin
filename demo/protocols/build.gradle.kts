@@ -1,6 +1,3 @@
-import java.util.Properties
-import java.io.FileInputStream
-
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.5.31"
     application
