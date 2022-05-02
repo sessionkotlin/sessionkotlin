@@ -13,7 +13,7 @@ build.gradle.kts:
 
 ```kotlin
 dependencies {
-1    api("org.david:sessionkotlin:0.0.1") // or the latest version
+    api("org.david:sessionkotlin:0.0.1") // or the latest version
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
 }
 
