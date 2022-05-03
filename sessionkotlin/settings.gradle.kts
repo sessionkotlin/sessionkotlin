@@ -12,3 +12,4 @@ pluginManagement {
 rootProject.name = "sessionkotlin"
 
 include(":lib")
+include(":parser")

@@ -20,7 +20,8 @@ internal data class Send(
     internal val from: SKRole,
     internal val to: SKRole,
     internal val type: Class<*>,
-    internal val msgLabel: String?
+    internal val msgLabel: String?,
+    internal val condition: String
 ) : Instruction {
 
     init {
@@ -38,7 +39,8 @@ internal data class Send(
             mapping.getOrKey(from),
             mapping.getOrKey(to),
             type,
-            msgLabel
+            msgLabel,
+            condition
         )
 }
 

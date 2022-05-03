@@ -46,6 +46,7 @@ internal class GlobalTypeSend(
     private val to: SKRole,
     private val type: Class<*>,
     private val msgLabel: String?,
+    private val condition: String,
     private val cont: GlobalType,
 ) : GlobalType() {
     override fun project(role: SKRole, state: State): LocalType =

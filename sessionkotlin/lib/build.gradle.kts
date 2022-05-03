@@ -1,31 +1,25 @@
 import java.io.FileInputStream
 import java.util.*
 
-group = "org.david"
-version = "0.0.1"
-
 plugins {
     kotlin("jvm")
     `java-library`
     `maven-publish`
     jacoco // Test Coverage
     id("org.jetbrains.dokka") version "1.6.10" // Generate documentation
-    id("org.jlleitschuh.gradle.ktlint") // Linter
-}
-
-repositories {
-    mavenCentral()
 }
 
 val kotlinPoetVersion: String by project
 val kotlinVersion: String by project
 val kotlinxCoroutinesVersion: String by project
+val ktorVersion: String by project
 
 dependencies {
+    project(":parser")
     testImplementation(kotlin("test"))
     implementation("com.squareup:kotlinpoet:$kotlinPoetVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
-    implementation("io.ktor:ktor-network:2.0.1")
+    implementation("io.ktor:ktor-network:$ktorVersion")
 }
 
 tasks.test {
@@ -35,6 +29,7 @@ tasks.test {
 tasks.test {
     finalizedBy(tasks.jacocoTestReport) // report is always generated after tests run
 }
+
 tasks.jacocoTestReport {
     dependsOn(tasks.test) // tests are required to run before generating the report
     reports {
@@ -62,13 +57,6 @@ tasks.dokkaHtml {
     }
 }
 
-ktlint {
-    verbose.set(true)
-    outputToConsole.set(true)
-    coloredOutput.set(true)
-    disabledRules.set(setOf("no-wildcard-imports"))
-}
-
 kotlin {
     explicitApi()
 }
@@ -82,9 +70,9 @@ publishing {
     publications {
 
         create<MavenPublication>("maven") {
-            groupId = project.group as String
+            groupId = rootProject.group as String
             artifactId = rootProject.name
-            version = project.version as String
+            version = rootProject.version as String
 
             from(components["java"])
 
