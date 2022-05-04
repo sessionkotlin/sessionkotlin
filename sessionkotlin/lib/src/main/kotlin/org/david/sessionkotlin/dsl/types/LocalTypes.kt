@@ -10,6 +10,7 @@ internal data class LocalTypeSend(
     val cont: LocalType,
     val branchLabel: String? = null,
     val msgLabel: String? = null,
+    val condition: String? = null,
 ) : LocalType() {
     override fun equals(other: Any?): Boolean {
         if (other !is LocalTypeSend) return false
@@ -17,6 +18,7 @@ internal data class LocalTypeSend(
             type == other.type &&
             cont == other.cont &&
             msgLabel == other.msgLabel &&
+            condition == other.condition &&
             ((branchLabel == null && other.branchLabel == null) || (branchLabel != null && other.branchLabel != null))
     }
 

@@ -42,11 +42,26 @@
 
 
 - É possível criar um SKChannel definindo apenas um ou nenhum dos participantes,
-adiando a sua definição até à tentativa de uso. Internamente, esta classe tem dois canais: cada endpoint envia num
-e recebe no outro (vice-versa) para prevenir que o remetente leia o que enviou.
+  adiando a sua definição até à tentativa de uso. Internamente, esta classe tem dois canais: cada endpoint envia num
+  e recebe no outro (vice-versa) para prevenir que o remetente leia o que enviou.
 
 
 - Para gerar a API de callbacks, as mensagens têm de ser anotadas com uma label, usada no nome do método.
 
 
-- As APIs fluentes e de callbacks completamente compatíveis (i.e. cada endpoint pode usar tanto uma como a outra).
+- API fluentes e de callbacks compatíveis (i.e. cada endpoint pode usar tanto uma como a outra).
+
+
+- Templates de projetos gradle/maven
+
+
+- Precedência dos operadores na gramática de refinamentos:
+
+| Operador           | Símbolo                                                                                                      | Precedência |
+|--------------------|--------------------------------------------------------------------------------------------------------------|-------------|
+| Parêntesis         | <code>(  )</code>                                                                                            | +           |
+| Menos unário       | <code>-</code>                                                                                               |             |
+| Soma / Subtração   | <code>+</code> <code>-</code>                                                                                |             |
+| Operadores lógicos | <code>==</code> <code>!=</code> <code><</code> <code><=</code> <code>></code> <code>>=</code> <code>!</code> |             |
+| Conjunção          | <code>&&</code>                                                                                              |             |
+| Disjunção          | <code>&#124;&#124;</code>                                                                                    | -           |

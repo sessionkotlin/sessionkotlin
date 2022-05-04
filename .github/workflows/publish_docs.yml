@@ -1,0 +1,25 @@
+name: publish_docs
+on:
+  push:
+    branches: [master]
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: 8
+      - name: Build documentation
+        run: cd sessionkotlin && gradle wrapper && ./gradlew test dokkaHtmlMultiModule
+      - name: Publish documentation
+        uses: JamesIves/github-pages-deploy-action@releases/v3
+        with:
+          token: ${{ secrets.DOCS_ACCESS_TOKEN }}
+          branch: gh-pages
+          folder: sessionkotlin/build/dokka/htmlMultiModule
+          target-folder: docs
+

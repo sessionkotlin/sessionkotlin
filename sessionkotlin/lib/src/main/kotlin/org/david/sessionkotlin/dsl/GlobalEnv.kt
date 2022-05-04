@@ -39,8 +39,13 @@ public sealed class GlobalEnv(
      * @sample [org.david.sessionkotlin.dsl.Samples.send]
      *
      */
-    public inline fun <reified T> send(from: SKRole, to: SKRole, label: String? = null) {
-        send(from, to, T::class.java, label)
+    public inline fun <reified T> send(
+        from: SKRole,
+        to: SKRole,
+        label: String? = null,
+        condition: String = ""
+    ) {
+        send(from, to, T::class.java, label, condition)
     }
 
     /**
@@ -57,8 +62,14 @@ public sealed class GlobalEnv(
      * @sample [org.david.sessionkotlin.dsl.Samples.sendTypes]
      *
      */
-    public open fun send(from: SKRole, to: SKRole, type: Class<*>, label: String? = null) {
-        val msg = Send(from, to, type, label)
+    public open fun send(
+        from: SKRole,
+        to: SKRole,
+        type: Class<*>,
+        label: String? = null,
+        condition: String = ""
+    ) {
+        val msg = Send(from, to, type, label, condition)
         roles.add(from)
         roles.add(to)
 
@@ -192,7 +203,7 @@ internal fun buildGlobalType(
         }
 
         when (head) {
-            is Send -> GlobalTypeSend(head.from, head.to, head.type, head.msgLabel, buildGlobalType(tail))
+            is Send -> GlobalTypeSend(head.from, head.to, head.type, head.msgLabel, head.condition, buildGlobalType(tail))
             is Choice -> GlobalTypeChoice(head.at, head.branchMap.mapValues { buildGlobalType(it.value.instructions) })
             is Recursion -> GlobalTypeRecursion(head.tag)
             is RecursionDefinition -> GlobalTypeRecursionDefinition(head.tag, buildGlobalType(tail))
