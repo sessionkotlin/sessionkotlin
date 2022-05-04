@@ -18,8 +18,8 @@ jobs:
       - name: Publish documentation
         uses: JamesIves/github-pages-deploy-action@releases/v3
         with:
-          token: ${{ secrets.DOCS_ACCESS_TOKEN }}
-          branch: gh-pages
-          folder: sessionkotlin/build/dokka/htmlMultiModule
-          target-folder: docs
+          ACCESS_TOKEN: ${{ secrets.DOCS_ACCESS_TOKEN }}
+          BRANCH: gh-pages
+          FOLDER: sessionkotlin/build/dokka/htmlMultiModule
+          TARGET_FOLDER: docs
 
