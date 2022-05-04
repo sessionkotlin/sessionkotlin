@@ -5,8 +5,6 @@ plugins {
     kotlin("jvm")
     `java-library`
     `maven-publish`
-    jacoco // Test Coverage
-    id("org.jetbrains.dokka") version "1.6.10" // Generate documentation
 }
 
 val kotlinPoetVersion: String by project
@@ -24,37 +22,6 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
-}
-
-tasks.test {
-    finalizedBy(tasks.jacocoTestReport) // report is always generated after tests run
-}
-
-tasks.jacocoTestReport {
-    dependsOn(tasks.test) // tests are required to run before generating the report
-    reports {
-        csv.required.set(true)
-    }
-    classDirectories.setFrom(
-        files(
-            classDirectories.files.map {
-                fileTree(it) {
-                    exclude("org/david/sessionkotlin/api")
-                }
-            }
-        )
-    )
-}
-
-tasks.dokkaHtml {
-    moduleName.set(rootProject.name)
-    dokkaSourceSets {
-        configureEach {
-            pluginsMapConfiguration.set(
-                mapOf("org.jetbrains.dokka.base.DokkaBase" to """{ "separateInheritedMembers": true}""")
-            )
-        }
-    }
 }
 
 kotlin {

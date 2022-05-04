@@ -57,11 +57,11 @@
 
 - Precedência dos operadores na gramática de refinamentos:
 
-| Operador           | Símbolo                                                  | Precedência |
-|--------------------|----------------------------------------------------------|-------------|
-| Parêntesis         | **(  )**                                                 | Max         |
-| Menos unário       | **-**                                                    |             |
-| Soma / Subtração   | **+** / **-**                                            |             |
-| Operadores lógicos | **=** / **!=** / **<** / **<=** / **>** / **>=** / **!** |             |
-| Conjunção          | **&**                                                    |             |
-| Disjunção          | **!**                                                    | Min         |
+| Operador           | Símbolo                                                                                                      | Precedência |
+|--------------------|--------------------------------------------------------------------------------------------------------------|-------------|
+| Parêntesis         | <code>(  )</code>                                                                                            | +           |
+| Menos unário       | <code>-</code>                                                                                               |             |
+| Soma / Subtração   | <code>+</code> <code>-</code>                                                                                |             |
+| Operadores lógicos | <code>==</code> <code>!=</code> <code><</code> <code><=</code> <code>></code> <code>>=</code> <code>!</code> |             |
+| Conjunção          | <code>&&</code>                                                                                              |             |
+| Disjunção          | <code>&#124;&#124;</code>                                                                                    | -           |
