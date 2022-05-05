@@ -21,7 +21,7 @@ class Booking {
         lateinit var t: RecursionTag
 
         val g = globalProtocolInternal {
-            t = miu("X")
+            t = miu()
             choice(client) {
                 branch("Book") {
                     send<String>(client, agency)

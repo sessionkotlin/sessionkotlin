@@ -18,8 +18,8 @@ import java.io.File
 private const val GENERATED_COMMENT = "This is a generated file. Do not change it."
 private val endClassName = ClassName("", "End")
 private fun buildClassName(protocolName: String, r: SKRole, count: Int? = null) =
-    StringBuilder("${protocolName}_$r")
-        .append(if (count != null) "_$count" else "")
+    StringBuilder("${protocolName}$r")
+        .append(if (count != null) "$count" else "")
         .toString()
 
 private data class ICNames(val interfaceClassName: ClassName, val className: ClassName)
@@ -155,7 +155,7 @@ private class APIGenerator(
             classBuilder.addModifiers(KModifier.PRIVATE)
         }
 
-        fun recursionVariable(tag: RecursionTag) = "var$tag"
+        fun recursionVariable(tag: RecursionTag) = "recursionTag${tag.hashCode()}"
 
         return when (l) {
             LocalTypeEnd -> GenRet(ICNames(endClassName, endClassName), stateIndex)
@@ -314,7 +314,7 @@ private class APIGenerator(
                     .addSuperclassConstructorParameter("e")
                 val branchInterfaceName = ClassName(
                     "",
-                    buildClassName(protocolName, role, stateIndex + 1) + "_Branch"
+                    buildClassName(protocolName, role, stateIndex + 1) + "Branch"
                 )
                 val branchInterfaceBuilder = TypeSpec
                     .interfaceBuilder(branchInterfaceName)

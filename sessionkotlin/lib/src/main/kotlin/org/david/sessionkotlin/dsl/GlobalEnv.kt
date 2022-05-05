@@ -1,10 +1,7 @@
 package org.david.sessionkotlin.dsl
 
 import org.david.sessionkotlin.api.generateAPI
-import org.david.sessionkotlin.dsl.exception.ProjectionTargetException
-import org.david.sessionkotlin.dsl.exception.SessionKotlinDSLException
-import org.david.sessionkotlin.dsl.exception.TerminalInstructionException
-import org.david.sessionkotlin.dsl.exception.UndefinedRecursionVariableException
+import org.david.sessionkotlin.dsl.exception.*
 import org.david.sessionkotlin.dsl.types.*
 import org.david.sessionkotlin.util.getOrKey
 import org.david.sessionkotlin.util.printlnIndent
@@ -17,7 +14,7 @@ public sealed class GlobalEnv(
     internal var instructions = mutableListOf<Instruction>()
     internal val roles = roles.toMutableSet()
     internal val recursionVariables = recursionVariables.toMutableSet()
-    private var recursionCounter = 1
+    internal val msgLabels = mutableSetOf<String>()
 
     /**
      *
@@ -34,6 +31,7 @@ public sealed class GlobalEnv(
      *
      * @throws [org.david.sessionkotlin.dsl.exception.SendingToSelfException]
      * if [from] and [to] are the same.
+     * @throws [DuplicateMessageLabelException] if [label] is not null and not unique in this protocol.
      *
      *
      * @sample [org.david.sessionkotlin.dsl.Samples.send]
@@ -43,10 +41,8 @@ public sealed class GlobalEnv(
         from: SKRole,
         to: SKRole,
         label: String? = null,
-        condition: String = ""
-    ) {
-        send(from, to, T::class.java, label, condition)
-    }
+        condition: String = "",
+    ): Unit = send(from, to, T::class.java, label, condition)
 
     /**
      *
@@ -57,7 +53,7 @@ public sealed class GlobalEnv(
      *
      * @throws [org.david.sessionkotlin.dsl.exception.SendingToSelfException]
      * if [from] and [to] are the same.
-     *
+     * @throws [DuplicateMessageLabelException] if [label] is not null and not unique in this protocol.
      *
      * @sample [org.david.sessionkotlin.dsl.Samples.sendTypes]
      *
@@ -67,8 +63,16 @@ public sealed class GlobalEnv(
         to: SKRole,
         type: Class<*>,
         label: String? = null,
-        condition: String = ""
+        condition: String = "",
     ) {
+        if (label != null) {
+            if (label in msgLabels) {
+                throw DuplicateMessageLabelException(label)
+            } else {
+                msgLabels.add(label)
+            }
+        }
+
         val msg = Send(from, to, type, label, condition)
         roles.add(from)
         roles.add(to)
@@ -95,6 +99,13 @@ public sealed class GlobalEnv(
         roles.add(at)
         for (g in b.branchMap.values) {
             roles.addAll(g.roles)
+            for (l in g.msgLabels) {
+                if (l in msgLabels) {
+                    throw DuplicateMessageLabelException(l)
+                } else {
+                    msgLabels.add(l)
+                }
+            }
         }
         instructions.add(b)
     }
@@ -115,6 +126,14 @@ public sealed class GlobalEnv(
         instructions.addAll(protocolBuilder.instructions.map { it.mapped(cleanMap) })
         roles.addAll(protocolBuilder.roles.map { cleanMap.getOrKey(it) })
         recursionVariables.addAll(protocolBuilder.recursionVariables)
+
+        for (l in protocolBuilder.msgLabels) {
+            if (l in msgLabels) {
+                throw DuplicateMessageLabelException(l)
+            } else {
+                msgLabels.add(l)
+            }
+        }
     }
 
     /**
@@ -128,8 +147,8 @@ public sealed class GlobalEnv(
      * @return a [RecursionTag] to be used in [goto] calls.
      *
      */
-    public open fun miu(label: String = "X${recursionCounter++}"): RecursionTag {
-        val tag = RecursionTag(label)
+    public open fun miu(): RecursionTag {
+        val tag = RecursionTag()
         val msg = RecursionDefinition(tag)
         instructions.add(msg)
         recursionVariables.add(tag)
@@ -168,8 +187,7 @@ public sealed class GlobalEnv(
         if (!roles.contains(role)) {
             throw ProjectionTargetException(role)
         }
-        return buildGlobalType(instructions)
-            .project(role)
+        return asGlobalType().project(role)
     }
 
     internal fun validate() {
@@ -189,7 +207,7 @@ public sealed class GlobalEnv(
 /**
  * Recursively builds a [GlobalType] from a list of [Instruction].
  */
-internal fun buildGlobalType(
+private fun buildGlobalType(
     instructions: MutableList<Instruction>,
 ): GlobalType =
     if (instructions.isEmpty()) {
@@ -203,7 +221,14 @@ internal fun buildGlobalType(
         }
 
         when (head) {
-            is Send -> GlobalTypeSend(head.from, head.to, head.type, head.msgLabel, head.condition, buildGlobalType(tail))
+            is Send -> GlobalTypeSend(
+                head.from,
+                head.to,
+                head.type,
+                head.msgLabel,
+                head.condition,
+                buildGlobalType(tail)
+            )
             is Choice -> GlobalTypeChoice(head.at, head.branchMap.mapValues { buildGlobalType(it.value.instructions) })
             is Recursion -> GlobalTypeRecursion(head.tag)
             is RecursionDefinition -> GlobalTypeRecursionDefinition(head.tag, buildGlobalType(tail))

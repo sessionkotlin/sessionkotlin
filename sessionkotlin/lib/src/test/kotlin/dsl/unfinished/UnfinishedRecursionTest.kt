@@ -18,7 +18,7 @@ class UnfinishedRecursionTest {
     fun `unfinished role`() {
         assertFailsWith<UnfinishedRolesException> {
             globalProtocolInternal {
-                val t = miu("X")
+                val t = miu()
                 choice(a) {
                     branch("1") {
                         send<Unit>(a, c)
@@ -42,7 +42,7 @@ class UnfinishedRecursionTest {
                 choice(a) {
                     branch("1") {
                         send<Int>(a, b)
-                        val t = miu("X")
+                        val t = miu()
                         send<Int>(b, c)
 
                         choice(c) {
@@ -69,14 +69,14 @@ class UnfinishedRecursionTest {
     fun `rec and choice unfinished 2`() {
         assertFailsWith<UnfinishedRolesException> {
             globalProtocolInternal {
-                val x = miu("X")
+                val x = miu()
                 send<Int>(a, b)
                 choice(a) {
                     branch("1") {
                         goto(x)
                     }
                     branch("2") {
-                        val y = miu("Y")
+                        val y = miu()
                         send<Long>(a, b)
                         choice(a) {
                             branch("1.1") {
@@ -97,7 +97,7 @@ class UnfinishedRecursionTest {
     fun `rec and choice unfinished 3`() {
         assertFailsWith<UnfinishedRolesException> {
             globalProtocolInternal {
-                val x = miu("X")
+                val x = miu()
                 choice(a) {
                     branch("1") {
                         // 'b' not used before goto
@@ -116,7 +116,7 @@ class UnfinishedRecursionTest {
     @Test
     fun `rec and choice unfinished 4`() {
         globalProtocolInternal {
-            val x = miu("X")
+            val x = miu()
             choice(a) {
                 branch("1") {
                     send<Long>(a, b)

@@ -65,3 +65,7 @@
 | Operadores lógicos | <code>==</code> <code>!=</code> <code><</code> <code><=</code> <code>></code> <code>>=</code> <code>!</code> |             |
 | Conjunção          | <code>&&</code>                                                                                              |             |
 | Disjunção          | <code>&#124;&#124;</code>                                                                                    | -           |
+
+
+- As labels das mensagens têm de ser únicas porque são usadas nos refinamentos e para geração de nomes de métodos.
+

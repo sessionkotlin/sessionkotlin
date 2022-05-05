@@ -27,7 +27,7 @@ class ExtraTest {
             globalProtocolInternal {
                 choice(a) {
                     branch("1") {
-                        val t = miu("X")
+                        val t = miu()
                         send<Unit>(a, b)
                         goto(t)
                     }
@@ -47,7 +47,7 @@ class ExtraTest {
             globalProtocolInternal {
                 choice(a) {
                     branch("1") {
-                        val t = miu("X")
+                        val t = miu()
                         choice(a) {
                             branch("1.1") {
                                 send<Unit>(a, b)
@@ -69,7 +69,7 @@ class ExtraTest {
         // scribble-java bad.safety.waitfor.threeparty.Test01
         assertFailsWith<UnfinishedRolesException> {
             globalProtocolInternal {
-                val t = miu("X")
+                val t = miu()
                 choice(a) {
                     branch("1") {
                         send<Unit>(a, b)
@@ -88,7 +88,7 @@ class ExtraTest {
         // scribble-java bad.safety.waitfor.threeparty.Test02
         assertFailsWith<RoleNotEnabledException> {
             globalProtocolInternal {
-                val t = miu("X")
+                val t = miu()
                 choice(a) {
                     branch("1") {
                         send<Unit>(a, b)
@@ -116,7 +116,7 @@ class ExtraTest {
         // scribble-java bad.syntax.consistentchoicesubj.Test04b
         assertFailsWith<InconsistentExternalChoiceException> {
             globalProtocolInternal {
-                val t = miu("X")
+                val t = miu()
                 choice(a) {
                     branch("1") {
                         send<Unit>(a, b)
@@ -160,7 +160,7 @@ class ExtraTest {
         // scribble-java bad.syntax.consistentchoicesubj.Test05b
         assertFailsWith<InconsistentExternalChoiceException> {
             globalProtocolInternal {
-                val t = miu("X")
+                val t = miu()
                 choice(a) {
                     branch("1") {
                         send<Unit>(a, b)
@@ -205,7 +205,7 @@ class ExtraTest {
         // scribble-java bad.syntax.consistentchoicesubj.Test07c
         assertFailsWith<InconsistentExternalChoiceException> {
             globalProtocolInternal {
-                val t = miu("X")
+                val t = miu()
                 choice(a) {
                     branch("1") {
                         send<Unit>(a, b)
@@ -256,7 +256,7 @@ class ExtraTest {
     fun `collapsable recs`() {
         lateinit var t: RecursionTag
         val g = globalProtocolInternal {
-            t = miu("X")
+            t = miu()
             send<Unit>(a, b)
 
             choice(a) {
@@ -283,7 +283,7 @@ class ExtraTest {
         // scribble-java good.efsm.gcontinue.choiceunguarded.Test01c
         lateinit var t: RecursionTag
         val g = globalProtocolInternal {
-            t = miu("X")
+            t = miu()
             send<Unit>(a, b)
 
             choice(a) {

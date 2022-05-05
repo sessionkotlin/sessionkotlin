@@ -32,7 +32,7 @@ class SMPT {
     }
 
     private val mail = globalProtocolInternal {
-        tMail1 = miu("tMail1")
+        tMail1 = miu()
 
         choice(c) {
             branch("Mail") {
@@ -44,7 +44,7 @@ class SMPT {
                     }
                     branch("250") {
                         send<Code250>(s, c)
-                        tMail2 = miu("tMail2")
+                        tMail2 = miu()
                         choice(c) {
                             branch("Recipient") {
                                 send<Recipient>(c, s)
@@ -54,7 +54,7 @@ class SMPT {
                             branch("Data") {
                                 send<Data>(c, s)
                                 send<Code354>(s, c)
-                                tMail3 = miu("tMail3")
+                                tMail3 = miu()
 
                                 choice(c) {
                                     branch("Data") {
@@ -83,7 +83,7 @@ class SMPT {
         }
     }
     private val auth = globalProtocolInternal {
-        tAuth = miu("tAuth")
+        tAuth = miu()
         choice(c) {
             branch("Continue") {
                 send<Auth>(c, s)
@@ -107,7 +107,7 @@ class SMPT {
         choice(c) {
             branch("Continue") {
                 send<Ehlo>(c, s)
-                tsecureEhlo = miu("tsecureEhlo")
+                tsecureEhlo = miu()
 
                 choice(s) {
                     branch("250") {
@@ -142,7 +142,7 @@ class SMPT {
         choice(c) {
             branch("Continue") {
                 send<Ehlo>(c, s)
-                tEhlo = miu("tEhlo")
+                tEhlo = miu()
 
                 choice(s) {
                     branch("250") {

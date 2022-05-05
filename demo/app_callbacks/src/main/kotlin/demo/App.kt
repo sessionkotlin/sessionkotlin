@@ -4,16 +4,16 @@ import A
 import B
 import C
 import Choice1
-import SimpleCallbacksClass_A
-import SimpleCallbacksClass_B
-import SimpleCallbacksClass_C
-import SimpleCallbacks_A
-import SimpleCallbacks_B
-import SimpleCallbacks_C
-import Simple_A_1
-import Simple_C_1
-import Simple_C_2_1
-import Simple_C_4_2
+import SimpleCallbacksClassA
+import SimpleCallbacksClassB
+import SimpleCallbacksClassC
+import SimpleCallbacksA
+import SimpleCallbacksB
+import SimpleCallbacksC
+import SimpleA1
+import SimpleC1
+import SimpleC2_1
+import SimpleC4_2
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.david.sessionkotlin.backend.SKBuffer
@@ -28,20 +28,20 @@ fun main() {
         launch {
             // A
             var index = 0
-            val callbacks = object : SimpleCallbacks_A {
+            val callbacks = object : SimpleCallbacksA {
                 override fun onChoose1(): Choice1 =
                     if (index++ < 2) Choice1.Choice1_1 else Choice1.Choice1_2
                 override fun onSendVal1ToB(): Int = if (index < 2) 10 else 11
                 override fun onSendVal3ToB(): String = "something"
             }
-            SimpleCallbacksClass_A(callbacks).use { e ->
+            SimpleCallbacksClassA(callbacks).use { e ->
                 e.connect(B, chanAB)
                 e.start()
             }
         }
         launch {
             // B
-            val callbacks = object : SimpleCallbacks_B {
+            val callbacks = object : SimpleCallbacksB {
                 var receivedInt = -1
                 var receivedString = ""
 
@@ -54,7 +54,7 @@ fun main() {
                 }
                 override fun onSendVal4ToC(): String = "$receivedString. Hello from B"
             }
-            SimpleCallbacksClass_B(callbacks).use { e ->
+            SimpleCallbacksClassB(callbacks).use { e ->
                 e.connect(A, chanAB)
                 e.accept(C, 9999)
                 e.start()
@@ -62,11 +62,11 @@ fun main() {
         }
         launch {
             // C
-            val callbacks = object : SimpleCallbacks_C {
+            val callbacks = object : SimpleCallbacksC {
                 override fun onReceiveVal2FromB(value: Int) = println(value)
                 override fun onReceiveVal4FromB(value: String) = println(value)
             }
-            SimpleCallbacksClass_C(callbacks).use { e ->
+            SimpleCallbacksClassC(callbacks).use { e ->
                 e.request(B, "localhost", 9999)
                 e.start()
             }

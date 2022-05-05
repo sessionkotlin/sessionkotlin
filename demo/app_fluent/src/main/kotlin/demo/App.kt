@@ -3,15 +3,16 @@ package demo
 import A
 import B
 import C
-import Simple_A_1
-import Simple_B_1
-import Simple_B_1_Interface
-import Simple_B_2_1
-import Simple_B_5_2
-import Simple_C_1
-import Simple_C_1_Interface
-import Simple_C_2_1
-import Simple_C_4_2
+import SimpleA1
+import SimpleB1
+import SimpleB1_Interface
+import SimpleB2_1
+import SimpleB5_2
+import SimpleC1
+import SimpleC1_Interface
+import SimpleC2_1
+import SimpleC4_2
+
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.david.sessionkotlin.backend.SKBuffer
@@ -27,7 +28,7 @@ fun main() {
             // A
             SKMPEndpoint().use {
                 it.connect(B, chanAB)
-                Simple_A_1(it)
+                SimpleA1(it)
                     .branch1()
                     .sendToB(2)
                     .branch2()
@@ -40,16 +41,16 @@ fun main() {
                 e.connect(A, chanAB)
                 e.accept(C, 9999)
 
-                var b1: Simple_B_1_Interface = Simple_B_1(e)
+                var b1: SimpleB1_Interface = SimpleB1(e)
                 do {
                     when (val b2 = b1.branch()) {
-                        is Simple_B_2_1 -> {
+                        is SimpleB2_1 -> {
                             val buf = SKBuffer<Int>()
                             b1 = b2
                                 .receiveFromA(buf)
                                 .sendToC(buf.value * 2)
                         }
-                        is Simple_B_5_2 -> {
+                        is SimpleB5_2 -> {
                             val buf = SKBuffer<String>()
                             b2
                                 .receiveFromA(buf)
@@ -64,15 +65,15 @@ fun main() {
             // C
             SKMPEndpoint().use { e ->
                 e.request(B, "localhost", 9999)
-                var b1: Simple_C_1_Interface = Simple_C_1(e)
+                var b1: SimpleC1_Interface = SimpleC1(e)
                 do {
                     when (val b2 = b1.branch()) {
-                        is Simple_C_2_1 -> {
+                        is SimpleC2_1 -> {
                             val bufInt = SKBuffer<Int>()
                             b1 = b2.receiveFromB(bufInt)
                             println("Received int: ${bufInt.value}")
                         }
-                        is Simple_C_4_2 -> {
+                        is SimpleC4_2 -> {
                             val bufString = SKBuffer<String>()
                             b2.receiveFromB(bufString)
                             println("Received string: ${bufString.value}")
