@@ -32,7 +32,7 @@ fun main() {
                     .branch1()
                     .sendToB(2)
                     .branch2()
-                    .sendToB("bye!")
+                    .sendToB(0)
             }
         }
         launch {
@@ -51,10 +51,10 @@ fun main() {
                                 .sendToC(buf.value * 2)
                         }
                         is SimpleB5_2 -> {
-                            val buf = SKBuffer<String>()
+                            val buf = SKBuffer<Int>()
                             b2
                                 .receiveFromA(buf)
-                                .sendToC(buf.value + ", and hello from B")
+                                .sendToC(buf.value - 1)
                             break
                         }
                     }
@@ -74,9 +74,9 @@ fun main() {
                             println("Received int: ${bufInt.value}")
                         }
                         is SimpleC4_2 -> {
-                            val bufString = SKBuffer<String>()
+                            val bufString = SKBuffer<Int>()
                             b2.receiveFromB(bufString)
-                            println("Received string: ${bufString.value}")
+                            println("Received int 2: ${bufString.value}")
                             break
                         }
                     }

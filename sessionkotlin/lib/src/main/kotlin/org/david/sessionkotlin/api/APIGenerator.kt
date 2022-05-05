@@ -89,20 +89,16 @@ private class APIGenerator(
     private val protocolName: String,
     val role: SKRole,
     private val localType: LocalType,
-    private val genCallbacks: Boolean
+    private val genCallbacks: Boolean,
 ) {
 
     companion object {
         const val initialStateCount = 1
     }
 
+    private val bindingsVariableName = "bindings"
+    private val bindingsVariableType = LinkedHashMap::class.parameterizedBy(String::class, Int::class)
     private val recursionMap: MutableMap<RecursionTag, ICNames> = mutableMapOf()
-    private val fileSpecBuilder = FileSpec
-        .builder(
-            packageName = "",
-            fileName = buildClassName(protocolName, role)
-        ).addFileComment(GENERATED_COMMENT)
-
     private val callbacksInterfaceName = ClassName("", buildClassName(protocolName + "Callbacks", role))
     private val callbacksClassName = ClassName("", buildClassName(protocolName + "CallbacksClass", role))
     private val callbacksInterface = TypeSpec.interfaceBuilder(callbacksInterfaceName)
@@ -112,7 +108,25 @@ private class APIGenerator(
             fileName = callbacksInterfaceName.simpleName
         ).addFileComment(GENERATED_COMMENT)
     private val callbacksParameterName = "callbacks"
-    private val bindingsVariableName = "bindings"
+    private val assertFunction = MemberName(
+        "org.david.sessionkotlin.util",
+        "assertRefinement"
+    )
+    private val fileSpecBuilder = FileSpec
+        .builder(
+            packageName = "",
+            fileName = buildClassName(protocolName, role)
+        ).addFileComment(GENERATED_COMMENT)
+        .addProperty(
+            PropertySpec.builder(
+                bindingsVariableName,
+                bindingsVariableType
+            ).addModifiers(KModifier.PRIVATE)
+                .initializer("%T()", bindingsVariableType).build()
+        )
+
+    fun recursionVariable(tag: RecursionTag) = "recursionTag${tag.hashCode()}"
+    fun msgVariable(label: String) = "msg$label"
 
     private fun genLocals(
         l: LocalType,
@@ -122,8 +136,9 @@ private class APIGenerator(
         superInterface: ClassName? = null,
         branch: String? = null,
     ): GenRet {
-        val suffix = "_" + (branch ?: "Interface")
-        val interfaceName = ClassName("", buildClassName(protocolName, role, stateIndex) + suffix)
+        // Fluent API
+        val interfaceSuffix = "_" + (branch ?: "Interface")
+        val interfaceName = ClassName("", buildClassName(protocolName, role, stateIndex) + interfaceSuffix)
         val className = ClassName("", buildClassName(protocolName, role, stateIndex))
         if (tag != null) {
             recursionMap[tag] = ICNames(interfaceName, className)
@@ -156,9 +171,7 @@ private class APIGenerator(
         if (stateIndex > initialStateCount) {
             classBuilder.addModifiers(KModifier.PRIVATE)
         }
-
-        fun recursionVariable(tag: RecursionTag) = "recursionTag${tag.hashCode()}"
-        fun msgVariable(label: String) = "msg$label"
+        // End Fluent API
 
         return when (l) {
             LocalTypeEnd -> GenRet(ICNames(endClassName, endClassName), stateIndex)
@@ -189,6 +202,20 @@ private class APIGenerator(
                 val codeBlock = CodeBlock.builder()
                     .let {
                         val pName = parameter?.name ?: "Unit"
+                        if (l.msgLabel != null) {
+                            it.addStatement("%L[%S] = %L", bindingsVariableName, l.msgLabel, pName)
+
+                            if (l.condition.isNotBlank()) {
+                                it.addStatement(
+                                    "%M(%S, %T.parseToEnd(%S).value(%L))",
+                                    assertFunction,
+                                    l.condition,
+                                    RefinementParser::class,
+                                    l.condition,
+                                    bindingsVariableName
+                                )
+                            }
+                        }
                         it.addStatement("super.send(%L, %L, %S)", roleMap[l.to], pName, l.branchLabel)
                         it
                     }
@@ -196,10 +223,7 @@ private class APIGenerator(
                     .build()
 
                 val functions = genMsgPassing(
-                    methodName,
-                    codeBlock,
-                    parameter,
-                    ret.interfaceClassPair.interfaceClassName
+                    methodName, codeBlock, parameter, ret.interfaceClassPair.interfaceClassName
                 )
                 interfaceBuilder.addFunction(functions.abstractSpec)
                 classBuilder.addFunction(functions.overrideSpec)
@@ -220,9 +244,7 @@ private class APIGenerator(
                             CodeBlock.builder()
                                 .addStatement(
                                     "super.sendProtected(%L, %T(\"%L\"))",
-                                    roleMap[l.to],
-                                    SKBranch::class,
-                                    l.branchLabel
+                                    roleMap[l.to], SKBranch::class, l.branchLabel
                                 )
                                 .build()
                         )
@@ -231,22 +253,13 @@ private class APIGenerator(
                         CodeBlock.builder()
                             .addStatement(
                                 "val %L = %L.%N()",
-                                msgVariable(l.msgLabel),
-                                callbacksParameterName,
-                                callbackFunction
+                                msgVariable(l.msgLabel), callbacksParameterName, callbackFunction
                             )
                             .addStatement(
                                 "%L[%S] = %L",
-                                bindingsVariableName,
-                                l.msgLabel,
-                                msgVariable(l.msgLabel)
+                                bindingsVariableName, l.msgLabel, msgVariable(l.msgLabel)
                             )
                             .let {
-                                val assertFunction = MemberName(
-                                    "org.david.sessionkotlin.util",
-                                    "assertRefinement"
-                                )
-
                                 if (l.condition.isNotBlank()) {
                                     it.addStatement(
                                         "%M(%S, %T.parseToEnd(%S).value(%L))",
@@ -261,9 +274,7 @@ private class APIGenerator(
                             }
                             .addStatement(
                                 "super.sendProtected(%L, %T(%L))",
-                                roleMap[l.to],
-                                SKPayload::class,
-                                msgVariable(l.msgLabel)
+                                roleMap[l.to], SKPayload::class, msgVariable(l.msgLabel)
                             )
                             .build()
                     )
@@ -289,9 +300,17 @@ private class APIGenerator(
 
                 val codeBlock = CodeBlock.builder()
                     .let {
-                        if (parameter != null)
+                        if (parameter != null) {
                             it.addStatement("super.receive(%L, %L)", roleMap[l.from], parameter.name)
-                        else
+                            if (l.msgLabel != null) {
+                                it.addStatement(
+                                    "%L[%S] = %L.value",
+                                    bindingsVariableName,
+                                    l.msgLabel,
+                                    parameter.name
+                                )
+                            }
+                        } else
                             it.addStatement(
                                 "super.receive(%L, %T())", roleMap[l.from],
                                 SKBuffer::class.asClassName().parameterizedBy(Unit::class.asClassName())
@@ -475,12 +494,12 @@ private class APIGenerator(
         codeBlock.addStatement(
             "val %L = %T()",
             bindingsVariableName,
-            LinkedHashMap::class.parameterizedBy(String::class, Int::class)
+            bindingsVariableType
         )
         genLocals(localType, initialStateCount, codeBlock)
         fileSpecBuilder.build().writeTo(outputDirectory)
 
-        val classBuilder = TypeSpec
+        val callbacksClassBuilder = TypeSpec
             .classBuilder(callbacksClassName)
             .superclass(SKMPEndpoint::class)
             .addFunction(
@@ -514,7 +533,7 @@ private class APIGenerator(
                     fileName = callbacksClassName.simpleName
                 ).addFileComment(GENERATED_COMMENT)
                 .addAnnotation(suppressUnchecked)
-                .addType(classBuilder.build())
+                .addType(callbacksClassBuilder.build())
                 .build().writeTo(outputDirectory)
 
             callbacksInterfaceFile

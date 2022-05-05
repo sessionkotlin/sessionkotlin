@@ -10,7 +10,17 @@ fun main() {
     val c = SKRole("C")
 
     globalProtocol("Simple", true) {
-        send<Int>(a, b, "val1")
-        send<Int>(b, c, "val2", "val2 > val1")
+        val t = miu()
+        choice(a) {
+            branch("1") {
+                send<Int>(a, b, "val1")
+                send<Int>(b, c, "val2", "val2 > val1")
+                goto(t)
+            }
+            branch("2") {
+                send<Int>(a, b, "val3")
+                send<Int>(b, c, "val4", "val4 < val3")
+            }
+        }
     }
 }
