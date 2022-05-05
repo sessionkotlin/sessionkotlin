@@ -1,4 +1,4 @@
-package org.david.grammar
+package org.david.parser
 
 import com.github.h0tk3y.betterParse.combinators.*
 import com.github.h0tk3y.betterParse.grammar.Grammar
@@ -8,7 +8,7 @@ import com.github.h0tk3y.betterParse.lexer.regexToken
 import com.github.h0tk3y.betterParse.parser.Parser
 import org.david.symbols.*
 
-internal val grammar = object : Grammar<BooleanExpression>() {
+public val grammar: Grammar<BooleanExpression> = object : Grammar<BooleanExpression>() {
     val lTrue by literalToken("true")
     val lFalse by literalToken("false")
     val number by regexToken("\\d+")

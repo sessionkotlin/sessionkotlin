@@ -11,6 +11,7 @@ import org.david.sessionkotlin.dsl.RecursionTag
 import org.david.sessionkotlin.dsl.RootEnv
 import org.david.sessionkotlin.dsl.SKRole
 import org.david.sessionkotlin.dsl.types.*
+import org.david.sessionkotlin.parser.RefinementParser
 import org.david.sessionkotlin.util.asClassname
 import org.david.sessionkotlin.util.capitalized
 import java.io.File
@@ -111,6 +112,7 @@ private class APIGenerator(
             fileName = callbacksInterfaceName.simpleName
         ).addFileComment(GENERATED_COMMENT)
     private val callbacksParameterName = "callbacks"
+    private val bindingsVariableName = "bindings"
 
     private fun genLocals(
         l: LocalType,
@@ -156,6 +158,7 @@ private class APIGenerator(
         }
 
         fun recursionVariable(tag: RecursionTag) = "recursionTag${tag.hashCode()}"
+        fun msgVariable(label: String) = "msg$label"
 
         return when (l) {
             LocalTypeEnd -> GenRet(ICNames(endClassName, endClassName), stateIndex)
@@ -204,14 +207,14 @@ private class APIGenerator(
                 fileSpecBuilder.addType(classBuilder.build())
 
                 if (l.msgLabel != null) {
-                    val name = "onSend${l.msgLabel.capitalized()}To${l.to}"
-
-                    callbacksInterface.addFunction(
-                        FunSpec.builder(name)
+                    val callbackFunction =
+                        FunSpec.builder("onSend${l.msgLabel.capitalized()}To${l.to}")
                             .addModifiers(KModifier.ABSTRACT)
                             .returns(l.type.kotlin)
                             .build()
-                    )
+
+                    callbacksInterface.addFunction(callbackFunction)
+
                     if (l.branchLabel != null) {
                         callbackCode.add(
                             CodeBlock.builder()
@@ -227,10 +230,40 @@ private class APIGenerator(
                     callbackCode.add(
                         CodeBlock.builder()
                             .addStatement(
-                                "super.sendProtected(%L, %T(%L.%L()))",
+                                "val %L = %L.%N()",
+                                msgVariable(l.msgLabel),
+                                callbacksParameterName,
+                                callbackFunction
+                            )
+                            .addStatement(
+                                "%L[%S] = %L",
+                                bindingsVariableName,
+                                l.msgLabel,
+                                msgVariable(l.msgLabel)
+                            )
+                            .let {
+                                val assertFunction = MemberName(
+                                    "org.david.sessionkotlin.util",
+                                    "assertRefinement"
+                                )
+
+                                if (l.condition.isNotBlank()) {
+                                    it.addStatement(
+                                        "%M(%S, %T.parseToEnd(%S).value(%L))",
+                                        assertFunction,
+                                        l.condition,
+                                        RefinementParser::class,
+                                        l.condition,
+                                        bindingsVariableName
+                                    )
+                                }
+                                it
+                            }
+                            .addStatement(
+                                "super.sendProtected(%L, %T(%L))",
                                 roleMap[l.to],
                                 SKPayload::class,
-                                callbacksParameterName, name
+                                msgVariable(l.msgLabel)
                             )
                             .build()
                     )
@@ -280,25 +313,36 @@ private class APIGenerator(
                 fileSpecBuilder.addType(classBuilder.build())
 
                 if (l.msgLabel != null) {
-                    val name = "onReceive${l.msgLabel.capitalized()}From${l.from}"
+                    "onReceive${l.msgLabel.capitalized()}From${l.from}"
 
-                    callbacksInterface.addFunction(
-                        FunSpec.builder(name)
-                            .addModifiers(KModifier.ABSTRACT)
-                            .let {
-                                if (parameter != null)
-                                    it.addParameter(ParameterSpec.builder("value", l.type.kotlin).build())
-                                it
-                            }
-                            .build()
-                    )
+                    val callbackFunction = FunSpec.builder("onReceive${l.msgLabel.capitalized()}From${l.from}")
+                        .addModifiers(KModifier.ABSTRACT)
+                        .let {
+                            if (parameter != null)
+                                it.addParameter(ParameterSpec.builder("value", l.type.kotlin).build())
+                            it
+                        }
+                        .build()
+                    callbacksInterface.addFunction(callbackFunction)
                     callbackCode.add(
                         CodeBlock.builder()
                             .addStatement(
-                                "%L.%L((super.receiveProtected(%L) as %T).payload)",
-                                callbacksParameterName, name,
+                                "val %L = (super.receiveProtected(%L) as %T).payload",
+                                msgVariable(l.msgLabel),
                                 roleMap[l.from],
                                 SKPayload::class.parameterizedBy(l.type.kotlin)
+                            )
+                            .addStatement(
+                                "%L[%S] = %L",
+                                bindingsVariableName,
+                                l.msgLabel,
+                                msgVariable(l.msgLabel)
+                            )
+                            .addStatement(
+                                "%L.%N(%L)",
+                                callbacksParameterName,
+                                callbackFunction,
+                                msgVariable(l.msgLabel)
                             )
                             .build()
                     )
@@ -428,6 +472,11 @@ private class APIGenerator(
 
     fun writeTo(outputDirectory: File) {
         val codeBlock = CodeBlock.builder()
+        codeBlock.addStatement(
+            "val %L = %T()",
+            bindingsVariableName,
+            LinkedHashMap::class.parameterizedBy(String::class, Int::class)
+        )
         genLocals(localType, initialStateCount, codeBlock)
         fileSpecBuilder.build().writeTo(outputDirectory)
 

@@ -7,7 +7,7 @@ val betterParseVersion: String by project
 
 dependencies {
     testImplementation(kotlin("test"))
-    implementation("com.github.h0tk3y.betterParse:better-parse:$betterParseVersion")
+    api("com.github.h0tk3y.betterParse:better-parse:$betterParseVersion")
 }
 
 tasks.test {
@@ -16,4 +16,9 @@ tasks.test {
 
 kotlin {
     explicitApi()
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
 }

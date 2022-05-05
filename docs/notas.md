@@ -69,3 +69,4 @@
 
 - As labels das mensagens têm de ser únicas porque são usadas nos refinamentos e para geração de nomes de métodos.
 
+- Os remetentes é que garantem que os refinamentos são respeitados.

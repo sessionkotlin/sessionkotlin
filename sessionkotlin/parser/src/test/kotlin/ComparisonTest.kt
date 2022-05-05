@@ -1,5 +1,5 @@
 import com.github.h0tk3y.betterParse.grammar.parseToEnd
-import org.david.grammar.grammar
+import org.david.parser.grammar
 import org.david.symbols.*
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
