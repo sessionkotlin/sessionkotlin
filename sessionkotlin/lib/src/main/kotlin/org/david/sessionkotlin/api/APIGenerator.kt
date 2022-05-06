@@ -14,6 +14,7 @@ import org.david.sessionkotlin.dsl.types.*
 import org.david.sessionkotlin.parser.RefinementParser
 import org.david.sessionkotlin.util.asClassname
 import org.david.sessionkotlin.util.capitalized
+import org.david.symbols.variable.Variable
 import java.io.File
 
 private const val GENERATED_COMMENT = "This is a generated file. Do not change it."
@@ -97,7 +98,7 @@ private class APIGenerator(
     }
 
     private val bindingsVariableName = "bindings"
-    private val bindingsVariableType = LinkedHashMap::class.parameterizedBy(String::class, Int::class)
+    private val bindingsVariableType = LinkedHashMap::class.parameterizedBy(String::class, Variable::class)
     private val recursionMap: MutableMap<RecursionTag, ICNames> = mutableMapOf()
     private val callbacksInterfaceName = ClassName("", buildClassName(protocolName + "Callbacks", role))
     private val callbacksClassName = ClassName("", buildClassName(protocolName + "CallbacksClass", role))

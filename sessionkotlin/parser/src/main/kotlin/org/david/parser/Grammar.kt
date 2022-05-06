@@ -7,13 +7,21 @@ import com.github.h0tk3y.betterParse.lexer.literalToken
 import com.github.h0tk3y.betterParse.lexer.regexToken
 import com.github.h0tk3y.betterParse.parser.Parser
 import org.david.symbols.*
+import org.david.symbols.variable.toVar
 
 public val grammar: Grammar<BooleanExpression> = object : Grammar<BooleanExpression>() {
     val lTrue by literalToken("true")
     val lFalse by literalToken("false")
-    val number by regexToken("\\d+")
+    val float by regexToken("\\d+\\.\\d+[Ff]")
+    val float2 by regexToken("\\.\\d+[Ff]")
+    val float3 by regexToken("\\d+[Ff]")
+    val double by regexToken("\\d+\\.\\d+")
+    val double2 by regexToken("\\.\\d+")
+    val long by regexToken("\\d+L")
+    val integer by regexToken("\\d+")
     val id by regexToken("\\w+")
     val plus by literalToken("+")
+    val impl by literalToken("->")
     val minus by literalToken("-")
     val eq by literalToken("==")
     val neq by literalToken("!=")
@@ -29,7 +37,13 @@ public val grammar: Grammar<BooleanExpression> = object : Grammar<BooleanExpress
     val rpar by literalToken(")")
 
     val term: Parser<Term> by
-    (number use { Const(text.toInt()) }) or
+    (integer use { Const(text.toInt().toVar()) }) or
+        (float3 use { Const(text.slice(0 until length - 1).toFloat().toVar()) }) or
+        (float2 use { Const(text.slice(0 until length - 1).toFloat().toVar()) }) or
+        (float use { Const(text.slice(0 until length - 1).toFloat().toVar()) }) or
+        (double2 use { Const(text.toDouble().toVar()) }) or
+        (double use { Const(text.toDouble().toVar()) }) or
+        (long use { Const(text.slice(0 until length - 1).toLong().toVar()) }) or
         (id use { Name(text) }) or
         -lpar * parser(::expr) * -rpar or
         (-minus * parser(::expr) map { Neg(it) })
@@ -51,6 +65,7 @@ public val grammar: Grammar<BooleanExpression> = object : Grammar<BooleanExpress
 
     val andChain: Parser<BooleanExpression> by leftAssociative(booleanExpr, and) { l, _, r -> And(l, r) }
     val orChain: Parser<BooleanExpression> by leftAssociative(andChain, or) { l, _, r -> Or(l, r) }
+    val implication: Parser<BooleanExpression> by rightAssociative(orChain, impl) { l, _, r -> Impl(l, r) }
 
-    override val rootParser: Parser<BooleanExpression> by orChain
+    override val rootParser: Parser<BooleanExpression> by implication
 }
