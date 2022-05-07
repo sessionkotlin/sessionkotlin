@@ -19,7 +19,7 @@ class Negotiation {
 
         val g = globalProtocolInternal {
             send<Int>(buyer, seller)
-            t = miu("X")
+            t = miu()
 
             choice(seller) {
                 branch("Accept1") {

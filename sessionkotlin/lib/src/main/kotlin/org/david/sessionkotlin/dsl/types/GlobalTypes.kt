@@ -1,17 +1,20 @@
 package org.david.sessionkotlin.dsl.types
 
+import com.github.h0tk3y.betterParse.grammar.parseToEnd
+import org.david.parser.grammar
 import org.david.sessionkotlin.dsl.RecursionTag
 import org.david.sessionkotlin.dsl.SKRole
 import org.david.sessionkotlin.dsl.exception.InconsistentExternalChoiceException
 import org.david.sessionkotlin.dsl.exception.RoleNotEnabledException
 import org.david.sessionkotlin.dsl.exception.UnfinishedRolesException
+import org.david.sessionkotlin.dsl.exception.UnknownMessageLabelException
 
 internal abstract class GlobalType {
     internal abstract fun project(role: SKRole, state: State = State(role)): LocalType
 }
 
-internal data class State(
-    val projectedRole: SKRole,
+internal class State(
+    private val projectedRole: SKRole,
 
     /**
      * Whether the projected role sent a message, made choice or had recursion while not knowing
@@ -34,11 +37,25 @@ internal data class State(
      * Label for the current branch
      */
     var branchLabel: String? = null,
+
+    /**
+     * Collection of message labels that the projected role knows about
+     */
+    val names: MutableSet<String> = mutableSetOf()
 ) {
     /**
      * Returns whether the [projectedRole] is enabled.
      */
     fun enabled() = enabledBy != null && enabledBy != projectedRole
+
+    fun copy(
+        projectedRole: SKRole = this.projectedRole,
+        sentWhileDisabled: Boolean = this.sentWhileDisabled,
+        enabledBy: SKRole? = this.enabledBy,
+        activeRoles: MutableSet<SKRole> = this.activeRoles.toMutableSet(),
+        branchLabel: String? = this.branchLabel,
+        names: MutableSet<String> = this.names.toMutableSet(),
+    ): State = State(projectedRole, sentWhileDisabled, enabledBy, activeRoles, branchLabel, names)
 }
 
 internal class GlobalTypeSend(
@@ -55,17 +72,27 @@ internal class GlobalTypeSend(
                 if (!state.enabled()) {
                     state.sentWhileDisabled = true
                 }
+                if (msgLabel != null) {
+                    state.names.add(msgLabel)
+                }
+                if (condition.isNotBlank()) {
+                    val unknown = grammar.parseToEnd(condition).names().minus(state.names)
+                    if (unknown.isNotEmpty()) {
+                        throw UnknownMessageLabelException(role, unknown)
+                    }
+                }
+
                 if (!state.activeRoles.contains(to)) {
                     // We are activating role [to]
                     state.activeRoles.add(to)
                     LocalTypeSend(
                         to, type, cont.project(role, state),
-                        branchLabel = state.branchLabel, msgLabel = msgLabel
+                        branchLabel = state.branchLabel, msgLabel = msgLabel, condition = condition
                     )
                 } else {
                     LocalTypeSend(
                         to, type, cont.project(role, state),
-                        msgLabel = msgLabel
+                        msgLabel = msgLabel, condition = condition
                     )
                 }
             }
@@ -73,6 +100,11 @@ internal class GlobalTypeSend(
                 if (!state.enabled()) {
                     state.enabledBy = from
                 }
+                if (msgLabel != null) {
+                    state.names.add(msgLabel)
+                }
+                // Only the sender must enforce the condition
+
                 LocalTypeReceive(from, type, cont.project(role, state), msgLabel = msgLabel)
             }
             else -> {
@@ -97,7 +129,7 @@ internal class GlobalTypeChoice(
                 return LocalTypeInternalChoice(branches.mapValues { it.value.project(role, states.getValue(it.key)) })
             }
             else -> {
-                val newState = State(role)
+                val newState = State(role, names = state.names.toMutableSet())
 
                 // Generate a new state for each branch, with the choice subject activated
                 val states = branches.mapValues { newState.copy(branchLabel = it.key, activeRoles = mutableSetOf(at)) }

@@ -64,4 +64,15 @@
 | Soma / Subtração   | <code>+</code> <code>-</code>                                                                                |             |
 | Operadores lógicos | <code>==</code> <code>!=</code> <code><</code> <code><=</code> <code>></code> <code>>=</code> <code>!</code> |             |
 | Conjunção          | <code>&&</code>                                                                                              |             |
-| Disjunção          | <code>&#124;&#124;</code>                                                                                    | -           |
+| Disjunção          | <code>&#124;&#124;</code>                                                                                    |             |
+| Implicação         | <code>-></code>                                                                                              | -           |
+
+
+- As labels das mensagens têm de ser únicas porque são usadas nos refinamentos e para geração de nomes de métodos.
+
+
+- Os remetentes é que garantem que os refinamentos são respeitados.
+
+
+- As expressões dos refinamentos permitem quaisquer variáveis que implementem `Variable`. Esta biblioteca inclui
+métodos de extensão para as classes Byte, Short, Int, Long, Float, Double e String.

@@ -1,5 +1,6 @@
 package org.david.sessionkotlin.util
 
+import org.david.sessionkotlin.api.exception.RefinementException
 import org.david.sessionkotlin.dsl.SKRole
 
 internal fun printlnIndent(indent: Int, message: Any?) {
@@ -14,3 +15,11 @@ internal fun String.asClassname() =
 
 internal fun String.capitalized() =
     replaceFirstChar(Char::titlecase)
+
+/**
+ * Throws [RefinementException] if evaluation is false.
+ */
+public fun assertRefinement(refinement: String, evaluation: Boolean) {
+    if (!evaluation)
+        throw RefinementException(refinement)
+}

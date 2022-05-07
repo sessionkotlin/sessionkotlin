@@ -18,7 +18,7 @@ class Adder {
         lateinit var t: RecursionTag
 
         val g = globalProtocolInternal {
-            t = miu("X")
+            t = miu()
             choice(c) {
                 branch("Continue") {
                     send<Int>(c, s)

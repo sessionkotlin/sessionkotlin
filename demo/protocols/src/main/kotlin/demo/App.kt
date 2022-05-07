@@ -1,6 +1,5 @@
 package demo
 
-import org.david.sessionkotlin.backend.SKBuffer
 import org.david.sessionkotlin.dsl.SKRole
 import org.david.sessionkotlin.dsl.globalProtocol
 
@@ -15,12 +14,12 @@ fun main() {
         choice(a) {
             branch("1") {
                 send<Int>(a, b, "val1")
-                send<Int>(b, c, "val2")
+                send<Int>(b, c, "val2", "val2 > val1")
                 goto(t)
             }
             branch("2") {
-                send<String>(a, b, "val3")
-                send<String>(b, c, "val4")
+                send<Int>(a, b, "val3")
+                send<Int>(b, c, "val4", "val4 < val3")
             }
         }
     }

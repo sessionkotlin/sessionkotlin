@@ -4,10 +4,7 @@ import dsl.util.DoubleClass
 import dsl.util.IntClass
 import dsl.util.StringClass
 import org.david.sessionkotlin.dsl.SKRole
-import org.david.sessionkotlin.dsl.exception.DuplicateBranchLabelException
-import org.david.sessionkotlin.dsl.exception.InvalidBranchLabelException
-import org.david.sessionkotlin.dsl.exception.SendingToSelfException
-import org.david.sessionkotlin.dsl.exception.TerminalInstructionException
+import org.david.sessionkotlin.dsl.exception.*
 import org.david.sessionkotlin.dsl.globalProtocolInternal
 import org.david.sessionkotlin.dsl.types.LEnd
 import org.david.sessionkotlin.dsl.types.LocalTypeExternalChoice
@@ -271,12 +268,66 @@ class SyntaxBasicTest {
                 }
             }
         }
-    } @Test
+    }
+
+    @Test
     fun `newline in label`() {
         assertFailsWith<InvalidBranchLabelException> {
             globalProtocolInternal {
                 choice(a) {
                     branch("before\nafter") {
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `dupe msg label`() {
+        assertFailsWith<DuplicateMessageLabelException> {
+            globalProtocolInternal {
+                send<String>(a, b, "my_label")
+                send<String>(b, a, "my_label")
+            }
+        }
+    }
+
+    @Test
+    fun `dupe msg label exec 1`() {
+        val aux = globalProtocolInternal {
+            send<String>(a, b, "my_label")
+        }
+        assertFailsWith<DuplicateMessageLabelException> {
+            globalProtocolInternal {
+                send<String>(a, b, "my_label")
+                exec(aux)
+            }
+        }
+    }
+
+    @Test
+    fun `dupe msg label exec 2`() {
+        val aux = globalProtocolInternal {
+            send<String>(a, b, "my_label")
+        }
+        assertFailsWith<DuplicateMessageLabelException> {
+            globalProtocolInternal {
+                exec(aux)
+                send<String>(a, b, "my_label")
+            }
+        }
+    }
+
+    @Test
+    fun `dupe msg label choice`() {
+        assertFailsWith<DuplicateMessageLabelException> {
+            globalProtocolInternal {
+                choice(b) {
+                    branch("1") {
+                        send<String>(b, a, "my_label")
+                    }
+                    branch("2") {
+                        send<Int>(b, a, "my_label")
                     }
                 }
             }

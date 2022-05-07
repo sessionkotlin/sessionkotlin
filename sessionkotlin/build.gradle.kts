@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.*
+
 group = "org.david"
 version = "0.0.1"
 
@@ -6,6 +9,7 @@ plugins {
     `java-library`
     id("org.jlleitschuh.gradle.ktlint") // Linter
     id("org.jetbrains.dokka") version "1.6.10" // Documentation
+    `maven-publish`
 }
 
 allprojects {
@@ -69,5 +73,51 @@ tasks.register<JacocoReport>("codeCoverageReport") {
         xml.required.set(true)
         csv.required.set(true)
         html.required.set(true)
+    }
+}
+
+subprojects {
+    apply(plugin = "maven-publish")
+    apply(plugin = "java-library")
+
+    publishing {
+        publications {
+
+            create<MavenPublication>("maven") {
+                groupId = rootProject.group as String
+                artifactId = "${rootProject.name}-${project.name }"
+                version = rootProject.version as String
+
+                from(components["java"])
+
+                pom {
+                    name.set("SessionKotlin")
+                    description.set("Multiparty Session Types in Kotlin ")
+                    licenses {
+                        license {
+                            name.set("MIT License")
+                            url.set("https://opensource.org/licenses/MIT")
+                        }
+                    }
+                }
+            }
+        }
+
+        repositories {
+            maven {
+                // Load GitHub credentials
+                val props = Properties()
+                val envFile = File(rootDir.path + "/.env")
+                if (envFile.exists()) {
+                    props.load(FileInputStream(envFile))
+                }
+                name = "SessionKotlin-GithubPackages"
+                url = uri("https://maven.pkg.github.com/d-costa/sessionkotlin")
+                credentials {
+                    username = props.getProperty("USERNAME") ?: System.getenv("USERNAME")
+                    password = props.getProperty("TOKEN") ?: System.getenv("TOKEN")
+                }
+            }
+        }
     }
 }
