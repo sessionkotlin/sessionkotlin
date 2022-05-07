@@ -102,23 +102,36 @@ class ArithmeticTest {
 
     @Test
     fun `test floating`() {
-        val ast = grammar.parseToEnd("a == 0.3")
-        assertEquals(Eq(Name("a"), cDouble(.3)), ast)
-        assert(ast.value(mapOf("a" to .3.toVar())))
+        val ast = grammar.parseToEnd("a == 0.3f")
+        assertEquals(Eq(Name("a"), cFloat(.3f)), ast)
+        assert(ast.value(mapOf("a" to .3F.toVar())))
     }
 
     @Test
     fun `test floating 2`() {
-        val ast = grammar.parseToEnd("a == .3")
-        assertEquals(Eq(Name("a"), cDouble(.3)), ast)
-        assert(ast.value(mapOf("a" to .3.toVar())))
+        val ast = grammar.parseToEnd("a == .3F")
+        assertEquals(Eq(Name("a"), cFloat(.3F)), ast)
+        assert(ast.value(mapOf("a" to .3F.toVar())))
     }
 
     @Test
-    fun `test floating 3`() {
+    fun `test string plus int`() {
+        val ast = grammar.parseToEnd("a + b == c")
+        assert(ast.value(mapOf("a" to "ab".toVar(), "b" to 3.toVar(), "c" to "ab3".toVar())))
+    }
+
+    @Test
+    fun `test double`() {
         val ast = grammar.parseToEnd("a == 3.0")
         assertEquals(Eq(Name("a"), cDouble(3.0)), ast)
         assert(ast.value(mapOf("a" to 3.0.toVar())))
+    }
+
+    @Test
+    fun `test double 2`() {
+        val ast = grammar.parseToEnd("a == .3")
+        assertEquals(Eq(Name("a"), cDouble(.3)), ast)
+        assert(ast.value(mapOf("a" to .3.toVar())))
     }
 
     @Test

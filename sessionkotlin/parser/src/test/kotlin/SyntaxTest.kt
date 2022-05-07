@@ -1,9 +1,11 @@
 import com.github.h0tk3y.betterParse.grammar.parseToEnd
 import org.david.parser.exception.UnresolvedNameException
 import org.david.parser.grammar
+import org.david.symbols.*
 import org.david.symbols.variable.Variable
 import org.david.symbols.variable.toVar
 import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class SyntaxTest {
@@ -60,5 +62,12 @@ class SyntaxTest {
     fun `compatible types 3`() {
         val ast = grammar.parseToEnd("a + b == .1")
         assert(ast.value(mapOf("a" to (0.05).toVar(), "b" to 0.05.toVar())))
+    }
+
+    @Test
+    fun `test string literal`() {
+        val ast = grammar.parseToEnd("a + 5 == 'something5'")
+        assertEquals(Eq(Plus(Name("a"), cInt(5)), cString("something5")), ast)
+        assert(ast.value(mapOf("a" to ("something").toVar())))
     }
 }

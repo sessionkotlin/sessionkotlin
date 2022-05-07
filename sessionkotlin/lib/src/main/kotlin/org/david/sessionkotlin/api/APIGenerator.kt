@@ -113,6 +113,10 @@ private class APIGenerator(
         "org.david.sessionkotlin.util",
         "assertRefinement"
     )
+    private val toVarFunction = MemberName(
+        "org.david.symbols.variable",
+        "toVar"
+    )
     private val fileSpecBuilder = FileSpec
         .builder(
             packageName = "",
@@ -204,7 +208,7 @@ private class APIGenerator(
                     .let {
                         val pName = parameter?.name ?: "Unit"
                         if (l.msgLabel != null) {
-                            it.addStatement("%L[%S] = %L", bindingsVariableName, l.msgLabel, pName)
+                            it.addStatement("%L[%S] = %L.%M()", bindingsVariableName, l.msgLabel, pName, toVarFunction)
 
                             if (l.condition.isNotBlank()) {
                                 it.addStatement(
@@ -257,8 +261,8 @@ private class APIGenerator(
                                 msgVariable(l.msgLabel), callbacksParameterName, callbackFunction
                             )
                             .addStatement(
-                                "%L[%S] = %L",
-                                bindingsVariableName, l.msgLabel, msgVariable(l.msgLabel)
+                                "%L[%S] = %L.%M()",
+                                bindingsVariableName, l.msgLabel, msgVariable(l.msgLabel), toVarFunction
                             )
                             .let {
                                 if (l.condition.isNotBlank()) {
@@ -305,10 +309,11 @@ private class APIGenerator(
                             it.addStatement("super.receive(%L, %L)", roleMap[l.from], parameter.name)
                             if (l.msgLabel != null) {
                                 it.addStatement(
-                                    "%L[%S] = %L.value",
+                                    "%L[%S] = %L.value.%M()",
                                     bindingsVariableName,
                                     l.msgLabel,
-                                    parameter.name
+                                    parameter.name,
+                                    toVarFunction
                                 )
                             }
                         } else
@@ -353,10 +358,11 @@ private class APIGenerator(
                                 SKPayload::class.parameterizedBy(l.type.kotlin)
                             )
                             .addStatement(
-                                "%L[%S] = %L",
+                                "%L[%S] = %L.%M()",
                                 bindingsVariableName,
                                 l.msgLabel,
-                                msgVariable(l.msgLabel)
+                                msgVariable(l.msgLabel),
+                                toVarFunction
                             )
                             .addStatement(
                                 "%L.%N(%L)",

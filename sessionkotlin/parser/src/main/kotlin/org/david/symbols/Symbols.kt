@@ -26,6 +26,7 @@ internal fun cInt(v: Int) = Const(v.toVar())
 internal fun cLong(v: Long) = Const(v.toVar())
 internal fun cFloat(v: Float) = Const(v.toVar())
 internal fun cDouble(v: Double) = Const(v.toVar())
+internal fun cString(v: String) = Const(v.toVar())
 
 internal data class Neg(val t: Term) : Term {
     override fun value(bindings: Map<String, Variable>): Variable = -t.value(bindings)
