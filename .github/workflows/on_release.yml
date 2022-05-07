@@ -6,6 +6,7 @@ name: on_release_created
 on:
   release:
     types: [created]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -24,10 +25,10 @@ jobs:
         distribution: 'temurin'
 
     - name: Build with Gradle
-      run: gradle build
+      run: cd sessionkotlin && gradle wrapper && ./gradlew clean build
 
     - name: Publish to GitHub Packages
-      run: gradle publish
+      run: cd sessionkotlin && gradle wrapper && ./gradlew publish
       env:
         USERNAME: ${{ secrets.PUBLISHER_ACTOR }}
-        PASSWORD: ${{ secrets.PUBLISHER_ACCESS_TOKEN }}
+        TOKEN: ${{ secrets.PUBLISHER_ACCESS_TOKEN }}
