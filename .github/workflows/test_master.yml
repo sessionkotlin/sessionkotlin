@@ -1,4 +1,4 @@
-name: push_to_master_flow
+name: Test Master
 
 # Controls when the workflow will run
 on:
@@ -62,7 +62,7 @@ jobs:
           name: jacoco-report
           path: sessionkotlin/build/reports/jacoco/codeCoverageReport
 
-      - name: Build docs
+      - name: Prepare Build docs
         uses: actions/checkout@v2
         with:
           persist-credentials: false
@@ -70,7 +70,7 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 8
-      - name: Build documentation
+      - name: Build docs
         run: cd sessionkotlin && gradle wrapper && ./gradlew test dokkaHtmlMultiModule
 
 #      - name: Publish docs to Github Pages

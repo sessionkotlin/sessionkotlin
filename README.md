@@ -29,7 +29,6 @@ repositories {
 ### Maven
 
 ```xml
-
 <dependencies>
     <dependency>
         <groupId>org.david</groupId>
