@@ -1,4 +1,4 @@
-package org.david.symbols.variable
+package org.david.sessionkotlin.parser.symbols.variable
 
 public abstract class Variable(public open val value: Any) {
     public abstract operator fun unaryMinus(): Variable

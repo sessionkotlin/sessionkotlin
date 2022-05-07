@@ -2,7 +2,7 @@ import java.io.FileInputStream
 import java.util.*
 
 group = "org.david"
-version = "0.0.1"
+version = "0.0.2"
 
 plugins {
     kotlin("jvm") apply false

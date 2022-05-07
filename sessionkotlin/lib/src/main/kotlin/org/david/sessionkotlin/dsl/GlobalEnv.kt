@@ -1,10 +1,9 @@
 package org.david.sessionkotlin.dsl
 
-import com.github.h0tk3y.betterParse.grammar.parseToEnd
-import org.david.parser.grammar
 import org.david.sessionkotlin.api.generateAPI
 import org.david.sessionkotlin.dsl.exception.*
 import org.david.sessionkotlin.dsl.types.*
+import org.david.sessionkotlin.parser.RefinementParser
 import org.david.sessionkotlin.util.getOrKey
 import org.david.sessionkotlin.util.printlnIndent
 
@@ -76,7 +75,7 @@ public sealed class GlobalEnv(
         }
         // TODO
         if (condition.isNotBlank()) {
-            grammar.parseToEnd(condition)
+            RefinementParser.parseToEnd(condition)
         }
 
         val msg = Send(from, to, type, label, condition)

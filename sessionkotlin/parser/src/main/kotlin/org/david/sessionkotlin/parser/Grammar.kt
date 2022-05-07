@@ -1,15 +1,16 @@
-package org.david.parser
+package org.david.sessionkotlin.parser
 
 import com.github.h0tk3y.betterParse.combinators.*
 import com.github.h0tk3y.betterParse.grammar.Grammar
+import com.github.h0tk3y.betterParse.grammar.parseToEnd
 import com.github.h0tk3y.betterParse.grammar.parser
 import com.github.h0tk3y.betterParse.lexer.literalToken
 import com.github.h0tk3y.betterParse.lexer.regexToken
 import com.github.h0tk3y.betterParse.parser.Parser
-import org.david.symbols.*
-import org.david.symbols.variable.toVar
+import org.david.sessionkotlin.parser.symbols.*
+import org.david.sessionkotlin.parser.symbols.variable.toVar
 
-public val grammar: Grammar<BooleanExpression> = object : Grammar<BooleanExpression>() {
+internal val grammar: Grammar<BooleanExpression> = object : Grammar<BooleanExpression>() {
     val lTrue by literalToken("true")
     val lFalse by literalToken("false")
     val float by regexToken("(\\d+[Ff])|(\\.\\d+[Ff])|(\\d+\\.\\d+[Ff])")
@@ -66,4 +67,8 @@ public val grammar: Grammar<BooleanExpression> = object : Grammar<BooleanExpress
     val implication: Parser<BooleanExpression> by rightAssociative(orChain, impl) { l, _, r -> Impl(l, r) }
 
     override val rootParser: Parser<BooleanExpression> by implication
+}
+
+public object RefinementParser {
+    public fun parseToEnd(input: String): BooleanExpression = grammar.parseToEnd(input)
 }

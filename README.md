@@ -12,7 +12,7 @@ build.gradle.kts:
 
 ```kotlin
 dependencies {
-    api("org.david:sessionkotlin:0.0.1") // or the latest version
+    api("org.david:sessionkotlin-lib:0.0.1") // or the latest version
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
 }
 
@@ -33,7 +33,7 @@ repositories {
 <dependencies>
     <dependency>
         <groupId>org.david</groupId>
-        <artifactId>sessionkotlin</artifactId>
+        <artifactId>sessionkotlin-lib</artifactId>
         <version>0.0.1</version>
     </dependency>
 </dependencies>

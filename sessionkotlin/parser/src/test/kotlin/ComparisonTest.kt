@@ -1,7 +1,7 @@
 import com.github.h0tk3y.betterParse.grammar.parseToEnd
-import org.david.parser.grammar
-import org.david.symbols.*
-import org.david.symbols.variable.toVar
+import org.david.sessionkotlin.parser.grammar
+import org.david.sessionkotlin.parser.symbols.*
+import org.david.sessionkotlin.parser.symbols.variable.toVar
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

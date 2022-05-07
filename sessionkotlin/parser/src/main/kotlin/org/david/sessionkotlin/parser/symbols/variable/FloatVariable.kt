@@ -1,11 +1,11 @@
-package org.david.symbols.variable
+package org.david.sessionkotlin.parser.symbols.variable
 
-import org.david.parser.exception.IncompatibleTypesException
+import org.david.sessionkotlin.parser.exception.IncompatibleTypesException
 
-public fun Byte.toVar(): ByteVariable = ByteVariable(this)
+public fun Float.toVar(): FloatVariable = FloatVariable(this)
 
-public data class ByteVariable(public override val value: Byte) : Variable(value) {
-    override fun unaryMinus(): IntVariable = IntVariable(value.unaryMinus())
+public data class FloatVariable(override val value: Float) : Variable(value) {
+    override fun unaryMinus(): FloatVariable = FloatVariable(value.unaryMinus())
     override fun compareTo(other: Variable): Int =
         when (other) {
             is ByteVariable -> value.compareTo(other.value)
@@ -19,10 +19,10 @@ public data class ByteVariable(public override val value: Byte) : Variable(value
 
     override fun minus(other: Variable): Variable =
         when (other) {
-            is ByteVariable -> IntVariable(value - other.value)
-            is ShortVariable -> IntVariable(value - other.value)
-            is IntVariable -> IntVariable(value - other.value)
-            is LongVariable -> LongVariable(value - other.value)
+            is ByteVariable -> FloatVariable(value - other.value)
+            is ShortVariable -> FloatVariable(value - other.value)
+            is IntVariable -> FloatVariable(value - other.value)
+            is LongVariable -> FloatVariable(value - other.value)
             is FloatVariable -> FloatVariable(value - other.value)
             is DoubleVariable -> DoubleVariable(value - other.value)
             else -> throw IncompatibleTypesException(this, other)
@@ -30,10 +30,10 @@ public data class ByteVariable(public override val value: Byte) : Variable(value
 
     override fun plus(other: Variable): Variable =
         when (other) {
-            is ByteVariable -> IntVariable(value + other.value)
-            is ShortVariable -> IntVariable(value + other.value)
-            is IntVariable -> IntVariable(value + other.value)
-            is LongVariable -> LongVariable(value + other.value)
+            is ByteVariable -> FloatVariable(value + other.value)
+            is ShortVariable -> FloatVariable(value + other.value)
+            is IntVariable -> FloatVariable(value + other.value)
+            is LongVariable -> FloatVariable(value + other.value)
             is FloatVariable -> FloatVariable(value + other.value)
             is DoubleVariable -> DoubleVariable(value + other.value)
             else -> throw IncompatibleTypesException(this, other)

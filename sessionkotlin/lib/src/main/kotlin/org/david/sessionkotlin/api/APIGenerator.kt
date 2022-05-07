@@ -12,9 +12,9 @@ import org.david.sessionkotlin.dsl.RootEnv
 import org.david.sessionkotlin.dsl.SKRole
 import org.david.sessionkotlin.dsl.types.*
 import org.david.sessionkotlin.parser.RefinementParser
+import org.david.sessionkotlin.parser.symbols.variable.Variable
 import org.david.sessionkotlin.util.asClassname
 import org.david.sessionkotlin.util.capitalized
-import org.david.symbols.variable.Variable
 import java.io.File
 
 private const val GENERATED_COMMENT = "This is a generated file. Do not change it."
@@ -114,7 +114,7 @@ private class APIGenerator(
         "assertRefinement"
     )
     private val toVarFunction = MemberName(
-        "org.david.symbols.variable",
+        "org.david.sessionkotlin.parser.symbols.variable",
         "toVar"
     )
     private val fileSpecBuilder = FileSpec

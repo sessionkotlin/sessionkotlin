@@ -1,13 +1,12 @@
 package org.david.sessionkotlin.dsl.types
 
-import com.github.h0tk3y.betterParse.grammar.parseToEnd
-import org.david.parser.grammar
 import org.david.sessionkotlin.dsl.RecursionTag
 import org.david.sessionkotlin.dsl.SKRole
 import org.david.sessionkotlin.dsl.exception.InconsistentExternalChoiceException
 import org.david.sessionkotlin.dsl.exception.RoleNotEnabledException
 import org.david.sessionkotlin.dsl.exception.UnfinishedRolesException
 import org.david.sessionkotlin.dsl.exception.UnknownMessageLabelException
+import org.david.sessionkotlin.parser.RefinementParser
 
 internal abstract class GlobalType {
     internal abstract fun project(role: SKRole, state: State = State(role)): LocalType
@@ -76,7 +75,7 @@ internal class GlobalTypeSend(
                     state.names.add(msgLabel)
                 }
                 if (condition.isNotBlank()) {
-                    val unknown = grammar.parseToEnd(condition).names().minus(state.names)
+                    val unknown = RefinementParser.parseToEnd(condition).names().minus(state.names)
                     if (unknown.isNotEmpty()) {
                         throw UnknownMessageLabelException(role, unknown)
                     }

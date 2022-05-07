@@ -1,9 +1,9 @@
-package org.david.symbols
+package org.david.sessionkotlin.parser.symbols
 
-import org.david.parser.exception.UnresolvedNameException
-import org.david.parser.util.getOrThrow
-import org.david.symbols.variable.Variable
-import org.david.symbols.variable.toVar
+import org.david.sessionkotlin.parser.exception.UnresolvedNameException
+import org.david.sessionkotlin.parser.symbols.variable.Variable
+import org.david.sessionkotlin.parser.symbols.variable.toVar
+import org.david.sessionkotlin.parser.util.getOrThrow
 
 internal sealed interface Term {
     fun value(bindings: Map<String, Variable>): Variable

@@ -1,6 +1,6 @@
-package org.david.symbols.variable
+package org.david.sessionkotlin.parser.symbols.variable
 
-import org.david.parser.exception.IncompatibleTypesException
+import org.david.sessionkotlin.parser.exception.IncompatibleTypesException
 
 public fun String.toVar(): StringVariable = StringVariable(this)
 

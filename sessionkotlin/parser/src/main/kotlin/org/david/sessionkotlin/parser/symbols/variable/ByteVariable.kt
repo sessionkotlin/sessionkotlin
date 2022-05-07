@@ -1,11 +1,11 @@
-package org.david.symbols.variable
+package org.david.sessionkotlin.parser.symbols.variable
 
-import org.david.parser.exception.IncompatibleTypesException
+import org.david.sessionkotlin.parser.exception.IncompatibleTypesException
 
-public fun Int.toVar(): IntVariable = IntVariable(this)
+public fun Byte.toVar(): ByteVariable = ByteVariable(this)
 
-public data class IntVariable(public override val value: Int) : Variable(value) {
-    override fun unaryMinus(): Variable = IntVariable(value.unaryMinus())
+public data class ByteVariable(public override val value: Byte) : Variable(value) {
+    override fun unaryMinus(): IntVariable = IntVariable(value.unaryMinus())
     override fun compareTo(other: Variable): Int =
         when (other) {
             is ByteVariable -> value.compareTo(other.value)
