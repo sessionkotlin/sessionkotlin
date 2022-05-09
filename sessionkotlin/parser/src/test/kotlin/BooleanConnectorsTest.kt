@@ -93,6 +93,14 @@ class BooleanConnectorsTest {
     }
 
     @Test
+    fun `test or 3`() {
+        val ast = grammar.parseToEnd("false || true")
+        assertEquals(Or(False, True), ast)
+        assert(ast.value(emptyMap()))
+        assertEquals(emptySet(), ast.names())
+    }
+
+    @Test
     fun `test and before or`() {
         val ast = grammar.parseToEnd("true || false && true")
         assertEquals(Or(True, And(False, True)), ast)

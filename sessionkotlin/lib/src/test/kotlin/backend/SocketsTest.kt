@@ -3,12 +3,14 @@ package backend
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.david.sessionkotlin.api.SKGenRole
+import org.david.sessionkotlin.backend.SKBranch
 import org.david.sessionkotlin.backend.SKMPEndpoint
 import org.david.sessionkotlin.backend.SKPayload
 import org.david.sessionkotlin.backend.channel.SKChannel
 import org.david.sessionkotlin.backend.exception.AlreadyConnectedException
 import org.david.sessionkotlin.backend.exception.BinaryEndpointsException
 import org.david.sessionkotlin.backend.exception.NotConnectedException
+import org.david.sessionkotlin.backend.exception.ReadClosedChannelException
 import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
@@ -243,6 +245,48 @@ class SocketsTest {
                     SKMPEndpoint().use { endpoint ->
                         endpoint.connect(C, chan)
                     }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `test read from closed channel`() {
+        val port = nextPort()
+
+        assertFailsWith<ReadClosedChannelException> {
+            runBlocking {
+                launch {
+                    SKMPEndpoint().use {
+                        it.accept(A, port)
+                        it.receive(A)
+                    }
+                }
+                launch {
+                    SKMPEndpoint().use {
+                        it.request(B, "localhost", port)
+                        it.close()
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `test send branch`() {
+        val chan = SKChannel()
+
+        runBlocking {
+            launch {
+                SKMPEndpoint().use { endpoint ->
+                    endpoint.connect(B, chan)
+                    endpoint.send(B, SKBranch("b1"))
+                }
+            }
+            launch {
+                SKMPEndpoint().use { endpoint ->
+                    endpoint.connect(A, chan)
+                    assertEquals("b1", (endpoint.receive(A) as SKBranch).label)
                 }
             }
         }

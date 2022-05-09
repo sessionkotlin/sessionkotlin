@@ -1,8 +1,12 @@
 package backend
 
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.david.sessionkotlin.api.SKGenRole
+import org.david.sessionkotlin.backend.SKMPEndpoint
 import org.david.sessionkotlin.backend.channel.SKChannel
 import org.david.sessionkotlin.backend.exception.BinaryEndpointsException
+import org.david.sessionkotlin.backend.exception.ReadClosedChannelException
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFailsWith
 
@@ -139,6 +143,27 @@ class SKChannelTest {
 
         assertFailsWith<BinaryEndpointsException> {
             chan1.getEndpoints(C)
+        }
+    }
+
+    @Test
+    fun `test read from closed channel`() {
+        val chan = SKChannel()
+        assertFailsWith<ReadClosedChannelException> {
+            runBlocking {
+                launch {
+                    SKMPEndpoint().use {
+                        it.connect(B, chan)
+                        it.close()
+                    }
+                }
+                launch {
+                    SKMPEndpoint().use {
+                        it.connect(A, chan)
+                        it.receive(A)
+                    }
+                }
+            }
         }
     }
 }

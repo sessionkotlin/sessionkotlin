@@ -93,4 +93,20 @@ class VisibilityTest {
             }
         }
     }
+
+    @Test
+    fun `test greater eq`() {
+        assertFailsWith<UnknownMessageLabelException> {
+            globalProtocolInternal {
+                choice(a) {
+                    branch("1") {
+                        send<Int>(a, b, "val1")
+                    }
+                    branch("2") {
+                        send<Int>(a, b, condition = "val1 >= 0")
+                    }
+                }
+            }
+        }
+    }
 }

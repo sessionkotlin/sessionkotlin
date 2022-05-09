@@ -40,7 +40,6 @@ internal val grammar: Grammar<BooleanExpression> = object : Grammar<BooleanExpre
         (float use { Const(text.slice(0 until length - 1).toFloat().toVar()) }) or
         (double use { Const(text.toDouble().toVar()) }) or
         (long use { Const(text.slice(0 until length - 1).toLong().toVar()) }) or
-        (long use { Const(text.slice(0 until length - 1).toLong().toVar()) }) or
         ((-singleQuote * word * -singleQuote) use { Const(text.toVar()) }) or
         (word use { Name(text) }) or
         -lpar * parser(::expr) * -rpar or

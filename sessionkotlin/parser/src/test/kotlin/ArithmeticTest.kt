@@ -12,6 +12,7 @@ class ArithmeticTest {
         val ast = grammar.parseToEnd("a + 5 == 7")
         assertEquals(Eq(Plus(Name("a"), Const(5.toVar())), cInt(7)), ast)
         assert(ast.value(mapOf("a" to 2.toVar())))
+        assertEquals(setOf("a"), ast.names())
 
         val ast2 = grammar.parseToEnd("4 + 2 == 1 + 5")
         assertEquals(Eq(Plus(cInt(4), cInt(2)), Plus(cInt(1), cInt(5))), ast2)
@@ -53,10 +54,12 @@ class ArithmeticTest {
         val ast = grammar.parseToEnd("b - 3 == 1")
         assertEquals(Eq(Minus(Name("b"), cInt(3)), cInt(1)), ast)
         assert(ast.value(mapOf("b" to 4.toVar())))
+        assertEquals(setOf("b"), ast.names())
 
         val ast2 = grammar.parseToEnd("4 - 2 != 1 - 2")
         assertEquals(Neq(Minus(cInt(4), cInt(2)), Minus(cInt(1), cInt(2))), ast2)
         assert(ast2.value(emptyMap()))
+        assertEquals(emptySet(), ast2.names())
     }
 
     @Test
@@ -64,6 +67,7 @@ class ArithmeticTest {
         val ast = grammar.parseToEnd("2 - 5 != 5 - 2")
         assertEquals(Neq(Minus(cInt(2), cInt(5)), Minus(cInt(5), cInt(2))), ast)
         assert(ast.value(emptyMap()))
+        assertEquals(emptySet(), ast.names())
     }
 
     @Test
@@ -98,6 +102,7 @@ class ArithmeticTest {
         val ast2 = grammar.parseToEnd("1 == -b")
         assertEquals(Eq(cInt(1), Neg(Name("b"))), ast2)
         assert(ast2.value(mapOf("b" to (-1).toVar())))
+        assertEquals(setOf("b"), ast2.names())
     }
 
     @Test
@@ -155,6 +160,7 @@ class ArithmeticTest {
             ),
             ast
         )
+        assertEquals(setOf("z", "a", "b"), ast.names())
     }
 
     @Test
@@ -235,5 +241,13 @@ class ArithmeticTest {
         val ast = grammar.parseToEnd("a + .2f <= c")
         assertEquals(LowerEq(Plus(Name("a"), cFloat(.2F)), Name("c")), ast)
         assert(ast.value(mapOf("a" to 1.toVar(), "c" to 4L.toVar())))
+    }
+
+    @Test
+    fun `test not`() {
+        val ast = grammar.parseToEnd("!a <= c")
+        assertEquals(Not(LowerEq(Name("a"), Name("c"))), ast)
+        assert(ast.value(mapOf("a" to 3.toVar(), "c" to 2.toVar())))
+        assertEquals(setOf("a", "c"), ast.names())
     }
 }
