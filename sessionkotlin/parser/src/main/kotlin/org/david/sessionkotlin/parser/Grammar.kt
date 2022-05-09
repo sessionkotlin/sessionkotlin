@@ -8,7 +8,7 @@ import com.github.h0tk3y.betterParse.lexer.literalToken
 import com.github.h0tk3y.betterParse.lexer.regexToken
 import com.github.h0tk3y.betterParse.parser.Parser
 import org.david.sessionkotlin.parser.symbols.*
-import org.david.sessionkotlin.parser.symbols.variable.toVar
+import org.david.sessionkotlin.parser.symbols.values.toVal
 
 internal val grammar: Grammar<BooleanExpression> = object : Grammar<BooleanExpression>() {
     val lTrue by literalToken("true")
@@ -36,11 +36,11 @@ internal val grammar: Grammar<BooleanExpression> = object : Grammar<BooleanExpre
     val singleQuote by literalToken("'")
 
     val term: Parser<Term> by
-    (integer use { Const(text.toInt().toVar()) }) or
-        (float use { Const(text.slice(0 until length - 1).toFloat().toVar()) }) or
-        (double use { Const(text.toDouble().toVar()) }) or
-        (long use { Const(text.slice(0 until length - 1).toLong().toVar()) }) or
-        ((-singleQuote * word * -singleQuote) use { Const(text.toVar()) }) or
+    (integer use { Const(text.toInt().toVal()) }) or
+        (float use { Const(text.slice(0 until length - 1).toFloat().toVal()) }) or
+        (double use { Const(text.toDouble().toVal()) }) or
+        (long use { Const(text.slice(0 until length - 1).toLong().toVal()) }) or
+        ((-singleQuote * word * -singleQuote) use { Const(text.toVal()) }) or
         (word use { Name(text) }) or
         -lpar * parser(::expr) * -rpar or
         (-minus * parser(::expr) map { Neg(it) })

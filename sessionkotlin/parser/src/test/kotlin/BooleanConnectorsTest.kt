@@ -1,7 +1,7 @@
 import com.github.h0tk3y.betterParse.grammar.parseToEnd
 import org.david.sessionkotlin.parser.grammar
 import org.david.sessionkotlin.parser.symbols.*
-import org.david.sessionkotlin.parser.symbols.variable.toVar
+import org.david.sessionkotlin.parser.symbols.values.toVal
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -12,10 +12,10 @@ class BooleanConnectorsTest {
         val ast = grammar.parseToEnd("a == 2 && b == 3")
         assertEquals(And(Eq(Name("a"), cInt(2)), Eq(Name("b"), cInt(3))), ast)
 
-        assert(ast.value(mapOf("a" to 2.toVar(), "b" to 3.toVar())))
-        assertFalse(ast.value(mapOf("a" to 2.toVar(), "b" to 0.toVar())))
-        assertFalse(ast.value(mapOf("a" to 0.toVar(), "b" to 3.toVar())))
-        assertFalse(ast.value(mapOf("a" to 0.toVar(), "b" to 0.toVar())))
+        assert(ast.value(mapOf("a" to 2.toVal(), "b" to 3.toVal())))
+        assertFalse(ast.value(mapOf("a" to 2.toVal(), "b" to 0.toVal())))
+        assertFalse(ast.value(mapOf("a" to 0.toVal(), "b" to 3.toVal())))
+        assertFalse(ast.value(mapOf("a" to 0.toVal(), "b" to 0.toVal())))
     }
 
     @Test
@@ -23,14 +23,14 @@ class BooleanConnectorsTest {
         val ast = grammar.parseToEnd("a == 2 && b == 3 && c == 4")
         assertEquals(And(And(Eq(Name("a"), cInt(2)), Eq(Name("b"), cInt(3))), Eq(Name("c"), cInt(4))), ast)
 
-        assertFalse(ast.value(mapOf("a" to 0.toVar(), "b" to 0.toVar(), "c" to 0.toVar())))
-        assertFalse(ast.value(mapOf("a" to 0.toVar(), "b" to 0.toVar(), "c" to 4.toVar())))
-        assertFalse(ast.value(mapOf("a" to 0.toVar(), "b" to 3.toVar(), "c" to 0.toVar())))
-        assertFalse(ast.value(mapOf("a" to 0.toVar(), "b" to 3.toVar(), "c" to 4.toVar())))
-        assertFalse(ast.value(mapOf("a" to 2.toVar(), "b" to 0.toVar(), "c" to 0.toVar())))
-        assertFalse(ast.value(mapOf("a" to 2.toVar(), "b" to 0.toVar(), "c" to 4.toVar())))
-        assertFalse(ast.value(mapOf("a" to 2.toVar(), "b" to 3.toVar(), "c" to 0.toVar())))
-        assert(ast.value(mapOf("a" to 2.toVar(), "b" to 3.toVar(), "c" to 4.toVar())))
+        assertFalse(ast.value(mapOf("a" to 0.toVal(), "b" to 0.toVal(), "c" to 0.toVal())))
+        assertFalse(ast.value(mapOf("a" to 0.toVal(), "b" to 0.toVal(), "c" to 4.toVal())))
+        assertFalse(ast.value(mapOf("a" to 0.toVal(), "b" to 3.toVal(), "c" to 0.toVal())))
+        assertFalse(ast.value(mapOf("a" to 0.toVal(), "b" to 3.toVal(), "c" to 4.toVal())))
+        assertFalse(ast.value(mapOf("a" to 2.toVal(), "b" to 0.toVal(), "c" to 0.toVal())))
+        assertFalse(ast.value(mapOf("a" to 2.toVal(), "b" to 0.toVal(), "c" to 4.toVal())))
+        assertFalse(ast.value(mapOf("a" to 2.toVal(), "b" to 3.toVal(), "c" to 0.toVal())))
+        assert(ast.value(mapOf("a" to 2.toVal(), "b" to 3.toVal(), "c" to 4.toVal())))
     }
 
     @Test
@@ -60,10 +60,10 @@ class BooleanConnectorsTest {
         val ast = grammar.parseToEnd("a == 2 || b == 3")
         assertEquals(Or(Eq(Name("a"), cInt(2)), Eq(Name("b"), cInt(3))), ast)
 
-        assert(ast.value(mapOf("a" to 2.toVar(), "b" to 3.toVar())))
-        assert(ast.value(mapOf("a" to 2.toVar(), "b" to 4.toVar())))
-        assert(ast.value(mapOf("a" to 4.toVar(), "b" to 3.toVar())))
-        assertFalse(ast.value(mapOf("a" to 4.toVar(), "b" to 4.toVar())))
+        assert(ast.value(mapOf("a" to 2.toVal(), "b" to 3.toVal())))
+        assert(ast.value(mapOf("a" to 2.toVal(), "b" to 4.toVal())))
+        assert(ast.value(mapOf("a" to 4.toVal(), "b" to 3.toVal())))
+        assertFalse(ast.value(mapOf("a" to 4.toVal(), "b" to 4.toVal())))
     }
 
     @Test
@@ -71,14 +71,14 @@ class BooleanConnectorsTest {
         val ast = grammar.parseToEnd("a == 2 || b == 3 || c == 4")
         assertEquals(Or(Or(Eq(Name("a"), cInt(2)), Eq(Name("b"), cInt(3))), Eq(Name("c"), cInt(4))), ast)
 
-        assertFalse(ast.value(mapOf("a" to 0.toVar(), "b" to 0.toVar(), "c" to 0.toVar())))
-        assert(ast.value(mapOf("a" to 0.toVar(), "b" to 0.toVar(), "c" to 4.toVar())))
-        assert(ast.value(mapOf("a" to 0.toVar(), "b" to 3.toVar(), "c" to 0.toVar())))
-        assert(ast.value(mapOf("a" to 0.toVar(), "b" to 3.toVar(), "c" to 4.toVar())))
-        assert(ast.value(mapOf("a" to 2.toVar(), "b" to 0.toVar(), "c" to 0.toVar())))
-        assert(ast.value(mapOf("a" to 2.toVar(), "b" to 0.toVar(), "c" to 4.toVar())))
-        assert(ast.value(mapOf("a" to 2.toVar(), "b" to 3.toVar(), "c" to 0.toVar())))
-        assert(ast.value(mapOf("a" to 2.toVar(), "b" to 3.toVar(), "c" to 4.toVar())))
+        assertFalse(ast.value(mapOf("a" to 0.toVal(), "b" to 0.toVal(), "c" to 0.toVal())))
+        assert(ast.value(mapOf("a" to 0.toVal(), "b" to 0.toVal(), "c" to 4.toVal())))
+        assert(ast.value(mapOf("a" to 0.toVal(), "b" to 3.toVal(), "c" to 0.toVal())))
+        assert(ast.value(mapOf("a" to 0.toVal(), "b" to 3.toVal(), "c" to 4.toVal())))
+        assert(ast.value(mapOf("a" to 2.toVal(), "b" to 0.toVal(), "c" to 0.toVal())))
+        assert(ast.value(mapOf("a" to 2.toVal(), "b" to 0.toVal(), "c" to 4.toVal())))
+        assert(ast.value(mapOf("a" to 2.toVal(), "b" to 3.toVal(), "c" to 0.toVal())))
+        assert(ast.value(mapOf("a" to 2.toVal(), "b" to 3.toVal(), "c" to 4.toVal())))
     }
 
     @Test

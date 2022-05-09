@@ -4,12 +4,12 @@ import com.github.h0tk3y.betterParse.grammar.parseToEnd
 import org.david.sessionkotlin.parser.exception.IncompatibleTypesException
 import org.david.sessionkotlin.parser.grammar
 import org.david.sessionkotlin.parser.symbols.*
-import org.david.sessionkotlin.parser.symbols.variable.toVar
+import org.david.sessionkotlin.parser.symbols.values.toVal
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class LongVariableTest {
+class LongValueTest {
 
     companion object {
         val astArith = grammar.parseToEnd("a + b == c - d")
@@ -28,7 +28,7 @@ class LongVariableTest {
         assert(
             ast.value(
                 mapOf(
-                    "a" to 2L.toVar(),
+                    "a" to 2L.toVal(),
                 )
             )
         )
@@ -39,10 +39,10 @@ class LongVariableTest {
         assert(
             astArith.value(
                 mapOf(
-                    "a" to 2L.toVar(),
-                    "b" to 3.toByte().toVar(),
-                    "c" to 6L.toVar(),
-                    "d" to 1.toByte().toVar()
+                    "a" to 2L.toVal(),
+                    "b" to 3.toByte().toVal(),
+                    "c" to 6L.toVal(),
+                    "d" to 1.toByte().toVal()
                 )
             )
         )
@@ -53,10 +53,10 @@ class LongVariableTest {
         assert(
             astArith.value(
                 mapOf(
-                    "a" to 2L.toVar(),
-                    "b" to 3.0.toVar(),
-                    "c" to 6L.toVar(),
-                    "d" to 1.0.toVar()
+                    "a" to 2L.toVal(),
+                    "b" to 3.0.toVal(),
+                    "c" to 6L.toVal(),
+                    "d" to 1.0.toVal()
                 )
             )
         )
@@ -67,10 +67,10 @@ class LongVariableTest {
         assert(
             astArith.value(
                 mapOf(
-                    "a" to 2L.toVar(),
-                    "b" to 3f.toVar(),
-                    "c" to 6L.toVar(),
-                    "d" to 1f.toVar()
+                    "a" to 2L.toVal(),
+                    "b" to 3f.toVal(),
+                    "c" to 6L.toVal(),
+                    "d" to 1f.toVal()
                 )
             )
         )
@@ -81,10 +81,10 @@ class LongVariableTest {
         assert(
             astArith.value(
                 mapOf(
-                    "a" to 2L.toVar(),
-                    "b" to 3.toVar(),
-                    "c" to 6L.toVar(),
-                    "d" to 1.toVar()
+                    "a" to 2L.toVal(),
+                    "b" to 3.toVal(),
+                    "c" to 6L.toVal(),
+                    "d" to 1.toVal()
                 )
             )
         )
@@ -95,10 +95,10 @@ class LongVariableTest {
         assert(
             astArith.value(
                 mapOf(
-                    "a" to 2L.toVar(),
-                    "b" to 3L.toVar(),
-                    "c" to 6L.toVar(),
-                    "d" to 1L.toVar()
+                    "a" to 2L.toVal(),
+                    "b" to 3L.toVal(),
+                    "c" to 6L.toVal(),
+                    "d" to 1L.toVal()
                 )
             )
         )
@@ -109,10 +109,10 @@ class LongVariableTest {
         assert(
             astArith.value(
                 mapOf(
-                    "a" to 2L.toVar(),
-                    "b" to 3.toShort().toVar(),
-                    "c" to 6L.toVar(),
-                    "d" to 1L.toShort().toVar()
+                    "a" to 2L.toVal(),
+                    "b" to 3.toShort().toVal(),
+                    "c" to 6L.toVal(),
+                    "d" to 1L.toShort().toVal()
                 )
             )
         )
@@ -123,8 +123,8 @@ class LongVariableTest {
         assert(
             astComp.value(
                 mapOf(
-                    "a" to 2L.toVar(),
-                    "b" to 3.toByte().toVar(),
+                    "a" to 2L.toVal(),
+                    "b" to 3.toByte().toVal(),
                 )
             )
         )
@@ -135,8 +135,8 @@ class LongVariableTest {
         assert(
             astComp.value(
                 mapOf(
-                    "a" to 2L.toVar(),
-                    "b" to 3.0.toVar(),
+                    "a" to 2L.toVal(),
+                    "b" to 3.0.toVal(),
                 )
             )
         )
@@ -147,8 +147,8 @@ class LongVariableTest {
         assert(
             astComp.value(
                 mapOf(
-                    "a" to 2L.toVar(),
-                    "b" to 3F.toVar(),
+                    "a" to 2L.toVal(),
+                    "b" to 3F.toVal(),
                 )
             )
         )
@@ -159,8 +159,8 @@ class LongVariableTest {
         assert(
             astComp.value(
                 mapOf(
-                    "a" to 2L.toVar(),
-                    "b" to 3.toVar(),
+                    "a" to 2L.toVal(),
+                    "b" to 3.toVal(),
                 )
             )
         )
@@ -171,8 +171,8 @@ class LongVariableTest {
         assert(
             astComp.value(
                 mapOf(
-                    "a" to 2L.toVar(),
-                    "b" to 3L.toVar(),
+                    "a" to 2L.toVal(),
+                    "b" to 3L.toVal(),
                 )
             )
         )
@@ -183,8 +183,8 @@ class LongVariableTest {
         assert(
             astComp.value(
                 mapOf(
-                    "a" to 2L.toVar(),
-                    "b" to 3.toShort().toVar(),
+                    "a" to 2L.toVal(),
+                    "b" to 3.toShort().toVal(),
                 )
             )
         )
@@ -196,8 +196,8 @@ class LongVariableTest {
             assert(
                 astComp.value(
                     mapOf(
-                        "a" to 2L.toVar(),
-                        "b" to "something".toVar(),
+                        "a" to 2L.toVal(),
+                        "b" to "something".toVal(),
                     )
                 )
             )
@@ -211,8 +211,8 @@ class LongVariableTest {
             assert(
                 ast.value(
                     mapOf(
-                        "a" to 2L.toVar(),
-                        "b" to "something".toVar(),
+                        "a" to 2L.toVal(),
+                        "b" to "something".toVal(),
                     )
                 )
             )
@@ -226,8 +226,8 @@ class LongVariableTest {
             assert(
                 ast.value(
                     mapOf(
-                        "a" to 2L.toVar(),
-                        "b" to "something".toVar(),
+                        "a" to 2L.toVal(),
+                        "b" to "something".toVal(),
                     )
                 )
             )

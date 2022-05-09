@@ -1,7 +1,7 @@
 import com.github.h0tk3y.betterParse.grammar.parseToEnd
 import org.david.sessionkotlin.parser.grammar
 import org.david.sessionkotlin.parser.symbols.*
-import org.david.sessionkotlin.parser.symbols.variable.toVar
+import org.david.sessionkotlin.parser.symbols.values.toVal
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -10,8 +10,8 @@ class ArithmeticTest {
     @Test
     fun `test plus`() {
         val ast = grammar.parseToEnd("a + 5 == 7")
-        assertEquals(Eq(Plus(Name("a"), Const(5.toVar())), cInt(7)), ast)
-        assert(ast.value(mapOf("a" to 2.toVar())))
+        assertEquals(Eq(Plus(Name("a"), Const(5.toVal())), cInt(7)), ast)
+        assert(ast.value(mapOf("a" to 2.toVal())))
         assertEquals(setOf("a"), ast.names())
 
         val ast2 = grammar.parseToEnd("4 + 2 == 1 + 5")
@@ -53,7 +53,7 @@ class ArithmeticTest {
     fun `test minus`() {
         val ast = grammar.parseToEnd("b - 3 == 1")
         assertEquals(Eq(Minus(Name("b"), cInt(3)), cInt(1)), ast)
-        assert(ast.value(mapOf("b" to 4.toVar())))
+        assert(ast.value(mapOf("b" to 4.toVal())))
         assertEquals(setOf("b"), ast.names())
 
         val ast2 = grammar.parseToEnd("4 - 2 != 1 - 2")
@@ -97,11 +97,11 @@ class ArithmeticTest {
     fun `test unary minus`() {
         val ast = grammar.parseToEnd("-b == -1")
         assertEquals(Eq(Neg(Name("b")), Neg(cInt(1))), ast)
-        assert(ast.value(mapOf("b" to 1.toVar())))
+        assert(ast.value(mapOf("b" to 1.toVal())))
 
         val ast2 = grammar.parseToEnd("1 == -b")
         assertEquals(Eq(cInt(1), Neg(Name("b"))), ast2)
-        assert(ast2.value(mapOf("b" to (-1).toVar())))
+        assert(ast2.value(mapOf("b" to (-1).toVal())))
         assertEquals(setOf("b"), ast2.names())
     }
 
@@ -109,34 +109,34 @@ class ArithmeticTest {
     fun `test floating`() {
         val ast = grammar.parseToEnd("a == 0.3f")
         assertEquals(Eq(Name("a"), cFloat(.3f)), ast)
-        assert(ast.value(mapOf("a" to .3F.toVar())))
+        assert(ast.value(mapOf("a" to .3F.toVal())))
     }
 
     @Test
     fun `test floating 2`() {
         val ast = grammar.parseToEnd("a == .3F")
         assertEquals(Eq(Name("a"), cFloat(.3F)), ast)
-        assert(ast.value(mapOf("a" to .3F.toVar())))
+        assert(ast.value(mapOf("a" to .3F.toVal())))
     }
 
     @Test
     fun `test string plus int`() {
         val ast = grammar.parseToEnd("a + b == c")
-        assert(ast.value(mapOf("a" to "ab".toVar(), "b" to 3.toVar(), "c" to "ab3".toVar())))
+        assert(ast.value(mapOf("a" to "ab".toVal(), "b" to 3.toVal(), "c" to "ab3".toVal())))
     }
 
     @Test
     fun `test double`() {
         val ast = grammar.parseToEnd("a == 3.0")
         assertEquals(Eq(Name("a"), cDouble(3.0)), ast)
-        assert(ast.value(mapOf("a" to 3.0.toVar())))
+        assert(ast.value(mapOf("a" to 3.0.toVal())))
     }
 
     @Test
     fun `test double 2`() {
         val ast = grammar.parseToEnd("a == .3")
         assertEquals(Eq(Name("a"), cDouble(.3)), ast)
-        assert(ast.value(mapOf("a" to .3.toVar())))
+        assert(ast.value(mapOf("a" to .3.toVal())))
     }
 
     @Test
@@ -144,10 +144,10 @@ class ArithmeticTest {
         val ast = grammar.parseToEnd("a > 0 -> b > 0")
         assertEquals(Impl(Greater(Name("a"), cInt(0)), Greater(Name("b"), cInt(0))), ast)
 
-        assert(ast.value(mapOf("a" to 0.toVar(), "b" to 0.toVar())))
-        assert(ast.value(mapOf("a" to 0.toVar(), "b" to 1.toVar())))
-        assertFalse(ast.value(mapOf("a" to 1.toVar(), "b" to 0.toVar())))
-        assert(ast.value(mapOf("a" to 1.toVar(), "b" to 1.toVar())))
+        assert(ast.value(mapOf("a" to 0.toVal(), "b" to 0.toVal())))
+        assert(ast.value(mapOf("a" to 0.toVal(), "b" to 1.toVal())))
+        assertFalse(ast.value(mapOf("a" to 1.toVal(), "b" to 0.toVal())))
+        assert(ast.value(mapOf("a" to 1.toVal(), "b" to 1.toVal())))
     }
 
     @Test
@@ -185,14 +185,14 @@ class ArithmeticTest {
             ),
             ast
         )
-        assert(ast.value(mapOf("a" to 0.toVar(), "b" to 0.toVar(), "c" to 0.toVar())))
-        assert(ast.value(mapOf("a" to 0.toVar(), "b" to 0.toVar(), "c" to 1.toVar())))
-        assert(ast.value(mapOf("a" to 0.toVar(), "b" to 1.toVar(), "c" to 0.toVar())))
-        assert(ast.value(mapOf("a" to 0.toVar(), "b" to 1.toVar(), "c" to 1.toVar())))
-        assert(ast.value(mapOf("a" to 1.toVar(), "b" to 0.toVar(), "c" to 0.toVar())))
-        assert(ast.value(mapOf("a" to 1.toVar(), "b" to 0.toVar(), "c" to 1.toVar())))
-        assertFalse(ast.value(mapOf("a" to 1.toVar(), "b" to 1.toVar(), "c" to 0.toVar())))
-        assert(ast.value(mapOf("a" to 1.toVar(), "b" to 1.toVar(), "c" to 1.toVar())))
+        assert(ast.value(mapOf("a" to 0.toVal(), "b" to 0.toVal(), "c" to 0.toVal())))
+        assert(ast.value(mapOf("a" to 0.toVal(), "b" to 0.toVal(), "c" to 1.toVal())))
+        assert(ast.value(mapOf("a" to 0.toVal(), "b" to 1.toVal(), "c" to 0.toVal())))
+        assert(ast.value(mapOf("a" to 0.toVal(), "b" to 1.toVal(), "c" to 1.toVal())))
+        assert(ast.value(mapOf("a" to 1.toVal(), "b" to 0.toVal(), "c" to 0.toVal())))
+        assert(ast.value(mapOf("a" to 1.toVal(), "b" to 0.toVal(), "c" to 1.toVal())))
+        assertFalse(ast.value(mapOf("a" to 1.toVal(), "b" to 1.toVal(), "c" to 0.toVal())))
+        assert(ast.value(mapOf("a" to 1.toVal(), "b" to 1.toVal(), "c" to 1.toVal())))
     }
 
     @Test
@@ -205,49 +205,49 @@ class ArithmeticTest {
             ),
             ast
         )
-        assertFalse(ast.value(mapOf("a" to 0.toVar(), "b" to 0.toVar(), "c" to 0.toVar())))
-        assert(ast.value(mapOf("a" to 0.toVar(), "b" to 0.toVar(), "c" to 1.toVar())))
-        assertFalse(ast.value(mapOf("a" to 0.toVar(), "b" to 1.toVar(), "c" to 0.toVar())))
-        assert(ast.value(mapOf("a" to 0.toVar(), "b" to 1.toVar(), "c" to 1.toVar())))
-        assert(ast.value(mapOf("a" to 1.toVar(), "b" to 0.toVar(), "c" to 0.toVar())))
-        assert(ast.value(mapOf("a" to 1.toVar(), "b" to 0.toVar(), "c" to 1.toVar())))
-        assertFalse(ast.value(mapOf("a" to 1.toVar(), "b" to 1.toVar(), "c" to 0.toVar())))
-        assert(ast.value(mapOf("a" to 1.toVar(), "b" to 1.toVar(), "c" to 1.toVar())))
+        assertFalse(ast.value(mapOf("a" to 0.toVal(), "b" to 0.toVal(), "c" to 0.toVal())))
+        assert(ast.value(mapOf("a" to 0.toVal(), "b" to 0.toVal(), "c" to 1.toVal())))
+        assertFalse(ast.value(mapOf("a" to 0.toVal(), "b" to 1.toVal(), "c" to 0.toVal())))
+        assert(ast.value(mapOf("a" to 0.toVal(), "b" to 1.toVal(), "c" to 1.toVal())))
+        assert(ast.value(mapOf("a" to 1.toVal(), "b" to 0.toVal(), "c" to 0.toVal())))
+        assert(ast.value(mapOf("a" to 1.toVal(), "b" to 0.toVal(), "c" to 1.toVal())))
+        assertFalse(ast.value(mapOf("a" to 1.toVal(), "b" to 1.toVal(), "c" to 0.toVal())))
+        assert(ast.value(mapOf("a" to 1.toVal(), "b" to 1.toVal(), "c" to 1.toVal())))
     }
 
     @Test
     fun `test long sum`() {
         val ast = grammar.parseToEnd("a + 3L == c")
         assertEquals(Eq(Plus(Name("a"), cLong(3L)), Name("c")), ast)
-        assert(ast.value(mapOf("a" to 1.toVar(), "c" to 4L.toVar())))
+        assert(ast.value(mapOf("a" to 1.toVal(), "c" to 4L.toVal())))
     }
 
     @Test
     fun `test float sum 1`() {
         val ast = grammar.parseToEnd("a + 3F == c")
         assertEquals(Eq(Plus(Name("a"), cFloat(3F)), Name("c")), ast)
-        assert(ast.value(mapOf("a" to 1.toVar(), "c" to 4L.toVar())))
+        assert(ast.value(mapOf("a" to 1.toVal(), "c" to 4L.toVal())))
     }
 
     @Test
     fun `test float sum 2`() {
         val ast = grammar.parseToEnd("a + 3.2F >= c")
         assertEquals(GreaterEq(Plus(Name("a"), cFloat(3.2F)), Name("c")), ast)
-        assert(ast.value(mapOf("a" to 1.toVar(), "c" to 4L.toVar())))
+        assert(ast.value(mapOf("a" to 1.toVal(), "c" to 4L.toVal())))
     }
 
     @Test
     fun `test float sum 3`() {
         val ast = grammar.parseToEnd("a + .2f <= c")
         assertEquals(LowerEq(Plus(Name("a"), cFloat(.2F)), Name("c")), ast)
-        assert(ast.value(mapOf("a" to 1.toVar(), "c" to 4L.toVar())))
+        assert(ast.value(mapOf("a" to 1.toVal(), "c" to 4L.toVal())))
     }
 
     @Test
     fun `test not`() {
         val ast = grammar.parseToEnd("!a <= c")
         assertEquals(Not(LowerEq(Name("a"), Name("c"))), ast)
-        assert(ast.value(mapOf("a" to 3.toVar(), "c" to 2.toVar())))
+        assert(ast.value(mapOf("a" to 3.toVal(), "c" to 2.toVal())))
         assertEquals(setOf("a", "c"), ast.names())
     }
 }

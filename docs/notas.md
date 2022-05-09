@@ -74,5 +74,13 @@
 - Os remetentes é que garantem que os refinamentos são respeitados.
 
 
-- As expressões dos refinamentos permitem quaisquer variáveis que implementem `Variable`. Esta biblioteca inclui
+- As expressões dos refinamentos permitem quaisquer variáveis que implementem `Value`. Esta biblioteca inclui
 métodos de extensão para as classes Byte, Short, Int, Long, Float, Double e String.
+
+
+- As expressões dos refinamentos permitem quaisquer variáveis que implementem `Value`. Esta biblioteca inclui
+métodos de extensão para as classes Byte, Short, Int, Long, Float, Double e String.
+
+
+- A visibilidade dos nomes é verificada durante a validação do protocolo global, validando a projeção
+para cada participante do protocolo.

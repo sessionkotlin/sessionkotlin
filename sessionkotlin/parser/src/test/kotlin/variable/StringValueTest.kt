@@ -4,12 +4,12 @@ import com.github.h0tk3y.betterParse.grammar.parseToEnd
 import org.david.sessionkotlin.parser.exception.IncompatibleTypesException
 import org.david.sessionkotlin.parser.grammar
 import org.david.sessionkotlin.parser.symbols.*
-import org.david.sessionkotlin.parser.symbols.variable.toVar
+import org.david.sessionkotlin.parser.symbols.values.toVal
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class StringVariableTest {
+class StringValueTest {
 
     @Test
     fun `test string minus`() {
@@ -18,8 +18,8 @@ class StringVariableTest {
         assertFailsWith<NotImplementedError> {
             ast.value(
                 mapOf(
-                    "a" to "".toVar(),
-                    "b" to "".toVar()
+                    "a" to "".toVal(),
+                    "b" to "".toVal()
                 )
             )
         }
@@ -32,8 +32,8 @@ class StringVariableTest {
         assertFailsWith<NotImplementedError> {
             ast.value(
                 mapOf(
-                    "a" to "".toVar(),
-                    "b" to "".toVar()
+                    "a" to "".toVal(),
+                    "b" to "".toVal()
                 )
             )
         }
@@ -46,8 +46,8 @@ class StringVariableTest {
         assert(
             ast.value(
                 mapOf(
-                    "a" to "ab".toVar(),
-                    "b" to "z".toVar(),
+                    "a" to "ab".toVal(),
+                    "b" to "z".toVal(),
                 )
             )
         )
@@ -60,8 +60,8 @@ class StringVariableTest {
         assert(
             ast.value(
                 mapOf(
-                    "a" to "ab".toVar(),
-                    "b" to "ab0.3".toVar(),
+                    "a" to "ab".toVal(),
+                    "b" to "ab0.3".toVal(),
                 )
             )
         )
@@ -71,7 +71,7 @@ class StringVariableTest {
     fun `test string compareTo string`() {
         val ast = grammar.parseToEnd("a == 'some'")
         assertEquals(Eq(Name("a"), cString("some")), ast)
-        ast.value(mapOf("a" to "".toVar()))
+        ast.value(mapOf("a" to "".toVal()))
     }
 
     @Test
@@ -79,7 +79,7 @@ class StringVariableTest {
         val ast = grammar.parseToEnd("a == 2")
         assertEquals(Eq(Name("a"), cInt(2)), ast)
         assertFailsWith<IncompatibleTypesException> {
-            ast.value(mapOf("a" to "".toVar()))
+            ast.value(mapOf("a" to "".toVal()))
         }
     }
 }

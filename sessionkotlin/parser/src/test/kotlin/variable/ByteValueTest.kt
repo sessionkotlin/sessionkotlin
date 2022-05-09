@@ -4,12 +4,12 @@ import com.github.h0tk3y.betterParse.grammar.parseToEnd
 import org.david.sessionkotlin.parser.exception.IncompatibleTypesException
 import org.david.sessionkotlin.parser.grammar
 import org.david.sessionkotlin.parser.symbols.*
-import org.david.sessionkotlin.parser.symbols.variable.toVar
+import org.david.sessionkotlin.parser.symbols.values.toVal
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class DoubleVariableTest {
+class ByteValueTest {
 
     companion object {
         val astArith = grammar.parseToEnd("a + b == c - d")
@@ -22,182 +22,182 @@ class DoubleVariableTest {
     }
 
     @Test
-    fun `test double unary minus`() {
+    fun `test byte unary minus`() {
         val ast = grammar.parseToEnd("-a < a")
         assertEquals(Lower(Neg(Name("a")), Name("a")), ast)
         assert(
             ast.value(
                 mapOf(
-                    "a" to 2.0.toVar(),
+                    "a" to 2.toByte().toVal(),
                 )
             )
         )
     }
 
     @Test
-    fun `test double plus, minus Byte`() {
+    fun `test byte plus, minus Byte`() {
         assert(
             astArith.value(
                 mapOf(
-                    "a" to 2.0.toVar(),
-                    "b" to 3.toByte().toVar(),
-                    "c" to 6.0.toVar(),
-                    "d" to 1.toByte().toVar()
+                    "a" to 2.toByte().toVal(),
+                    "b" to 3.toByte().toVal(),
+                    "c" to 6.toByte().toVal(),
+                    "d" to 1.toByte().toVal()
                 )
             )
         )
     }
 
     @Test
-    fun `test double plus, minus Double`() {
+    fun `test byte plus, minus Double`() {
         assert(
             astArith.value(
                 mapOf(
-                    "a" to 2.0.toVar(),
-                    "b" to 3.0.toVar(),
-                    "c" to 6.0.toVar(),
-                    "d" to 1.0.toVar()
+                    "a" to 2.toByte().toVal(),
+                    "b" to 3.0.toVal(),
+                    "c" to 6.toByte().toVal(),
+                    "d" to 1.0.toVal()
                 )
             )
         )
     }
 
     @Test
-    fun `test double plus, minus Float`() {
+    fun `test byte plus, minus Float`() {
         assert(
             astArith.value(
                 mapOf(
-                    "a" to 2.0.toVar(),
-                    "b" to 3f.toVar(),
-                    "c" to 6.0.toVar(),
-                    "d" to 1f.toVar()
+                    "a" to 2.toByte().toVal(),
+                    "b" to 3f.toVal(),
+                    "c" to 6.toByte().toVal(),
+                    "d" to 1f.toVal()
                 )
             )
         )
     }
 
     @Test
-    fun `test double plus, minus Int`() {
+    fun `test byte plus, minus Int`() {
         assert(
             astArith.value(
                 mapOf(
-                    "a" to 2.0.toVar(),
-                    "b" to 3.toVar(),
-                    "c" to 6.0.toVar(),
-                    "d" to 1.toVar()
+                    "a" to 2.toByte().toVal(),
+                    "b" to 3.toVal(),
+                    "c" to 6.toByte().toVal(),
+                    "d" to 1.toVal()
                 )
             )
         )
     }
 
     @Test
-    fun `test double plus, minus Long`() {
+    fun `test byte plus, minus Long`() {
         assert(
             astArith.value(
                 mapOf(
-                    "a" to 2.0.toVar(),
-                    "b" to 3L.toVar(),
-                    "c" to 6.0.toVar(),
-                    "d" to 1L.toVar()
+                    "a" to 2.toByte().toVal(),
+                    "b" to 3L.toVal(),
+                    "c" to 6.toByte().toVal(),
+                    "d" to 1L.toVal()
                 )
             )
         )
     }
 
     @Test
-    fun `test double plus, minus Short`() {
+    fun `test byte plus, minus Short`() {
         assert(
             astArith.value(
                 mapOf(
-                    "a" to 2.0.toVar(),
-                    "b" to 3.toShort().toVar(),
-                    "c" to 6.0.toVar(),
-                    "d" to 1L.toShort().toVar()
+                    "a" to 2.toByte().toVal(),
+                    "b" to 3.toShort().toVal(),
+                    "c" to 6.toByte().toVal(),
+                    "d" to 1L.toShort().toVal()
                 )
             )
         )
     }
 
     @Test
-    fun `test double compareTo byte`() {
+    fun `test byte compareTo byte`() {
         assert(
             astComp.value(
                 mapOf(
-                    "a" to 2.0.toVar(),
-                    "b" to 3.toByte().toVar(),
+                    "a" to 2.toByte().toVal(),
+                    "b" to 3.toByte().toVal(),
                 )
             )
         )
     }
 
     @Test
-    fun `test double compareTo double`() {
+    fun `test byte compareTo double`() {
         assert(
             astComp.value(
                 mapOf(
-                    "a" to 2.0.toVar(),
-                    "b" to 3.0.toVar(),
+                    "a" to 2.toByte().toVal(),
+                    "b" to 3.0.toVal(),
                 )
             )
         )
     }
 
     @Test
-    fun `test double compareTo float`() {
+    fun `test byte compareTo float`() {
         assert(
             astComp.value(
                 mapOf(
-                    "a" to 2.0.toVar(),
-                    "b" to 3F.toVar(),
+                    "a" to 2.toByte().toVal(),
+                    "b" to 3F.toVal(),
                 )
             )
         )
     }
 
     @Test
-    fun `test double compareTo int`() {
+    fun `test byte compareTo int`() {
         assert(
             astComp.value(
                 mapOf(
-                    "a" to 2.0.toVar(),
-                    "b" to 3.toVar(),
+                    "a" to 2.toByte().toVal(),
+                    "b" to 3.toVal(),
                 )
             )
         )
     }
 
     @Test
-    fun `test double compareTo long`() {
+    fun `test byte compareTo long`() {
         assert(
             astComp.value(
                 mapOf(
-                    "a" to 2.0.toVar(),
-                    "b" to 3L.toVar(),
+                    "a" to 2.toByte().toVal(),
+                    "b" to 3L.toVal(),
                 )
             )
         )
     }
 
     @Test
-    fun `test double compareTo short`() {
+    fun `test byte compareTo short`() {
         assert(
             astComp.value(
                 mapOf(
-                    "a" to 2.0.toVar(),
-                    "b" to 3.toShort().toVar(),
+                    "a" to 2.toByte().toVal(),
+                    "b" to 3.toShort().toVal(),
                 )
             )
         )
     }
 
     @Test
-    fun `test double compareTo string`() {
+    fun `test byte compareTo string`() {
         assertFailsWith<IncompatibleTypesException> {
             assert(
                 astComp.value(
                     mapOf(
-                        "a" to 2.0.toVar(),
-                        "b" to "something".toVar(),
+                        "a" to 2.toByte().toVal(),
+                        "b" to "something".toVal(),
                     )
                 )
             )
@@ -205,14 +205,14 @@ class DoubleVariableTest {
     }
 
     @Test
-    fun `test double plus string`() {
+    fun `test byte plus string`() {
         val ast = grammar.parseToEnd("a + b == 3.0")
         assertFailsWith<IncompatibleTypesException> {
             assert(
                 ast.value(
                     mapOf(
-                        "a" to 2.0.toVar(),
-                        "b" to "something".toVar(),
+                        "a" to 2.toByte().toVal(),
+                        "b" to "something".toVal(),
                     )
                 )
             )
@@ -220,14 +220,14 @@ class DoubleVariableTest {
     }
 
     @Test
-    fun `test double minus string`() {
+    fun `test byte minus string`() {
         val ast = grammar.parseToEnd("a - b == 3.0")
         assertFailsWith<IncompatibleTypesException> {
             assert(
                 ast.value(
                     mapOf(
-                        "a" to 2.0.toVar(),
-                        "b" to "something".toVar(),
+                        "a" to 2.toByte().toVal(),
+                        "b" to "something".toVal(),
                     )
                 )
             )
