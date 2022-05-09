@@ -9,52 +9,7 @@ import org.david.sessionkotlin.dsl.exception.UnknownMessageLabelException
 import org.david.sessionkotlin.parser.RefinementParser
 
 internal abstract class GlobalType {
-    internal abstract fun project(role: SKRole, state: State = State(role)): LocalType
-}
-
-internal class State(
-    private val projectedRole: SKRole,
-
-    /**
-     * Whether the projected role sent a message, made choice or had recursion while not knowing
-     * the outcome of a choice
-     */
-    var sentWhileDisabled: Boolean = false,
-
-    /**
-     * The role that enabled the projected role (i.e. the sender of the first message received
-     * in a branch)
-     */
-    var enabledBy: SKRole? = null,
-
-    /**
-     * The roles that received a message in the branch
-     */
-    var activeRoles: MutableSet<SKRole> = mutableSetOf(),
-
-    /**
-     * Label for the current branch
-     */
-    var branchLabel: String? = null,
-
-    /**
-     * Collection of message labels that the projected role knows about
-     */
-    val names: MutableSet<String> = mutableSetOf()
-) {
-    /**
-     * Returns whether the [projectedRole] is enabled.
-     */
-    fun enabled() = enabledBy != null && enabledBy != projectedRole
-
-    fun copy(
-        projectedRole: SKRole = this.projectedRole,
-        sentWhileDisabled: Boolean = this.sentWhileDisabled,
-        enabledBy: SKRole? = this.enabledBy,
-        activeRoles: MutableSet<SKRole> = this.activeRoles.toMutableSet(),
-        branchLabel: String? = this.branchLabel,
-        names: MutableSet<String> = this.names.toMutableSet(),
-    ): State = State(projectedRole, sentWhileDisabled, enabledBy, activeRoles, branchLabel, names)
+    internal abstract fun project(role: SKRole, state: ProjectionState): LocalType
 }
 
 internal class GlobalTypeSend(
@@ -65,9 +20,10 @@ internal class GlobalTypeSend(
     private val condition: String,
     private val cont: GlobalType,
 ) : GlobalType() {
-    override fun project(role: SKRole, state: State): LocalType =
+    override fun project(role: SKRole, state: ProjectionState): LocalType =
         when (role) {
             from -> {
+                state.unguardedRecursions.removeAll { true }
                 if (!state.enabled()) {
                     state.sentWhileDisabled = true
                 }
@@ -96,6 +52,8 @@ internal class GlobalTypeSend(
                 }
             }
             to -> {
+                state.unguardedRecursions.removeAll { true }
+
                 if (!state.enabled()) {
                     state.enabledBy = from
                 }
@@ -117,7 +75,7 @@ internal class GlobalTypeChoice(
     private val at: SKRole,
     private val branches: Map<String, GlobalType>,
 ) : GlobalType() {
-    override fun project(role: SKRole, state: State): LocalType {
+    override fun project(role: SKRole, state: ProjectionState): LocalType {
         when (role) {
             at -> {
                 if (!state.enabled()) {
@@ -128,12 +86,14 @@ internal class GlobalTypeChoice(
                 return LocalTypeInternalChoice(branches.mapValues { it.value.project(role, states.getValue(it.key)) })
             }
             else -> {
-                val newState = State(role, names = state.names.toMutableSet())
+                val newState = state.copy(role, names = state.names.toMutableSet(), unguardedRecursions = state.unguardedRecursions)
 
                 // Generate a new state for each branch, with the choice subject activated
                 val states = branches.mapValues { newState.copy(branchLabel = it.key, activeRoles = mutableSetOf(at)) }
-                val localType =
+                var localType =
                     LocalTypeExternalChoice(at, branches.mapValues { it.value.project(role, states.getValue(it.key)) })
+
+                localType = localType.removeRecursions(newState.unguardedRecursions)
 
                 /**
                  * The roles that enabled the projected role
@@ -187,19 +147,17 @@ internal class GlobalTypeChoice(
 }
 
 internal object GlobalTypeEnd : GlobalType() {
-    override fun project(role: SKRole, state: State) = LocalTypeEnd
+    override fun project(role: SKRole, state: ProjectionState) = LocalTypeEnd
 }
 
 internal class GlobalTypeRecursionDefinition(
     private val tag: RecursionTag,
     private val cont: GlobalType,
 ) : GlobalType() {
-    override fun project(role: SKRole, state: State): LocalType {
+    override fun project(role: SKRole, state: ProjectionState): LocalType {
+        state.unguardedRecursions.add(tag)
         val projectedContinuation = cont.project(role, state)
-        return if (projectedContinuation is LocalTypeRecursion) {
-            // Empty loop
-            LocalTypeEnd
-        } else if (!projectedContinuation.containsTag(tag)) {
+        return if (!projectedContinuation.containsTag(tag)) {
             // Recursion tag is not used. Skip recursion definition.
             projectedContinuation
         } else {
@@ -211,7 +169,7 @@ internal class GlobalTypeRecursionDefinition(
 internal class GlobalTypeRecursion(
     private val tag: RecursionTag,
 ) : GlobalType() {
-    override fun project(role: SKRole, state: State): LocalType {
+    override fun project(role: SKRole, state: ProjectionState): LocalType {
         if (!state.enabled()) {
             state.sentWhileDisabled = true
         }

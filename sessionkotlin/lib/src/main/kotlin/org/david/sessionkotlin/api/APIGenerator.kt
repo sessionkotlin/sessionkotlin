@@ -35,7 +35,7 @@ internal fun generateAPI(globalEnv: RootEnv, callbacks: Boolean) {
     val globalType = globalEnv.asGlobalType()
     genRoles(globalEnv.roles, outputDirectory) // populates roleMap
     globalEnv.roles.forEach {
-        APIGenerator(globalEnv.protocolName.asClassname(), it, globalType.project(it), callbacks)
+        APIGenerator(globalEnv.protocolName.asClassname(), it, globalType.project(it, ProjectionState(it)), callbacks)
             .writeTo(outputDirectory)
     }
     genEndClass(outputDirectory)

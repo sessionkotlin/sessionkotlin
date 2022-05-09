@@ -5,6 +5,7 @@ import dsl.util.UnitClass
 import org.david.sessionkotlin.dsl.RecursionTag
 import org.david.sessionkotlin.dsl.SKRole
 import org.david.sessionkotlin.dsl.exception.RoleNotEnabledException
+import org.david.sessionkotlin.dsl.exception.UnfinishedRolesException
 import org.david.sessionkotlin.dsl.globalProtocolInternal
 import org.david.sessionkotlin.dsl.types.*
 import org.junit.jupiter.api.Test
@@ -135,7 +136,7 @@ class EnabledRecursionTest {
 
     @Test
     fun `nested rec not enabled`() {
-        assertFailsWith<RoleNotEnabledException> {
+        assertFailsWith<UnfinishedRolesException> {
             globalProtocolInternal {
                 send<Int>(a, c)
                 val y = miu()

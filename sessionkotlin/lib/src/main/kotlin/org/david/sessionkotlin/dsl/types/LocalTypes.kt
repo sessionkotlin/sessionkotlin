@@ -3,7 +3,14 @@ package org.david.sessionkotlin.dsl.types
 import org.david.sessionkotlin.dsl.RecursionTag
 import org.david.sessionkotlin.dsl.SKRole
 
-internal sealed class LocalType
+internal sealed class LocalType {
+    /**
+     * Replaces [LocalTypeRecursion] with [LocalTypeEnd] and
+     * [LocalTypeRecursionDefinition] with [LocalTypeRecursionDefinition.cont].
+     */
+    abstract fun removeRecursions(tags: Set<RecursionTag>): LocalType
+}
+
 internal data class LocalTypeSend(
     val to: SKRole,
     val type: Class<*>,
@@ -12,6 +19,9 @@ internal data class LocalTypeSend(
     val msgLabel: String? = null,
     val condition: String = "",
 ) : LocalType() {
+    override fun removeRecursions(tags: Set<RecursionTag>) =
+        LocalTypeSend(to, type, cont.removeRecursions(tags), branchLabel, msgLabel, condition)
+
     override fun equals(other: Any?): Boolean {
         if (other !is LocalTypeSend) return false
         return to == other.to &&
@@ -37,13 +47,40 @@ internal data class LocalTypeReceive(
     val type: Class<*>,
     val cont: LocalType,
     val msgLabel: String? = null,
-) : LocalType()
+) : LocalType() {
+    override fun removeRecursions(tags: Set<RecursionTag>) =
+        LocalTypeReceive(from, type, cont.removeRecursions(tags), msgLabel)
+}
 
-internal data class LocalTypeInternalChoice(val branches: Map<String, LocalType>) : LocalType()
-internal data class LocalTypeExternalChoice(var to: SKRole, val branches: Map<String, LocalType>) : LocalType()
-internal data class LocalTypeRecursionDefinition(val tag: RecursionTag, val cont: LocalType) : LocalType()
-internal data class LocalTypeRecursion(val tag: RecursionTag) : LocalType()
-internal object LocalTypeEnd : LocalType()
+internal data class LocalTypeInternalChoice(val branches: Map<String, LocalType>) : LocalType() {
+    override fun removeRecursions(tags: Set<RecursionTag>) =
+        LocalTypeInternalChoice(branches.mapValues { it.value.removeRecursions(tags) })
+}
+
+internal data class LocalTypeExternalChoice(var to: SKRole, val branches: Map<String, LocalType>) : LocalType() {
+    override fun removeRecursions(tags: Set<RecursionTag>) =
+        LocalTypeExternalChoice(to, branches.mapValues { it.value.removeRecursions(tags) })
+}
+
+internal data class LocalTypeRecursionDefinition(val tag: RecursionTag, val cont: LocalType) : LocalType() {
+    override fun removeRecursions(tags: Set<RecursionTag>) =
+        if (tag in tags)
+            cont.removeRecursions(tags)
+        else
+            LocalTypeRecursionDefinition(tag, cont.removeRecursions(tags))
+}
+
+internal data class LocalTypeRecursion(val tag: RecursionTag) : LocalType() {
+    override fun removeRecursions(tags: Set<RecursionTag>) =
+        if (tag in tags)
+            LocalTypeEnd
+        else
+            LocalTypeRecursion(tag)
+}
+
+internal object LocalTypeEnd : LocalType() {
+    override fun removeRecursions(tags: Set<RecursionTag>) = LocalTypeEnd
+}
 internal typealias LEnd = LocalTypeEnd
 
 internal fun LocalType.containsTag(tag: RecursionTag): Boolean =

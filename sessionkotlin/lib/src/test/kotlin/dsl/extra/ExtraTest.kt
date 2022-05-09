@@ -249,7 +249,7 @@ class ExtraTest {
                 )
             )
         )
-        assertEquals(g.project(c), lC)
+        assertEquals(lC, g.project(c))
     }
 
     @Test
@@ -275,7 +275,7 @@ class ExtraTest {
                 LocalTypeRecursion(t)
             )
         )
-        assertEquals(g.project(b), lB)
+        assertEquals(lB, g.project(b))
     }
 
     @Test
@@ -305,7 +305,7 @@ class ExtraTest {
             t,
             LocalTypeReceive(a, UnitClass, LocalTypeRecursion(t))
         )
-        assertEquals(g.project(a), lA)
-        assertEquals(g.project(b), lB)
+        assertEquals(lA, g.project(a))
+        assertEquals(lB, g.project(b))
     }
 }

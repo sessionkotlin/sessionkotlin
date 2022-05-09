@@ -192,7 +192,14 @@ public sealed class GlobalEnv(
         if (!roles.contains(role)) {
             throw ProjectionTargetException(role)
         }
-        return asGlobalType().project(role)
+        val state = ProjectionState(role)
+        return asGlobalType()
+            .project(role, state)
+            .let {
+                println("" + role + " " + state.unguardedRecursions)
+                it
+            }
+            .removeRecursions(state.unguardedRecursions)
     }
 
     internal fun validate() {

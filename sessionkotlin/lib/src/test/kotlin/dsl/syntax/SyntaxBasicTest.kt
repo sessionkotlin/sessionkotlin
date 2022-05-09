@@ -333,4 +333,34 @@ class SyntaxBasicTest {
             }
         }
     }
+
+    @Test
+    fun `role declared inside choice`() {
+        globalProtocolInternal {
+            choice(b) {
+                branch("1") {
+                    send<String>(b, a)
+                }
+                branch("2") {
+                    send<Int>(b, a)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `erasable recursion for one endpoint`() {
+        val g = globalProtocolInternal {
+            send<String>(a, b)
+
+            // 'a' does nothing beyond this point
+            send<String>(b, c)
+            val t = miu()
+            send<Int>(b, c)
+            send<Int>(c, b)
+            goto(t)
+        }
+        val lA = LocalTypeSend(b, StringClass, LEnd)
+        assertEquals(lA, g.project(a))
+    }
 }

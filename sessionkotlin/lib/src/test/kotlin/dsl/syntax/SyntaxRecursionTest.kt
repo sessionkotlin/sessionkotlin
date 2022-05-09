@@ -162,7 +162,7 @@ class SyntaxRecursionTest {
                 )
             )
         )
-        assertEquals(g.project(c), lC)
+        assertEquals(lC, g.project(c))
     }
 
     @Test
@@ -174,8 +174,8 @@ class SyntaxRecursionTest {
         }
         val lA = LocalTypeSend(b, IntClass, LEnd)
         val lB = LocalTypeReceive(a, IntClass, LEnd)
-        assertEquals(g.project(a), lA)
-        assertEquals(g.project(b), lB)
+        assertEquals(lA, g.project(a))
+        assertEquals(lB, g.project(b))
     }
 
     @Test
@@ -271,8 +271,8 @@ class SyntaxRecursionTest {
         }
         val lC = LocalTypeRecursionDefinition(t, LocalTypeSend(d, UnitClass, LocalTypeRecursion(t)))
         val lD = LocalTypeRecursionDefinition(t, LocalTypeReceive(c, UnitClass, LocalTypeRecursion(t)))
-        assertEquals(g.project(c), lC)
-        assertEquals(g.project(d), lD)
+        assertEquals(lC, g.project(c))
+        assertEquals(lD, g.project(d))
     }
 
     @Test
