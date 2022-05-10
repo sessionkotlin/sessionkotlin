@@ -79,7 +79,7 @@ public sealed class GlobalEnv(
                 msgLabels.add(label)
             }
         }
-        // TODO
+
         if (condition.isNotBlank()) {
             RefinementParser.parseToEnd(condition)
         }
@@ -222,8 +222,8 @@ public sealed class GlobalEnv(
         )
 
         val satState = SatState(context)
-        g.visitRefinements(satState)
-        if (!satState.satisfiable()) {
+
+        if (!g.sat(satState)) {
             throw UnsatisfiableRefinementsException()
         }
     }

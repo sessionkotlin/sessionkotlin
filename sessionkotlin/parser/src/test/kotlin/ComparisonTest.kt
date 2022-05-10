@@ -10,12 +10,12 @@ class ComparisonTest {
     @Test
     fun `test equality`() {
         val ast = grammar.parseToEnd("a == 2")
-        assertEquals(Eq(Name("a"), cInt(2)), ast)
+        assertEquals(Eq(Name("a"), cLong(2)), ast)
         assert(ast.value(mapOf("a" to 2.toVal())))
         assertFalse(ast.value(mapOf("a" to 3.toVal())))
 
         val ast2 = grammar.parseToEnd("4 == b")
-        assertEquals(Eq(cInt(4), Name("b")), ast2)
+        assertEquals(Eq(cLong(4), Name("b")), ast2)
         assert(ast2.value(mapOf("b" to 4.toVal())))
         assertFalse(ast2.value(mapOf("b" to 3.toVal())))
     }
@@ -27,25 +27,25 @@ class ComparisonTest {
         assertEquals(true, ast.value(mapOf("a" to 2.toVal(), "b" to 4.toVal())))
 
         val ast2 = grammar.parseToEnd("4 != 4")
-        assertEquals(Neq(cInt(4), cInt(4)), ast2)
+        assertEquals(Neq(cLong(4), cLong(4)), ast2)
         assertFalse(ast2.value(emptyMap()))
     }
 
     @Test
     fun `test lower`() {
         val ast = grammar.parseToEnd("a + 2 < 10")
-        assertEquals(Lower(Plus(Name("a"), cInt(2)), cInt(10)), ast)
+        assertEquals(Lower(Plus(Name("a"), cLong(2)), cLong(10)), ast)
         assert(ast.value(mapOf("a" to 2.toVal())))
 
         val ast2 = grammar.parseToEnd("2 <= 0 + 1")
-        assertEquals(LowerEq(cInt(2), Plus(cInt(0), cInt(1))), ast2)
+        assertEquals(LowerEq(cLong(2), Plus(cLong(0), cLong(1))), ast2)
         assertFalse(ast2.value(emptyMap()))
     }
 
     @Test
     fun `test greater`() {
         val ast = grammar.parseToEnd("i - 1 > 0")
-        assertEquals(Greater(Minus(Name("i"), cInt(1)), cInt(0)), ast)
+        assertEquals(Greater(Minus(Name("i"), cLong(1)), cLong(0)), ast)
         assertFalse(ast.value(mapOf("i" to 1.toVal())))
 
         val ast2 = grammar.parseToEnd("b >= c")
@@ -56,12 +56,12 @@ class ComparisonTest {
     @Test
     fun `test negation`() {
         val ast = grammar.parseToEnd("!a == 2")
-        assertEquals(Not(Eq(Name("a"), cInt(2))), ast)
+        assertEquals(Not(Eq(Name("a"), cLong(2))), ast)
         assertFalse(ast.value(mapOf("a" to 2.toVal())))
         assert(ast.value(mapOf("a" to 3.toVal())))
 
         val ast2 = grammar.parseToEnd("!4 == b")
-        assertEquals(Not(Eq(cInt(4), Name("b"))), ast2)
+        assertEquals(Not(Eq(cLong(4), Name("b"))), ast2)
         assertFalse(ast2.value(mapOf("b" to 4.toVal())))
         assert(ast2.value(mapOf("b" to 3.toVal())))
     }

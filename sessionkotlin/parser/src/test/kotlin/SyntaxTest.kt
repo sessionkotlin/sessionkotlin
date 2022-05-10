@@ -1,7 +1,7 @@
 import com.github.d_costa.sessionkotlin.parser.exception.UnresolvedNameException
 import com.github.d_costa.sessionkotlin.parser.grammar
 import com.github.d_costa.sessionkotlin.parser.symbols.*
-import com.github.d_costa.sessionkotlin.parser.symbols.values.Value
+import com.github.d_costa.sessionkotlin.parser.symbols.values.RefinedValue
 import com.github.d_costa.sessionkotlin.parser.symbols.values.toVal
 import com.github.h0tk3y.betterParse.grammar.parseToEnd
 import org.junit.jupiter.api.Test
@@ -9,12 +9,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class SyntaxTest {
-    companion object {
-        val values: List<Value> = listOf(
-            0.toByte().toVal(), 0.toShort().toVal(),
-            0.toVal(), 0.toLong().toVal()
-        )
-    }
 
     @Test
     fun `unresolved name`() {
@@ -27,20 +21,20 @@ class SyntaxTest {
     @Test
     fun `unknown number class`() {
         val ast = grammar.parseToEnd("a + b == c")
-        class CustomValue(override val value: String) : Value(value) {
-            override fun compareTo(other: Value): Int =
+        class CustomValue(override val value: String) : RefinedValue(value) {
+            override fun compareTo(other: RefinedValue): Int =
                 if (other is CustomValue)
                     value.compareTo(other.value)
                 else
                     throw RuntimeException()
 
-            override fun plus(other: Value): Value =
+            override fun plus(other: RefinedValue): RefinedValue =
                 if (other is CustomValue)
                     CustomValue("${value}_${other.value}")
                 else
                     throw RuntimeException()
 
-            override fun minus(other: Value) = throw RuntimeException() // not needed
+            override fun minus(other: RefinedValue) = throw RuntimeException() // not needed
             override fun unaryMinus() = throw RuntimeException() // not needed
         }
         ast.value(
@@ -67,7 +61,7 @@ class SyntaxTest {
     @Test
     fun `test string literal`() {
         val ast = grammar.parseToEnd("a + 5 == 'something5'")
-        assertEquals(Eq(Plus(Name("a"), cInt(5)), cString("something5")), ast)
+        assertEquals(Eq(Plus(Name("a"), cLong(5)), cString("something5")), ast)
         assert(ast.value(mapOf("a" to ("something").toVal())))
     }
 }

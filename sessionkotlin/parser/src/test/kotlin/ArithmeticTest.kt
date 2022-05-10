@@ -10,19 +10,19 @@ class ArithmeticTest {
     @Test
     fun `test plus`() {
         val ast = grammar.parseToEnd("a + 5 == 7")
-        assertEquals(Eq(Plus(Name("a"), Const(5.toVal())), cInt(7)), ast)
+        assertEquals(Eq(Plus(Name("a"), cLong(5)), cLong(7)), ast)
         assert(ast.value(mapOf("a" to 2.toVal())))
         assertEquals(setOf("a"), ast.names())
 
         val ast2 = grammar.parseToEnd("4 + 2 == 1 + 5")
-        assertEquals(Eq(Plus(cInt(4), cInt(2)), Plus(cInt(1), cInt(5))), ast2)
+        assertEquals(Eq(Plus(cLong(4), cLong(2)), Plus(cLong(1), cLong(5))), ast2)
         assert(ast2.value(emptyMap()))
     }
 
     @Test
     fun `test plus commutative`() {
         val ast = grammar.parseToEnd("2 + 5 == 5 + 2")
-        assertEquals(Eq(Plus(cInt(2), cInt(5)), Plus(cInt(5), cInt(2))), ast)
+        assertEquals(Eq(Plus(cLong(2), cLong(5)), Plus(cLong(5), cLong(2))), ast)
         assert(ast.value(emptyMap()))
     }
 
@@ -31,8 +31,8 @@ class ArithmeticTest {
         val ast = grammar.parseToEnd("(2 + 5) + 3 ==  2 + 5 + 3")
         assertEquals(
             Eq(
-                Plus(Plus(cInt(2), cInt(5)), cInt(3)),
-                Plus(Plus(cInt(2), cInt(5)), cInt(3))
+                Plus(Plus(cLong(2), cLong(5)), cLong(3)),
+                Plus(Plus(cLong(2), cLong(5)), cLong(3))
             ),
             ast
         )
@@ -41,8 +41,8 @@ class ArithmeticTest {
         val ast2 = grammar.parseToEnd("2 + (5 + 3) ==  2 + 5 + 3")
         assertEquals(
             Eq(
-                Plus(cInt(2), Plus(cInt(5), cInt(3))),
-                Plus(Plus(cInt(2), cInt(5)), cInt(3))
+                Plus(cLong(2), Plus(cLong(5), cLong(3))),
+                Plus(Plus(cLong(2), cLong(5)), cLong(3))
             ),
             ast2
         )
@@ -52,12 +52,12 @@ class ArithmeticTest {
     @Test
     fun `test minus`() {
         val ast = grammar.parseToEnd("b - 3 == 1")
-        assertEquals(Eq(Minus(Name("b"), cInt(3)), cInt(1)), ast)
+        assertEquals(Eq(Minus(Name("b"), cLong(3)), cLong(1)), ast)
         assert(ast.value(mapOf("b" to 4.toVal())))
         assertEquals(setOf("b"), ast.names())
 
         val ast2 = grammar.parseToEnd("4 - 2 != 1 - 2")
-        assertEquals(Neq(Minus(cInt(4), cInt(2)), Minus(cInt(1), cInt(2))), ast2)
+        assertEquals(Neq(Minus(cLong(4), cLong(2)), Minus(cLong(1), cLong(2))), ast2)
         assert(ast2.value(emptyMap()))
         assertEquals(emptySet(), ast2.names())
     }
@@ -65,7 +65,7 @@ class ArithmeticTest {
     @Test
     fun `test minus (non) commutative`() {
         val ast = grammar.parseToEnd("2 - 5 != 5 - 2")
-        assertEquals(Neq(Minus(cInt(2), cInt(5)), Minus(cInt(5), cInt(2))), ast)
+        assertEquals(Neq(Minus(cLong(2), cLong(5)), Minus(cLong(5), cLong(2))), ast)
         assert(ast.value(emptyMap()))
         assertEquals(emptySet(), ast.names())
     }
@@ -75,8 +75,8 @@ class ArithmeticTest {
         val ast = grammar.parseToEnd("(2 - 5) - 3 ==  2 - 5 - 3")
         assertEquals(
             Eq(
-                Minus(Minus(cInt(2), cInt(5)), cInt(3)),
-                Minus(Minus(cInt(2), cInt(5)), cInt(3))
+                Minus(Minus(cLong(2), cLong(5)), cLong(3)),
+                Minus(Minus(cLong(2), cLong(5)), cLong(3))
             ),
             ast
         )
@@ -85,8 +85,8 @@ class ArithmeticTest {
         val ast2 = grammar.parseToEnd("2 - (5 - 3) ==  2 - 5 - 3")
         assertEquals(
             Eq(
-                Minus(cInt(2), Minus(cInt(5), cInt(3))),
-                Minus(Minus(cInt(2), cInt(5)), cInt(3))
+                Minus(cLong(2), Minus(cLong(5), cLong(3))),
+                Minus(Minus(cLong(2), cLong(5)), cLong(3))
             ),
             ast2
         )
@@ -96,27 +96,27 @@ class ArithmeticTest {
     @Test
     fun `test unary minus`() {
         val ast = grammar.parseToEnd("-b == -1")
-        assertEquals(Eq(Neg(Name("b")), Neg(cInt(1))), ast)
+        assertEquals(Eq(Neg(Name("b")), Neg(cLong(1))), ast)
         assert(ast.value(mapOf("b" to 1.toVal())))
 
         val ast2 = grammar.parseToEnd("1 == -b")
-        assertEquals(Eq(cInt(1), Neg(Name("b"))), ast2)
+        assertEquals(Eq(cLong(1), Neg(Name("b"))), ast2)
         assert(ast2.value(mapOf("b" to (-1).toVal())))
         assertEquals(setOf("b"), ast2.names())
     }
 
     @Test
     fun `test floating`() {
-        val ast = grammar.parseToEnd("a == 0.3f")
-        assertEquals(Eq(Name("a"), cFloat(.3f)), ast)
-        assert(ast.value(mapOf("a" to .3F.toVal())))
+        val ast = grammar.parseToEnd("a == 0.3")
+        assertEquals(Eq(Name("a"), cDouble(.3)), ast)
+        assert(ast.value(mapOf("a" to .3.toVal())))
     }
 
     @Test
     fun `test floating 2`() {
-        val ast = grammar.parseToEnd("a == .3F")
-        assertEquals(Eq(Name("a"), cFloat(.3F)), ast)
-        assert(ast.value(mapOf("a" to .3F.toVal())))
+        val ast = grammar.parseToEnd("a == .3")
+        assertEquals(Eq(Name("a"), cDouble(.3)), ast)
+        assert(ast.value(mapOf("a" to .3.toVal())))
     }
 
     @Test
@@ -142,7 +142,7 @@ class ArithmeticTest {
     @Test
     fun `test implication`() {
         val ast = grammar.parseToEnd("a > 0 -> b > 0")
-        assertEquals(Impl(Greater(Name("a"), cInt(0)), Greater(Name("b"), cInt(0))), ast)
+        assertEquals(Impl(Greater(Name("a"), cLong(0)), Greater(Name("b"), cLong(0))), ast)
 
         assert(ast.value(mapOf("a" to 0.toVal(), "b" to 0.toVal())))
         assert(ast.value(mapOf("a" to 0.toVal(), "b" to 1.toVal())))
@@ -155,8 +155,8 @@ class ArithmeticTest {
         val ast = grammar.parseToEnd("z == 1 && a > 0 -> b > 0")
         assertEquals(
             Impl(
-                And(Eq(Name("z"), cInt(1)), Greater(Name("a"), cInt(0))),
-                Greater(Name("b"), cInt(0))
+                And(Eq(Name("z"), cLong(1)), Greater(Name("a"), cLong(0))),
+                Greater(Name("b"), cLong(0))
             ),
             ast
         )
@@ -168,8 +168,8 @@ class ArithmeticTest {
         val ast = grammar.parseToEnd("z == 1 && (a > 0 -> b > 0)")
         assertEquals(
             And(
-                Eq(Name("z"), cInt(1)),
-                Impl(Greater(Name("a"), cInt(0)), Greater(Name("b"), cInt(0)))
+                Eq(Name("z"), cLong(1)),
+                Impl(Greater(Name("a"), cLong(0)), Greater(Name("b"), cLong(0)))
             ),
             ast
         )
@@ -180,8 +180,8 @@ class ArithmeticTest {
         val ast = grammar.parseToEnd("a > 0 -> b > 0 -> c > 0")
         assertEquals(
             Impl(
-                Greater(Name("a"), cInt(0)),
-                Impl(Greater(Name("b"), cInt(0)), Greater(Name("c"), cInt(0)))
+                Greater(Name("a"), cLong(0)),
+                Impl(Greater(Name("b"), cLong(0)), Greater(Name("c"), cLong(0)))
             ),
             ast
         )
@@ -200,8 +200,8 @@ class ArithmeticTest {
         val ast = grammar.parseToEnd("(a > 0 -> b > 0) -> c > 0")
         assertEquals(
             Impl(
-                Impl(Greater(Name("a"), cInt(0)), Greater(Name("b"), cInt(0))),
-                Greater(Name("c"), cInt(0))
+                Impl(Greater(Name("a"), cLong(0)), Greater(Name("b"), cLong(0))),
+                Greater(Name("c"), cLong(0))
             ),
             ast
         )
@@ -217,29 +217,29 @@ class ArithmeticTest {
 
     @Test
     fun `test long sum`() {
-        val ast = grammar.parseToEnd("a + 3L == c")
+        val ast = grammar.parseToEnd("a + 3 == c")
         assertEquals(Eq(Plus(Name("a"), cLong(3L)), Name("c")), ast)
         assert(ast.value(mapOf("a" to 1.toVal(), "c" to 4L.toVal())))
     }
 
     @Test
     fun `test float sum 1`() {
-        val ast = grammar.parseToEnd("a + 3F == c")
-        assertEquals(Eq(Plus(Name("a"), cFloat(3F)), Name("c")), ast)
+        val ast = grammar.parseToEnd("a + 3.0 == c")
+        assertEquals(Eq(Plus(Name("a"), cDouble(3.0)), Name("c")), ast)
         assert(ast.value(mapOf("a" to 1.toVal(), "c" to 4L.toVal())))
     }
 
     @Test
     fun `test float sum 2`() {
-        val ast = grammar.parseToEnd("a + 3.2F >= c")
-        assertEquals(GreaterEq(Plus(Name("a"), cFloat(3.2F)), Name("c")), ast)
+        val ast = grammar.parseToEnd("a + 3.2 >= c")
+        assertEquals(GreaterEq(Plus(Name("a"), cDouble(3.2)), Name("c")), ast)
         assert(ast.value(mapOf("a" to 1.toVal(), "c" to 4L.toVal())))
     }
 
     @Test
     fun `test float sum 3`() {
-        val ast = grammar.parseToEnd("a + .2f <= c")
-        assertEquals(LowerEq(Plus(Name("a"), cFloat(.2F)), Name("c")), ast)
+        val ast = grammar.parseToEnd("a + .2 <= c")
+        assertEquals(LowerEq(Plus(Name("a"), cDouble(.2)), Name("c")), ast)
         assert(ast.value(mapOf("a" to 1.toVal(), "c" to 4L.toVal())))
     }
 

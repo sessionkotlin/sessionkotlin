@@ -8,9 +8,9 @@ import com.github.d_costa.sessionkotlin.dsl.exception.UnfinishedRolesException
 import com.github.d_costa.sessionkotlin.dsl.exception.UnknownMessageLabelException
 import com.github.d_costa.sessionkotlin.parser.RefinementParser
 
-internal abstract class GlobalType {
-    internal abstract fun project(role: SKRole, state: ProjectionState = ProjectionState(role)): LocalType
-    internal abstract fun visitRefinements(state: SatState)
+internal sealed interface GlobalType {
+    fun project(role: SKRole, state: ProjectionState = ProjectionState(role)): LocalType
+    fun sat(state: SatState): Boolean
 }
 
 internal class GlobalTypeSend(
@@ -20,7 +20,7 @@ internal class GlobalTypeSend(
     private val msgLabel: String?,
     private val condition: String,
     private val cont: GlobalType,
-) : GlobalType() {
+) : GlobalType {
     override fun project(role: SKRole, state: ProjectionState): LocalType =
         when (role) {
             from -> {
@@ -71,20 +71,21 @@ internal class GlobalTypeSend(
             }
         }
 
-    override fun visitRefinements(state: SatState) {
+    override fun sat(state: SatState): Boolean {
         if (msgLabel != null) {
-            state.addVariable(msgLabel)
+            state.addVariable(msgLabel, type)
         }
         if (condition.isNotBlank()) {
             state.addCondition(condition)
         }
+        return cont.sat(state)
     }
 }
 
 internal class GlobalTypeChoice(
     private val at: SKRole,
     private val branches: Map<String, GlobalType>,
-) : GlobalType() {
+) : GlobalType {
     override fun project(role: SKRole, state: ProjectionState): LocalType {
         when (role) {
             at -> {
@@ -96,7 +97,11 @@ internal class GlobalTypeChoice(
                 return LocalTypeInternalChoice(branches.mapValues { it.value.project(role, states.getValue(it.key)) })
             }
             else -> {
-                val newState = state.copy(role, names = state.names.toMutableSet(), unguardedRecursions = state.unguardedRecursions)
+                val newState = state.copy(
+                    role,
+                    names = state.names.toMutableSet(),
+                    unguardedRecursions = state.unguardedRecursions
+                )
 
                 // Generate a new state for each branch, with the choice subject activated
                 val states = branches.mapValues { newState.copy(branchLabel = it.key, activeRoles = mutableSetOf(at)) }
@@ -155,18 +160,18 @@ internal class GlobalTypeChoice(
         }
     }
 
-    override fun visitRefinements(state: SatState) = branches.forEach { it.value.visitRefinements(state) }
+    override fun sat(state: SatState): Boolean = branches.any { it.value.sat(state.clone()) }
 }
 
-internal object GlobalTypeEnd : GlobalType() {
+internal object GlobalTypeEnd : GlobalType {
     override fun project(role: SKRole, state: ProjectionState) = LocalTypeEnd
-    override fun visitRefinements(state: SatState) = Unit
+    override fun sat(state: SatState): Boolean = state.satisfiable()
 }
 
 internal class GlobalTypeRecursionDefinition(
     private val tag: RecursionTag,
     private val cont: GlobalType,
-) : GlobalType() {
+) : GlobalType {
     override fun project(role: SKRole, state: ProjectionState): LocalType {
         state.unguardedRecursions.add(tag)
         val projectedContinuation = cont.project(role, state)
@@ -177,12 +182,13 @@ internal class GlobalTypeRecursionDefinition(
             LocalTypeRecursionDefinition(tag, projectedContinuation)
         }
     }
-    override fun visitRefinements(state: SatState) = cont.visitRefinements(state)
+
+    override fun sat(state: SatState) = cont.sat(state)
 }
 
 internal class GlobalTypeRecursion(
     private val tag: RecursionTag,
-) : GlobalType() {
+) : GlobalType {
     override fun project(role: SKRole, state: ProjectionState): LocalType {
         if (!state.enabled()) {
             state.sentWhileDisabled = true
@@ -190,5 +196,5 @@ internal class GlobalTypeRecursion(
         return LocalTypeRecursion(tag)
     }
 
-    override fun visitRefinements(state: SatState) = Unit
+    override fun sat(state: SatState) = state.satisfiable()
 }

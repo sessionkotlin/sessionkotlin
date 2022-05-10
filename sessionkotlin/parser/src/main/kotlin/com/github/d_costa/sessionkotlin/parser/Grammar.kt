@@ -13,9 +13,7 @@ import com.github.h0tk3y.betterParse.parser.Parser
 internal val grammar: Grammar<BooleanExpression> = object : Grammar<BooleanExpression>() {
     val lTrue by literalToken("true")
     val lFalse by literalToken("false")
-    val float by regexToken("(\\d+[Ff])|(\\.\\d+[Ff])|(\\d+\\.\\d+[Ff])")
-    val double by regexToken("(\\.\\d+)|(\\d+\\.\\d+)")
-    val long by regexToken("\\d+L")
+    val real by regexToken("(\\.\\d+)|(\\d+\\.\\d+)")
     val integer by regexToken("\\d+")
     val word by regexToken("\\w+")
     val plus by literalToken("+")
@@ -36,10 +34,8 @@ internal val grammar: Grammar<BooleanExpression> = object : Grammar<BooleanExpre
     val singleQuote by literalToken("'")
 
     val term: Parser<Term> by
-    (integer use { Const(text.toInt().toVal()) }) or
-        (float use { Const(text.slice(0 until length - 1).toFloat().toVal()) }) or
-        (double use { Const(text.toDouble().toVal()) }) or
-        (long use { Const(text.slice(0 until length - 1).toLong().toVal()) }) or
+    (integer use { Const(text.toLong().toVal()) }) or
+        (real use { Const(text.toDouble().toVal()) }) or
         ((-singleQuote * word * -singleQuote) use { Const(text.toVal()) }) or
         (word use { Name(text) }) or
         -lpar * parser(::expr) * -rpar or

@@ -10,7 +10,7 @@ import com.github.d_costa.sessionkotlin.dsl.RootEnv
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.types.*
 import com.github.d_costa.sessionkotlin.parser.RefinementParser
-import com.github.d_costa.sessionkotlin.parser.symbols.values.Value
+import com.github.d_costa.sessionkotlin.parser.symbols.values.RefinedValue
 import com.github.d_costa.sessionkotlin.util.asClassname
 import com.github.d_costa.sessionkotlin.util.capitalized
 import com.squareup.kotlinpoet.*
@@ -98,7 +98,7 @@ private class APIGenerator(
     }
 
     private val bindingsVariableName = "bindings"
-    private val bindingsValueType = LinkedHashMap::class.parameterizedBy(String::class, Value::class)
+    private val bindingsValueType = LinkedHashMap::class.parameterizedBy(String::class, RefinedValue::class)
     private val recursionMap: MutableMap<RecursionTag, ICNames> = mutableMapOf()
     private val callbacksInterfaceName = ClassName("", buildClassName(protocolName + "Callbacks", role))
     private val callbacksClassName = ClassName("", buildClassName(protocolName + "CallbacksClass", role))

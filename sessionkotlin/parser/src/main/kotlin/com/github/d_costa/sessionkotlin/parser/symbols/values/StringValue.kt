@@ -4,13 +4,13 @@ import com.github.d_costa.sessionkotlin.parser.exception.IncompatibleTypesExcept
 
 public fun String.toVal(): StringValue = StringValue(this)
 
-public data class StringValue(override val value: String) : Value(value) {
-    override fun unaryMinus(): Value = throw NotImplementedError("String does not support operation: unaryMinus")
-    override fun minus(other: Value): StringValue =
+public data class StringValue(override val value: String) : RefinedValue(value) {
+    override fun unaryMinus(): RefinedValue = throw NotImplementedError("String does not support operation: unaryMinus")
+    override fun minus(other: RefinedValue): StringValue =
         throw NotImplementedError("String does not support operation: minus")
 
-    override fun compareTo(other: Value): Int =
+    override fun compareTo(other: RefinedValue): Int =
         if (other is StringValue) value.compareTo(other.value) else throw IncompatibleTypesException(this, other)
 
-    override fun plus(other: Value): StringValue = StringValue(value + other.value)
+    override fun plus(other: RefinedValue): StringValue = StringValue(value + other.value)
 }

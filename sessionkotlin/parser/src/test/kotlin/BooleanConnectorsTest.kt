@@ -10,7 +10,7 @@ class BooleanConnectorsTest {
     @Test
     fun `test and`() {
         val ast = grammar.parseToEnd("a == 2 && b == 3")
-        assertEquals(And(Eq(Name("a"), cInt(2)), Eq(Name("b"), cInt(3))), ast)
+        assertEquals(And(Eq(Name("a"), cLong(2)), Eq(Name("b"), cLong(3))), ast)
 
         assert(ast.value(mapOf("a" to 2.toVal(), "b" to 3.toVal())))
         assertFalse(ast.value(mapOf("a" to 2.toVal(), "b" to 0.toVal())))
@@ -21,7 +21,7 @@ class BooleanConnectorsTest {
     @Test
     fun `test and 2`() {
         val ast = grammar.parseToEnd("a == 2 && b == 3 && c == 4")
-        assertEquals(And(And(Eq(Name("a"), cInt(2)), Eq(Name("b"), cInt(3))), Eq(Name("c"), cInt(4))), ast)
+        assertEquals(And(And(Eq(Name("a"), cLong(2)), Eq(Name("b"), cLong(3))), Eq(Name("c"), cLong(4))), ast)
 
         assertFalse(ast.value(mapOf("a" to 0.toVal(), "b" to 0.toVal(), "c" to 0.toVal())))
         assertFalse(ast.value(mapOf("a" to 0.toVal(), "b" to 0.toVal(), "c" to 4.toVal())))
@@ -58,7 +58,7 @@ class BooleanConnectorsTest {
     @Test
     fun `test or`() {
         val ast = grammar.parseToEnd("a == 2 || b == 3")
-        assertEquals(Or(Eq(Name("a"), cInt(2)), Eq(Name("b"), cInt(3))), ast)
+        assertEquals(Or(Eq(Name("a"), cLong(2)), Eq(Name("b"), cLong(3))), ast)
 
         assert(ast.value(mapOf("a" to 2.toVal(), "b" to 3.toVal())))
         assert(ast.value(mapOf("a" to 2.toVal(), "b" to 4.toVal())))
@@ -69,7 +69,7 @@ class BooleanConnectorsTest {
     @Test
     fun `test or 2`() {
         val ast = grammar.parseToEnd("a == 2 || b == 3 || c == 4")
-        assertEquals(Or(Or(Eq(Name("a"), cInt(2)), Eq(Name("b"), cInt(3))), Eq(Name("c"), cInt(4))), ast)
+        assertEquals(Or(Or(Eq(Name("a"), cLong(2)), Eq(Name("b"), cLong(3))), Eq(Name("c"), cLong(4))), ast)
 
         assertFalse(ast.value(mapOf("a" to 0.toVal(), "b" to 0.toVal(), "c" to 0.toVal())))
         assert(ast.value(mapOf("a" to 0.toVal(), "b" to 0.toVal(), "c" to 4.toVal())))

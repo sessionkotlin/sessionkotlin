@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class StringValueTest {
+class StringRefinedValueTest {
 
     @Test
     fun `test string minus`() {
@@ -77,7 +77,7 @@ class StringValueTest {
     @Test
     fun `test string compareTo non-string`() {
         val ast = grammar.parseToEnd("a == 2")
-        assertEquals(Eq(Name("a"), cInt(2)), ast)
+        assertEquals(Eq(Name("a"), cLong(2)), ast)
         assertFailsWith<IncompatibleTypesException> {
             ast.value(mapOf("a" to "".toVal()))
         }
