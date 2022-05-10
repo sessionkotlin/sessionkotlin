@@ -6,6 +6,12 @@ import org.david.sessionkotlin.dsl.types.*
 import org.david.sessionkotlin.parser.RefinementParser
 import org.david.sessionkotlin.util.getOrKey
 import org.david.sessionkotlin.util.printlnIndent
+import org.sosy_lab.common.ShutdownManager
+import org.sosy_lab.common.configuration.Configuration
+import org.sosy_lab.common.log.BasicLogManager
+import org.sosy_lab.common.log.LogManager
+import org.sosy_lab.java_smt.SolverContextFactory
+import org.sosy_lab.java_smt.SolverContextFactory.Solvers
 
 @SessionKotlinDSL
 public sealed class GlobalEnv(
@@ -195,21 +201,30 @@ public sealed class GlobalEnv(
         val state = ProjectionState(role)
         return asGlobalType()
             .project(role, state)
-            .let {
-                println("" + role + " " + state.unguardedRecursions)
-                it
-            }
             .removeRecursions(state.unguardedRecursions)
     }
 
     internal fun validate() {
+        val g = asGlobalType()
         roles.forEach {
             try {
-                project(it)
+                g.project(it)
             } catch (e: SessionKotlinDSLException) {
                 System.err.println("Exception while projecting $it:")
                 throw e
             }
+        }
+        val config: Configuration = Configuration.defaultConfiguration()
+        val logger: LogManager = BasicLogManager.create(config)
+        val shutdown = ShutdownManager.create()
+        val context = SolverContextFactory.createSolverContext(
+            config, logger, shutdown.notifier, Solvers.Z3
+        )
+
+        val satState = SatState(context)
+        g.visitRefinements(satState)
+        if (!satState.satisfiable()) {
+            throw UnsatisfiableRefinementsException()
         }
     }
 

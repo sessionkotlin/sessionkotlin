@@ -1,6 +1,5 @@
 plugins {
     kotlin("jvm")
-    `java-library`
 }
 
 val betterParseVersion: String by project

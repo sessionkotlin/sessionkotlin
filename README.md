@@ -4,9 +4,48 @@ Multiparty Session Types in Kotlin
 
 ![master](https://github.com/d-costa/session-kotlin/actions/workflows/test_master.yml/badge.svg) ![master coverage](../badges/jacoco.svg)
 
-## Add as dependency
+```kotlin
+val a = SKRole("Client A")
+val b = SKRole("Client B")
+val seller = SKRole("Seller")
 
-### Gradle
+globalProtocolInternal { 
+   send<String>(a, seller)
+
+   send<Int>(seller, a, "valSentToA")
+   send<Int>(seller, b, "valSentToA", "valSentToA == valSentToB")
+   
+   send<Int>(a, b, "proposal", "proposal <= valSentToA")
+   
+   choice(b) {
+     branch("Ok") {
+         send<Address>(b, seller)
+         send<Date>(seller, b)
+         send<Date>(b, a)
+     }
+     branch("Quit") {
+         send<Unit>(b, seller)
+         send<Unit>(b, a)
+     }
+}
+}
+```
+
+## Getting started
+
+### Using a Template
+
+#### Gradle
+
+https://github.com/d-costa/sessionkotlin-template-gradle
+
+#### Maven
+
+https://github.com/d-costa/sessionkotlin-template-maven
+
+### Add as dependency
+
+#### Gradle
 
 build.gradle.kts:
 
@@ -26,9 +65,10 @@ repositories {
 
 ```
 
-### Maven
+#### Maven
 
 ```xml
+
 <dependencies>
     <dependency>
         <groupId>org.david</groupId>

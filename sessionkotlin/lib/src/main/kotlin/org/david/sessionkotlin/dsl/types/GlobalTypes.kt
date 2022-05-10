@@ -9,7 +9,8 @@ import org.david.sessionkotlin.dsl.exception.UnknownMessageLabelException
 import org.david.sessionkotlin.parser.RefinementParser
 
 internal abstract class GlobalType {
-    internal abstract fun project(role: SKRole, state: ProjectionState): LocalType
+    internal abstract fun project(role: SKRole, state: ProjectionState = ProjectionState(role)): LocalType
+    internal abstract fun visitRefinements(state: SatState)
 }
 
 internal class GlobalTypeSend(
@@ -69,6 +70,15 @@ internal class GlobalTypeSend(
                 cont.project(role, state)
             }
         }
+
+    override fun visitRefinements(state: SatState) {
+        if (msgLabel != null) {
+            state.addVariable(msgLabel)
+        }
+        if (condition.isNotBlank()) {
+            state.addCondition(condition)
+        }
+    }
 }
 
 internal class GlobalTypeChoice(
@@ -144,10 +154,13 @@ internal class GlobalTypeChoice(
             }
         }
     }
+
+    override fun visitRefinements(state: SatState) = branches.forEach { it.value.visitRefinements(state) }
 }
 
 internal object GlobalTypeEnd : GlobalType() {
     override fun project(role: SKRole, state: ProjectionState) = LocalTypeEnd
+    override fun visitRefinements(state: SatState) = Unit
 }
 
 internal class GlobalTypeRecursionDefinition(
@@ -164,6 +177,7 @@ internal class GlobalTypeRecursionDefinition(
             LocalTypeRecursionDefinition(tag, projectedContinuation)
         }
     }
+    override fun visitRefinements(state: SatState) = cont.visitRefinements(state)
 }
 
 internal class GlobalTypeRecursion(
@@ -175,4 +189,6 @@ internal class GlobalTypeRecursion(
         }
         return LocalTypeRecursion(tag)
     }
+
+    override fun visitRefinements(state: SatState) = Unit
 }
