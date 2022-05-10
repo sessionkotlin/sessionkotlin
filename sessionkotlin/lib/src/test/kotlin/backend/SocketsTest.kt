@@ -1,16 +1,16 @@
 package backend
 
+import com.github.d_costa.sessionkotlin.api.SKGenRole
+import com.github.d_costa.sessionkotlin.backend.SKBranch
+import com.github.d_costa.sessionkotlin.backend.SKMPEndpoint
+import com.github.d_costa.sessionkotlin.backend.SKPayload
+import com.github.d_costa.sessionkotlin.backend.channel.SKChannel
+import com.github.d_costa.sessionkotlin.backend.exception.AlreadyConnectedException
+import com.github.d_costa.sessionkotlin.backend.exception.BinaryEndpointsException
+import com.github.d_costa.sessionkotlin.backend.exception.NotConnectedException
+import com.github.d_costa.sessionkotlin.backend.exception.ReadClosedChannelException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.david.sessionkotlin.api.SKGenRole
-import org.david.sessionkotlin.backend.SKBranch
-import org.david.sessionkotlin.backend.SKMPEndpoint
-import org.david.sessionkotlin.backend.SKPayload
-import org.david.sessionkotlin.backend.channel.SKChannel
-import org.david.sessionkotlin.backend.exception.AlreadyConnectedException
-import org.david.sessionkotlin.backend.exception.BinaryEndpointsException
-import org.david.sessionkotlin.backend.exception.NotConnectedException
-import org.david.sessionkotlin.backend.exception.ReadClosedChannelException
 import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals

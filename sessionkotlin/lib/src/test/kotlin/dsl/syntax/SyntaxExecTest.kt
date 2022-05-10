@@ -1,12 +1,12 @@
 package dsl.syntax
 
+import com.github.d_costa.sessionkotlin.dsl.SKRole
+import com.github.d_costa.sessionkotlin.dsl.exception.SendingToSelfException
+import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
+import com.github.d_costa.sessionkotlin.dsl.types.*
 import dsl.util.IntClass
 import dsl.util.StringClass
 import dsl.util.UnitClass
-import org.david.sessionkotlin.dsl.SKRole
-import org.david.sessionkotlin.dsl.exception.SendingToSelfException
-import org.david.sessionkotlin.dsl.globalProtocolInternal
-import org.david.sessionkotlin.dsl.types.*
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

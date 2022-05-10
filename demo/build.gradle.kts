@@ -5,5 +5,10 @@ subprojects{
     repositories {
         mavenLocal()
         mavenCentral()
+        mavenCentral {
+            metadataSources {
+                artifact()
+            }
+        }
     }
 }

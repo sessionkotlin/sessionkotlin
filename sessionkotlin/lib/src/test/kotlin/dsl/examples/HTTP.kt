@@ -1,10 +1,10 @@
 package dsl.examples
 
-import org.david.sessionkotlin.dsl.SKRole
-import org.david.sessionkotlin.dsl.globalProtocolInternal
-import org.david.sessionkotlin.dsl.types.LEnd
-import org.david.sessionkotlin.dsl.types.LocalTypeReceive
-import org.david.sessionkotlin.dsl.types.LocalTypeSend
+import com.github.d_costa.sessionkotlin.dsl.SKRole
+import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
+import com.github.d_costa.sessionkotlin.dsl.types.LEnd
+import com.github.d_costa.sessionkotlin.dsl.types.LocalTypeReceive
+import com.github.d_costa.sessionkotlin.dsl.types.LocalTypeSend
 import org.junit.jupiter.api.Test
 import java.util.*
 import kotlin.test.assertEquals

@@ -1,7 +1,7 @@
 package demo
 
-import org.david.sessionkotlin.dsl.SKRole
-import org.david.sessionkotlin.dsl.globalProtocol
+import com.github.d_costa.sessionkotlin.dsl.SKRole
+import com.github.d_costa.sessionkotlin.dsl.globalProtocol
 
 
 fun main() {

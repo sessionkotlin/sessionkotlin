@@ -1,6 +1,6 @@
 package backend
 
-import org.david.sessionkotlin.backend.SKBuffer
+import com.github.d_costa.sessionkotlin.backend.SKBuffer
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

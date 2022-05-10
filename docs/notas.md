@@ -84,3 +84,6 @@ métodos de extensão para as classes Byte, Short, Int, Long, Float, Double e St
 
 - A visibilidade dos nomes é verificada durante a validação do protocolo global, validando a projeção
 para cada participante do protocolo.
+
+
+- Tive de alterar a versão do Java para 11 por causa do pacote java-smt.

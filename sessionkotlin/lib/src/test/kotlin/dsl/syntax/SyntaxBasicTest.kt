@@ -1,15 +1,15 @@
 package dsl.syntax
 
+import com.github.d_costa.sessionkotlin.dsl.SKRole
+import com.github.d_costa.sessionkotlin.dsl.exception.*
+import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
+import com.github.d_costa.sessionkotlin.dsl.types.LEnd
+import com.github.d_costa.sessionkotlin.dsl.types.LocalTypeExternalChoice
+import com.github.d_costa.sessionkotlin.dsl.types.LocalTypeReceive
+import com.github.d_costa.sessionkotlin.dsl.types.LocalTypeSend
 import dsl.util.DoubleClass
 import dsl.util.IntClass
 import dsl.util.StringClass
-import org.david.sessionkotlin.dsl.SKRole
-import org.david.sessionkotlin.dsl.exception.*
-import org.david.sessionkotlin.dsl.globalProtocolInternal
-import org.david.sessionkotlin.dsl.types.LEnd
-import org.david.sessionkotlin.dsl.types.LocalTypeExternalChoice
-import org.david.sessionkotlin.dsl.types.LocalTypeReceive
-import org.david.sessionkotlin.dsl.types.LocalTypeSend
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

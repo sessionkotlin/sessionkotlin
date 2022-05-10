@@ -1,10 +1,10 @@
 package dsl.misc
 
-import org.david.sessionkotlin.dsl.SKRole
-import org.david.sessionkotlin.dsl.exception.ProjectionTargetException
-import org.david.sessionkotlin.dsl.globalProtocolInternal
-import org.david.sessionkotlin.dsl.types.asFormattedString
-import org.david.sessionkotlin.dsl.types.asString
+import com.github.d_costa.sessionkotlin.dsl.SKRole
+import com.github.d_costa.sessionkotlin.dsl.exception.ProjectionTargetException
+import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
+import com.github.d_costa.sessionkotlin.dsl.types.asFormattedString
+import com.github.d_costa.sessionkotlin.dsl.types.asString
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFailsWith
 

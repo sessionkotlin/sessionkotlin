@@ -16,12 +16,15 @@ repositories {
             mavenPom()
         }
     }
+    // Some dependencies from 'org.sosy-lab' do not have pom files
     mavenCentral {
         metadataSources {
             artifact()
         }
     }
 }
+
+val dependenciesFolder = "$buildDir/dependencies"
 
 dependencies {
     api(project(":parser"))
@@ -34,7 +37,7 @@ dependencies {
     runtimeOnly("org.sosy-lab:javasmt-solver-z3:$javaSMTZ3Version:libz3@so")
     runtimeOnly("org.sosy-lab:javasmt-solver-z3:$javaSMTZ3Version:libz3java@so")
 
-    implementation(fileTree("dir" to "build/dependencies", "include" to "*.jar"))
+    implementation(fileTree("dir" to dependenciesFolder, "include" to "*.jar"))
 }
 
 configurations {
@@ -51,13 +54,13 @@ configurations {
 tasks.register<Copy>("copyDependencies") {
     dependsOn("cleanDownloadedDependencies")
     from(configurations["javaSMTConfig"])
-    into("build/dependencies")
+    into(dependenciesFolder)
     rename(".*(lib[^-]*)-?.*.so", "\$1.so")
 }
 
 // Cleans the dependencies folder
 tasks.register<Delete>("cleanDownloadedDependencies") {
-    delete(file("build/dependencies"))
+    delete(file(dependenciesFolder))
 }
 
 // Copy the JavaSMT dependencies before using them.

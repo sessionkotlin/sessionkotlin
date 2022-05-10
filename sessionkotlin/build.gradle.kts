@@ -1,8 +1,12 @@
 import java.io.FileInputStream
 import java.util.*
 
-group = "org.david"
+group = "com.github.d-costa"
 version = "0.0.2"
+
+if (JavaVersion.current() != JavaVersion.VERSION_11) {
+    throw GradleException("This project requires Java 11, but it's running on ${JavaVersion.current()}")
+}
 
 plugins {
     kotlin("jvm") apply false
@@ -119,5 +123,10 @@ subprojects {
                 }
             }
         }
+    }
+
+    java {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 }

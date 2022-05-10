@@ -1,8 +1,8 @@
 package dsl.refinements
 
-import org.david.sessionkotlin.dsl.SKRole
-import org.david.sessionkotlin.dsl.exception.UnknownMessageLabelException
-import org.david.sessionkotlin.dsl.globalProtocolInternal
+import com.github.d_costa.sessionkotlin.dsl.SKRole
+import com.github.d_costa.sessionkotlin.dsl.exception.UnknownMessageLabelException
+import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFailsWith
 

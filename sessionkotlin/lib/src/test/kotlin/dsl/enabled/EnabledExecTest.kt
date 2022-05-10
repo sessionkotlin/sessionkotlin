@@ -1,9 +1,9 @@
 package dsl.enabled
 
-import org.david.sessionkotlin.dsl.SKRole
-import org.david.sessionkotlin.dsl.exception.RoleNotEnabledException
-import org.david.sessionkotlin.dsl.exception.UnfinishedRolesException
-import org.david.sessionkotlin.dsl.globalProtocolInternal
+import com.github.d_costa.sessionkotlin.dsl.SKRole
+import com.github.d_costa.sessionkotlin.dsl.exception.RoleNotEnabledException
+import com.github.d_costa.sessionkotlin.dsl.exception.UnfinishedRolesException
+import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFailsWith
 

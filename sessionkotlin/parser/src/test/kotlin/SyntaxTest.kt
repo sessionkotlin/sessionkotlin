@@ -1,9 +1,9 @@
+import com.github.d_costa.sessionkotlin.parser.exception.UnresolvedNameException
+import com.github.d_costa.sessionkotlin.parser.grammar
+import com.github.d_costa.sessionkotlin.parser.symbols.*
+import com.github.d_costa.sessionkotlin.parser.symbols.values.Value
+import com.github.d_costa.sessionkotlin.parser.symbols.values.toVal
 import com.github.h0tk3y.betterParse.grammar.parseToEnd
-import org.david.sessionkotlin.parser.exception.UnresolvedNameException
-import org.david.sessionkotlin.parser.grammar
-import org.david.sessionkotlin.parser.symbols.*
-import org.david.sessionkotlin.parser.symbols.values.Value
-import org.david.sessionkotlin.parser.symbols.values.toVal
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

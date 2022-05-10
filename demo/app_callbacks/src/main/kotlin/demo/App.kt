@@ -12,7 +12,7 @@ import SimpleCallbacksClassB
 import SimpleCallbacksClassC
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.david.sessionkotlin.backend.channel.SKChannel
+import com.github.d_costa.sessionkotlin.backend.channel.SKChannel
 
 
 fun main() {

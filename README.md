@@ -33,6 +33,10 @@ globalProtocolInternal {
 
 ## Getting started
 
+### Requirements
+
+This library re
+
 ### Using a Template
 
 #### Gradle
