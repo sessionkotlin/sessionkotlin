@@ -18,11 +18,25 @@ plugins {
 
 allprojects {
     apply(plugin = "org.jlleitschuh.gradle.ktlint") // Linter
-    apply(plugin = "jacoco") // Code coverage
-    apply(plugin = "org.jetbrains.dokka") //  Documentation
 
     repositories {
         mavenCentral()
+        maven {
+            val githubPackagesRepo: String by project
+
+            // Load GitHub credentials
+            val props = Properties()
+            val envFile = File(rootDir.path + "/.env")
+            if (envFile.exists()) {
+                props.load(FileInputStream(envFile))
+            }
+            name = githubPackagesRepo
+            url = uri("https://maven.pkg.github.com/d-costa/sessionkotlin")
+            credentials {
+                username = props.getProperty("USERNAME") ?: System.getenv("USERNAME")
+                password = props.getProperty("TOKEN") ?: System.getenv("TOKEN")
+            }
+        }
     }
 
     ktlint {
@@ -30,17 +44,6 @@ allprojects {
         outputToConsole.set(true)
         coloredOutput.set(true)
         disabledRules.set(setOf("no-wildcard-imports"))
-    }
-
-    tasks.dokkaHtml {
-        moduleName.set(rootProject.name)
-        dokkaSourceSets {
-            configureEach {
-                pluginsMapConfiguration.set(
-                    mapOf("org.jetbrains.dokka.base.DokkaBase" to """{ "separateInheritedMembers": true}""")
-                )
-            }
-        }
     }
 }
 
@@ -77,56 +80,5 @@ tasks.register<JacocoReport>("codeCoverageReport") {
         xml.required.set(true)
         csv.required.set(true)
         html.required.set(true)
-    }
-}
-
-subprojects {
-    apply(plugin = "maven-publish")
-    apply(plugin = "java-library")
-
-    publishing {
-        publications {
-
-            create<MavenPublication>("maven") {
-                groupId = rootProject.group as String
-                artifactId = "${rootProject.name}-${project.name }"
-                version = rootProject.version as String
-
-                from(components["java"])
-
-                pom {
-                    name.set("SessionKotlin")
-                    description.set("Multiparty Session Types in Kotlin ")
-                    licenses {
-                        license {
-                            name.set("MIT License")
-                            url.set("https://opensource.org/licenses/MIT")
-                        }
-                    }
-                }
-            }
-        }
-
-        repositories {
-            maven {
-                // Load GitHub credentials
-                val props = Properties()
-                val envFile = File(rootDir.path + "/.env")
-                if (envFile.exists()) {
-                    props.load(FileInputStream(envFile))
-                }
-                name = "SessionKotlin-GithubPackages"
-                url = uri("https://maven.pkg.github.com/d-costa/sessionkotlin")
-                credentials {
-                    username = props.getProperty("USERNAME") ?: System.getenv("USERNAME")
-                    password = props.getProperty("TOKEN") ?: System.getenv("TOKEN")
-                }
-            }
-        }
-    }
-
-    java {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
     }
 }

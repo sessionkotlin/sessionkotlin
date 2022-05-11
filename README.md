@@ -1,4 +1,4 @@
-# sessionkotlin
+# SessionKotlin
 
 Multiparty Session Types in Kotlin
 
@@ -37,7 +37,7 @@ globalProtocol {
 
 - Java 11
 
-### Using a Template
+### Templates
 
 #### Gradle
 
@@ -46,48 +46,6 @@ https://github.com/d-costa/sessionkotlin-template-gradle
 #### Maven
 
 https://github.com/d-costa/sessionkotlin-template-maven
-
-### Add as dependency
-
-#### Gradle
-
-build.gradle.kts:
-
-```kotlin
-dependencies {
-    api("org.david:sessionkotlin-lib:0.0.1") // or the latest version
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
-}
-
-repositories {
-    mavenCentral()
-    maven {
-        name = "SessionKotlin-GithubPackages"
-        url = uri("https://maven.pkg.github.com/d-costa/sessionkotlin")
-    }
-}
-
-```
-
-#### Maven
-
-```xml
-
-<dependencies>
-    <dependency>
-        <groupId>org.david</groupId>
-        <artifactId>sessionkotlin-lib</artifactId>
-        <version>0.0.1</version>
-    </dependency>
-</dependencies>
-
-<repositories>
-<repository>
-    <id>SessionKotlin-GithubPackages</id>
-    <url>https://maven.pkg.github.com/d-costa/sessionkotlin</url>
-</repository>
-</repositories>
-```
 
 ## Local development
 

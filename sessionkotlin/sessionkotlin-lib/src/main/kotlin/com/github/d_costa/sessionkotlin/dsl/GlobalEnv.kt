@@ -21,7 +21,7 @@ public sealed class GlobalEnv(
     internal var instructions = mutableListOf<Instruction>()
     internal val roles = roles.toMutableSet()
     internal val recursionVariables = recursionVariables.toMutableSet()
-    internal val msgLabels = mutableSetOf<String>()
+    private val msgLabels = mutableSetOf<String>()
 
     /**
      *

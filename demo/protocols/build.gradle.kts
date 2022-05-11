@@ -1,5 +1,6 @@
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.5.31"
+    kotlin("jvm")
+    id("com.github.d-costa.sessionkotlin.plugin") version "0.0.2"
     application
 }
 
