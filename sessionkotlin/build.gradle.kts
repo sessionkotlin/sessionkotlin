@@ -67,7 +67,7 @@ tasks.register<JacocoReport>("codeCoverageReport") {
         files(
             classDirectories.files.map {
                 fileTree(it) {
-                    exclude("org/david/sessionkotlin/api")
+                    exclude("com/github/d_costa/sessionkotlin/api")
                 }
             }
         )

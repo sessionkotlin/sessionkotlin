@@ -109,4 +109,12 @@ class VisibilityTest {
             }
         }
     }
+
+    @Test
+    fun `test arithmetic`() {
+        globalProtocolInternal {
+            send<Int>(a, b, "val1")
+            send<Int>(a, b, "val2", condition = "(-val1 + 1) > val2 + val1")
+        }
+    }
 }

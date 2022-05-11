@@ -9,7 +9,7 @@ val a = SKRole("Client A")
 val b = SKRole("Client B")
 val seller = SKRole("Seller")
 
-globalProtocolInternal { 
+globalProtocol { 
    send<String>(a, seller)
 
    send<Int>(seller, a, "valSentToA")
@@ -17,17 +17,17 @@ globalProtocolInternal {
    
    send<Int>(a, b, "proposal", "proposal <= valSentToA")
    
-   choice(b) {
-     branch("Ok") {
+   choice(b) { 
+      branch("Ok") { 
          send<Address>(b, seller)
          send<Date>(seller, b)
-         send<Date>(b, a)
-     }
-     branch("Quit") {
+         send<Date>(b, a) 
+      }
+      branch("Quit") {
          send<Unit>(b, seller)
          send<Unit>(b, a)
-     }
-}
+      } 
+   }
 }
 ```
 

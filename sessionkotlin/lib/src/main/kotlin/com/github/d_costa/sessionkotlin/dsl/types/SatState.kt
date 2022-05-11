@@ -11,6 +11,7 @@ internal class SatState(
 ) {
     private enum class SmtSort(val value: String) {
         STRING("String"), INT("Int"), REAL("Real");
+
         override fun toString() = value
     }
 
@@ -54,7 +55,7 @@ internal class SatState(
             is Greater -> "(> ${e1.toSMT()} ${e2.toSMT()})"
             is GreaterEq -> "(>= ${e1.toSMT()} ${e2.toSMT()})"
             is Lower -> "(< ${e1.toSMT()} ${e2.toSMT()})"
-            is LowerEq -> "(<= ${e1.toSMT()} ${e2.toSMT()}))"
+            is LowerEq -> "(<= ${e1.toSMT()} ${e2.toSMT()})"
         }
 
     private fun Term.toSMT(): String =
@@ -63,7 +64,7 @@ internal class SatState(
             is Minus -> "(- ${t1.toSMT()} ${t2.toSMT()})"
             is Name -> id
             is Neg -> "(- ${t.toSMT()})"
-            is Plus -> "(+ ${t1.toSMT()}, ${t2.toSMT()})"
+            is Plus -> "(+ ${t1.toSMT()} ${t2.toSMT()})"
         }
 
     fun satisfiable(): Boolean {
@@ -76,6 +77,7 @@ internal class SatState(
                 }
 
                 declaration.append("(assert (and ${constraints.joinToString(" ")}))")
+                println(declaration)
                 prover.addConstraint(formulaManager.parse(declaration.toString()))
                 return !prover.isUnsat
             } else {
