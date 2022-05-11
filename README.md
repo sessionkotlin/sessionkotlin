@@ -9,33 +9,33 @@ val a = SKRole("Client A")
 val b = SKRole("Client B")
 val seller = SKRole("Seller")
 
-globalProtocol { 
-   send<String>(a, seller)
+globalProtocol {
+    send<String>(a, seller)
 
-   send<Int>(seller, a, "valSentToA")
-   send<Int>(seller, b, "valSentToA", "valSentToA == valSentToB")
-   
-   send<Int>(a, b, "proposal", "proposal <= valSentToA")
-   
-   choice(b) { 
-      branch("Ok") { 
-         send<Address>(b, seller)
-         send<Date>(seller, b)
-         send<Date>(b, a) 
-      }
-      branch("Quit") {
-         send<Unit>(b, seller)
-         send<Unit>(b, a)
-      } 
-   }
+    send<Int>(seller, a, "valSentToA")
+    send<Int>(seller, b, "valSentToA", "valSentToA == valSentToB")
+
+    send<Int>(a, b, "proposal", "proposal <= valSentToA")
+
+    choice(b) {
+        branch("Ok") {
+            send<Address>(b, seller)
+            send<Date>(seller, b)
+            send<Date>(b, a)
+        }
+        branch("Quit") {
+            send<Unit>(b, seller)
+            send<Unit>(b, a)
+        }
+    }
 }
 ```
 
 ## Getting started
 
-### Requirements
+### Prerequisites
 
-This library re
+- Java 11
 
 ### Using a Template
 
