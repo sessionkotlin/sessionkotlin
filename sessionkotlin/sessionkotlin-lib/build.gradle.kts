@@ -69,7 +69,7 @@ publishing {
 }
 
 tasks.dokkaHtml {
-    moduleName.set(rootProject.name)
+    moduleName.set(project.name)
     dokkaSourceSets {
         configureEach {
             pluginsMapConfiguration.set(

@@ -1,11 +1,10 @@
-package com.github.d_costa.sessionkotlin.backend
+package com.github.d_costa.sessionkotlin.backend.endpoint
 
 import com.github.d_costa.sessionkotlin.api.SKGenRole
 import com.github.d_costa.sessionkotlin.backend.channel.SKChannel
 import com.github.d_costa.sessionkotlin.backend.channel.SKChannelEndpoint
-import com.github.d_costa.sessionkotlin.backend.exception.AlreadyConnectedException
-import com.github.d_costa.sessionkotlin.backend.exception.NotConnectedException
-import com.github.d_costa.sessionkotlin.backend.exception.ReadClosedChannelException
+import com.github.d_costa.sessionkotlin.backend.message.ObjectFormatter
+import com.github.d_costa.sessionkotlin.backend.message.SKMessage
 import com.github.d_costa.sessionkotlin.backend.socket.SKSocketEndpoint
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*

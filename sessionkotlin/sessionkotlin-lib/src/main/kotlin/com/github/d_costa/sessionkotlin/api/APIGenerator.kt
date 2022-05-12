@@ -1,10 +1,10 @@
 package com.github.d_costa.sessionkotlin.api
 
 import com.github.d_costa.sessionkotlin.api.exception.NoMessageLabelException
-import com.github.d_costa.sessionkotlin.backend.SKBranch
 import com.github.d_costa.sessionkotlin.backend.SKBuffer
-import com.github.d_costa.sessionkotlin.backend.SKMPEndpoint
-import com.github.d_costa.sessionkotlin.backend.SKPayload
+import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
+import com.github.d_costa.sessionkotlin.backend.message.SKBranch
+import com.github.d_costa.sessionkotlin.backend.message.SKPayload
 import com.github.d_costa.sessionkotlin.dsl.RecursionTag
 import com.github.d_costa.sessionkotlin.dsl.RootEnv
 import com.github.d_costa.sessionkotlin.dsl.SKRole
@@ -30,12 +30,12 @@ private data class GenRet(val interfaceClassPair: ICNames, val counter: Int)
 
 private val roleMap = mutableMapOf<SKRole, ClassName>()
 
-internal fun generateAPI(globalEnv: RootEnv, callbacks: Boolean) {
+internal fun generateAPI(globalEnv: RootEnv, genCallbacksAPI: Boolean) {
     val outputDirectory = File("build/generated/sessionkotlin/main/kotlin")
     val globalType = globalEnv.asGlobalType()
     genRoles(globalEnv.roles, outputDirectory) // populates roleMap
     globalEnv.roles.forEach {
-        APIGenerator(globalEnv.protocolName.asClassname(), it, globalType.project(it, ProjectionState(it)), callbacks)
+        APIGenerator(globalEnv.protocolName.asClassname(), it, globalType.project(it, ProjectionState(it)), genCallbacksAPI)
             .writeTo(outputDirectory)
     }
     genEndClass(outputDirectory)
@@ -90,7 +90,7 @@ private class APIGenerator(
     private val protocolName: String,
     val role: SKRole,
     private val localType: LocalType,
-    private val genCallbacks: Boolean,
+    private val genCallbacksAPI: Boolean,
 ) {
 
     companion object {
@@ -235,7 +235,12 @@ private class APIGenerator(
                 fileSpecBuilder.addType(interfaceBuilder.build())
                 fileSpecBuilder.addType(classBuilder.build())
 
-                if (l.msgLabel != null) {
+                if (genCallbacksAPI) {
+                    if (l.msgLabel == null) {
+                        // Msg labels are required for callbacks API
+                        throw NoMessageLabelException(l.asString())
+                    }
+
                     val callbackFunction =
                         FunSpec.builder("onSend${l.msgLabel.capitalized()}To${l.to}")
                             .addModifiers(KModifier.ABSTRACT)
@@ -245,6 +250,7 @@ private class APIGenerator(
                     callbacksInterface.addFunction(callbackFunction)
 
                     if (l.branchLabel != null) {
+                        // Send branch label
                         callbackCode.add(
                             CodeBlock.builder()
                                 .addStatement(
@@ -284,11 +290,7 @@ private class APIGenerator(
                             .build()
                     )
                     callbackCode.add(nextCallbackCode.build())
-                } else {
-                    if (genCallbacks)
-                        throw NoMessageLabelException(l.asString())
                 }
-
                 GenRet(ICNames(interfaceName, className), ret.counter)
             }
             is LocalTypeReceive -> {
@@ -337,9 +339,11 @@ private class APIGenerator(
                 fileSpecBuilder.addType(interfaceBuilder.build())
                 fileSpecBuilder.addType(classBuilder.build())
 
-                if (l.msgLabel != null) {
-                    "onReceive${l.msgLabel.capitalized()}From${l.from}"
-
+                if (genCallbacksAPI) {
+                    if (l.msgLabel == null) {
+                        // Msg labels are required for callbacks API
+                        throw NoMessageLabelException(l.asString())
+                    }
                     val callbackFunction = FunSpec.builder("onReceive${l.msgLabel.capitalized()}From${l.from}")
                         .addModifiers(KModifier.ABSTRACT)
                         .let {
@@ -373,8 +377,6 @@ private class APIGenerator(
                             .build()
                     )
                     callbackCode.add(nextCallbackCode.build())
-                } else {
-                    throw NoMessageLabelException(l.asString())
                 }
 
                 GenRet(ICNames(interfaceName, className), ret.counter)
@@ -443,7 +445,7 @@ private class APIGenerator(
                 GenRet(ICNames(interfaceName, className), newIndex)
             }
             is LocalTypeInternalChoice -> {
-                classBuilder.superclass(SKEndpoint::class)
+                classBuilder.superclass(SKLinearEndpoint::class)
 //                    .addSuperclassConstructorParameter("e")
                 var counter = stateIndex + 1
                 val choiceEnumClassname = ClassName("", "Choice$stateIndex")
@@ -529,7 +531,7 @@ private class APIGenerator(
                     .build()
             )
 
-        if (genCallbacks) {
+        if (genCallbacksAPI) {
             val suppressUnchecked = AnnotationSpec.builder(ClassName("", "Suppress"))
                 .addMember("%S", "unchecked_cast")
                 .build()

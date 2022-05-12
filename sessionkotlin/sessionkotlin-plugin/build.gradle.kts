@@ -5,10 +5,16 @@ plugins {
     kotlin("jvm")
     `java-gradle-plugin`
     `maven-publish`
+    jacoco
 }
 
 repositories {
     mavenCentral()
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
 }
 
 dependencies {
@@ -29,7 +35,7 @@ gradlePlugin {
     val plugin by plugins.creating {
         id = "com.github.d-costa.sessionkotlin.plugin"
         displayName = "SessionKotlin Plugin"
-        description = "Auxiliary plugin for sessionkotlin"
+        description = "Plugin for SessionKotlin"
         implementationClass = "com.github.d_costa.sessionkotlin.CopyZ3"
     }
 

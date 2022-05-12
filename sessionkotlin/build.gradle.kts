@@ -12,8 +12,9 @@ plugins {
     kotlin("jvm") apply false
     `java-library`
     id("org.jlleitschuh.gradle.ktlint") // Linter
-    id("org.jetbrains.dokka") version "1.6.10" // Documentation
+    id("org.jetbrains.dokka") // Documentation
     `maven-publish`
+    jacoco
 }
 
 allprojects {
@@ -66,15 +67,6 @@ tasks.register<JacocoReport>("codeCoverageReport") {
             }
         }
     }
-    classDirectories.setFrom(
-        files(
-            classDirectories.files.map {
-                fileTree(it) {
-                    exclude("com/github/d_costa/sessionkotlin/api")
-                }
-            }
-        )
-    )
 
     reports {
         xml.required.set(true)

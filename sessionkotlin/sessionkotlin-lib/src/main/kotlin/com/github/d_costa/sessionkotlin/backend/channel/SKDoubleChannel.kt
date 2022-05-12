@@ -1,6 +1,6 @@
 package com.github.d_costa.sessionkotlin.backend.channel
 
-import com.github.d_costa.sessionkotlin.backend.SKMessage
+import com.github.d_costa.sessionkotlin.backend.message.SKMessage
 import kotlinx.coroutines.channels.Channel
 import java.io.Closeable
 

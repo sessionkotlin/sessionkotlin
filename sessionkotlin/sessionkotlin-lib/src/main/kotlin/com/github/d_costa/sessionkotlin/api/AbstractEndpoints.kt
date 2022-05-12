@@ -1,15 +1,15 @@
 package com.github.d_costa.sessionkotlin.api
 
 import com.github.d_costa.sessionkotlin.api.exception.SKLinearException
-import com.github.d_costa.sessionkotlin.backend.SKBranch
 import com.github.d_costa.sessionkotlin.backend.SKBuffer
-import com.github.d_costa.sessionkotlin.backend.SKMPEndpoint
-import com.github.d_costa.sessionkotlin.backend.SKPayload
+import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
+import com.github.d_costa.sessionkotlin.backend.message.SKBranch
+import com.github.d_costa.sessionkotlin.backend.message.SKPayload
 
 /**
- * Linear endpoint. Throws [SKLinearException] when [SKEndpoint.use] is called twice.
+ * Linear endpoint. Throws [SKLinearException] when [SKLinearEndpoint.use] is called twice.
  */
-public open class SKEndpoint {
+public open class SKLinearEndpoint {
     private var used = false
     internal fun use() {
         if (used)
@@ -19,7 +19,7 @@ public open class SKEndpoint {
     }
 }
 
-public abstract class SKOutputEndpoint(private val e: SKMPEndpoint) : SKEndpoint() {
+public abstract class SKOutputEndpoint(private val e: SKMPEndpoint) : SKLinearEndpoint() {
 
     /**
      * Sends a message with payload of type [T] to the target [role].
@@ -38,7 +38,7 @@ public abstract class SKOutputEndpoint(private val e: SKMPEndpoint) : SKEndpoint
 }
 
 @Suppress("unchecked_cast")
-public abstract class SKInputEndpoint(private val e: SKMPEndpoint) : SKEndpoint() {
+public abstract class SKInputEndpoint(private val e: SKMPEndpoint) : SKLinearEndpoint() {
 
     /**
      * Receives a message with payload of type [T] from [role]
@@ -58,7 +58,7 @@ public abstract class SKInputEndpoint(private val e: SKMPEndpoint) : SKEndpoint(
 //    }
 // }
 
-public abstract class SKExternalEndpoint(private val e: SKMPEndpoint) : SKEndpoint() {
+public abstract class SKExternalEndpoint(private val e: SKMPEndpoint) : SKLinearEndpoint() {
 
     /**
      * Receives a branch message from [role].

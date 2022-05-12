@@ -2,8 +2,8 @@ plugins {
     kotlin("jvm")
     `java-library`
     jacoco // Code coverage`
-    id("org.jetbrains.dokka") //  Documentation
     `maven-publish`
+    id("org.jetbrains.dokka") //  Documentation
 }
 
 val betterParseVersion: String by project
@@ -59,7 +59,7 @@ publishing {
 }
 
 tasks.dokkaHtml {
-    moduleName.set(rootProject.name)
+    moduleName.set(project.name)
     dokkaSourceSets {
         configureEach {
             pluginsMapConfiguration.set(

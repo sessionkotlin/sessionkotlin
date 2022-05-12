@@ -2,11 +2,14 @@ pluginManagement {
     // Versions are declared in 'gradle.properties' file
     val kotlinVersion: String by settings
     val klintVersion: String by settings
+    val dokkaVersion: String by settings
 
     plugins {
         kotlin("jvm") version kotlinVersion apply false
         id("org.jlleitschuh.gradle.ktlint") version klintVersion apply false
+        id("org.jetbrains.dokka") version dokkaVersion apply false
     }
+
     repositories {
         mavenCentral()
         gradlePluginPortal()
@@ -30,6 +33,6 @@ pluginManagement {
 
 rootProject.name = "sessionkotlin"
 
-include(":sessionkotlin-lib")
 include(":sessionkotlin-parser")
+include(":sessionkotlin-lib")
 include(":sessionkotlin-plugin")

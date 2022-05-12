@@ -1,7 +1,7 @@
 package com.github.d_costa.sessionkotlin.backend.channel
 
-import com.github.d_costa.sessionkotlin.backend.SKEndpoint
-import com.github.d_costa.sessionkotlin.backend.SKMessage
+import com.github.d_costa.sessionkotlin.backend.endpoint.SKEndpoint
+import com.github.d_costa.sessionkotlin.backend.message.SKMessage
 
 /**
  * Endpoint implementation with channels.

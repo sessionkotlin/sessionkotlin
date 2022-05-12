@@ -1,4 +1,4 @@
-package com.github.d_costa.sessionkotlin.backend
+package com.github.d_costa.sessionkotlin.backend.message
 
 import java.io.Serializable
 

@@ -1,10 +1,10 @@
 package backend
 
 import com.github.d_costa.sessionkotlin.api.SKGenRole
-import com.github.d_costa.sessionkotlin.backend.SKMPEndpoint
+import com.github.d_costa.sessionkotlin.backend.channel.BinaryEndpointsException
 import com.github.d_costa.sessionkotlin.backend.channel.SKChannel
-import com.github.d_costa.sessionkotlin.backend.exception.BinaryEndpointsException
-import com.github.d_costa.sessionkotlin.backend.exception.ReadClosedChannelException
+import com.github.d_costa.sessionkotlin.backend.endpoint.ReadClosedChannelException
+import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test

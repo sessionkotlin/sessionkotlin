@@ -9,6 +9,8 @@ fun main() {
     val b = SKRole("B")
     val c = SKRole("C")
 
+    val subProtocol = globalProtocol()
+
     globalProtocol("Simple", true) {
         val t = miu()
         choice(a) {

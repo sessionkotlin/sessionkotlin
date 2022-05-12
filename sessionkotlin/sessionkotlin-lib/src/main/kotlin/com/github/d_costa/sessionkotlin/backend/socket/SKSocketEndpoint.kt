@@ -1,8 +1,8 @@
 package com.github.d_costa.sessionkotlin.backend.socket
 
-import com.github.d_costa.sessionkotlin.backend.SKEndpoint
-import com.github.d_costa.sessionkotlin.backend.SKMessage
-import com.github.d_costa.sessionkotlin.backend.SKMessageFormatter
+import com.github.d_costa.sessionkotlin.backend.endpoint.SKEndpoint
+import com.github.d_costa.sessionkotlin.backend.message.SKMessage
+import com.github.d_costa.sessionkotlin.backend.message.SKMessageFormatter
 import io.ktor.network.sockets.*
 import io.ktor.utils.io.*
 import java.nio.ByteBuffer

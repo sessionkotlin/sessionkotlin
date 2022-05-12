@@ -16,8 +16,8 @@ import SimpleC4_2
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import com.github.d_costa.sessionkotlin.backend.SKBuffer
-import com.github.d_costa.sessionkotlin.backend.SKMPEndpoint
 import com.github.d_costa.sessionkotlin.backend.channel.SKChannel
+import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
 
 fun main() {
     val chanAB = SKChannel(A, B)

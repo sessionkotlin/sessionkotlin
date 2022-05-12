@@ -1,5 +1,6 @@
-package com.github.d_costa.sessionkotlin.backend
+package com.github.d_costa.sessionkotlin.backend.endpoint
 
+import com.github.d_costa.sessionkotlin.backend.message.SKMessage
 import java.io.Closeable
 
 /**
