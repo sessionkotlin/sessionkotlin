@@ -2,26 +2,32 @@
 
 ## Tasks
 
-### Test and Publish locally
+### Run linter
 
-```
-./gradlew clean ktlintCheck build publishToMavenLocal
+```shell
+./gradlew ktlintCheck  # or 'ktlintFormat' to fix
 ```
 
-### Test and Publish to GitHub Packages
+### Publish locally
 
+```shell
+./gradlew clean build publishToMavenLocal
 ```
-./gradlew clean ktlintCheck build publish
+
+### Publish to GitHub Packages
+
+```shell
+./gradlew clean build publish
 ```
 
 ### Generate HTML documentation
 
-```
+```shell
 ./gradlew dokkaHtmlMultiModule
 ```
 
 ### Generate code coverage report (JaCoCo)
 
-```
+```shell
 ./gradlew codeCoverageReport
 ```

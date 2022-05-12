@@ -67,20 +67,21 @@
 | Disjunção          | <code>&#124;&#124;</code>                                                                                    |             |
 | Implicação         | <code>-></code>                                                                                              | -           |
 
-
 - As labels das mensagens têm de ser únicas porque são usadas nos refinamentos e para geração de nomes de métodos.
 
 
 - Os remetentes é que garantem que os refinamentos são respeitados.
 
 
-- As expressões dos refinamentos permitem quaisquer variáveis que implementem `Value`. Esta biblioteca inclui
-métodos de extensão para as classes Byte, Short, Int, Long, Float, Double e String.
-
-
-- As expressões dos refinamentos permitem quaisquer variáveis que implementem `Value`. Esta biblioteca inclui
-métodos de extensão para as classes Byte, Short, Int, Long, Float, Double e String.
-
+- As expressões dos refinamentos permitem variáveis do tipo Byte, Short, Int, Long, Float, Double e String.
+  Internamente Byte, Short e Int são promovidos para Long e Float para Double.
 
 - A visibilidade dos nomes é verificada durante a validação do protocolo global, validando a projeção
-para cada participante do protocolo.
+  para cada participante do protocolo.
+
+
+- Tive de alterar a versão do Java para 11 por causa do pacote java-smt.
+
+
+- Como o Z3 não tem tem implementação disponível para a JVM é preciso mover as bibliotecas para uma pasta que o pacote
+  java-smt está à espera. Para este efeito, foi criado um plugin gradle para automatizar o processo.
