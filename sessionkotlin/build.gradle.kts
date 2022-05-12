@@ -85,7 +85,7 @@ subprojects {
 
             create<MavenPublication>("maven") {
                 groupId = rootProject.group as String
-                artifactId = "${rootProject.name}-${project.name }"
+                artifactId = "${rootProject.name}-${project.name}"
                 version = rootProject.version as String
 
                 from(components["java"])

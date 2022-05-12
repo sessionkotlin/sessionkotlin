@@ -12,6 +12,9 @@ jobs:
 
       - name: Tests
         run: cd sessionkotlin && gradle wrapper && ./gradlew clean build
+        env:
+          USERNAME: ${{ secrets.ACTIONS_ACTOR }}
+          TOKEN: ${{ secrets.ACTIONS_TOKEN }}
 
       - name: Checkout badges branch dedicated to storing badges only
         uses: actions/checkout@v3
@@ -21,6 +24,9 @@ jobs:
 
       - name: Generate report
         run: cd sessionkotlin && gradle wrapper && ./gradlew clean build codeCoverageReport
+        env:
+          USERNAME: ${{ secrets.ACTIONS_ACTOR }}
+          TOKEN: ${{ secrets.ACTIONS_TOKEN }}
 
       - name: Upload Jacoco coverage report
         uses: actions/upload-artifact@v2
