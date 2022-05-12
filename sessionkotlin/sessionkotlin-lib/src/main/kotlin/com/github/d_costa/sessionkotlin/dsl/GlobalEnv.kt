@@ -265,7 +265,7 @@ private fun buildGlobalType(
 /**
  * Base environment
  */
-internal class RootEnv(
+public class RootEnv(
     internal val protocolName: String,
 ) : GlobalEnv(emptySet(), emptySet())
 
@@ -286,6 +286,15 @@ internal fun globalProtocolInternal(name: String = "Proto", protocolBuilder: Glo
     p.validate()
     return p
 }
+
+/**
+ * Auxiliary Global protocol builder.
+ *
+ * Useful when composing protocols with [GlobalEnv.exec]
+ * Does not generate local APIs.
+ */
+public fun auxGlobalProtocol(protocolBuilder: GlobalEnv.() -> Unit): RootEnv =
+    globalProtocolInternal("Proto", protocolBuilder)
 
 /**
  * Global protocol builder.

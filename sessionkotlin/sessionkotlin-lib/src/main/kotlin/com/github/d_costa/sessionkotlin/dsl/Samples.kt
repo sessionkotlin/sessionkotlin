@@ -7,7 +7,7 @@ public class Samples {
         val b = SKRole("B")
         val s = SKRole("C")
 
-        globalProtocolInternal {
+        globalProtocol("ProtocolName") {
             send<String>(a, s)
             send<Long>(s, a)
             send<Long>(s, b)
@@ -20,7 +20,7 @@ public class Samples {
         val b = SKRole("B")
         val s = SKRole("C")
 
-        globalProtocolInternal {
+        globalProtocol("ProtocolName") {
             send(a, s, String::class.java)
             send(s, a, Long::class.java)
             send(s, b, Long::class.java)
@@ -32,7 +32,7 @@ public class Samples {
         val a = SKRole("A")
         val b = SKRole("B")
 
-        globalProtocolInternal {
+        globalProtocol("ProtocolName") {
             choice(b) {
                 branch("Ok") {
                     send<String>(b, a)
@@ -51,17 +51,17 @@ public class Samples {
 
         val z = SKRole("Z")
 
-        val case1 = globalProtocolInternal {
+        val case1 = auxGlobalProtocol {
             send<Int>(b, a)
             send<Int>(a, c)
         }
 
-        val case2 = globalProtocolInternal {
+        val case2 = auxGlobalProtocol {
             send<String>(b, a)
             send<String>(a, z)
         }
 
-        globalProtocolInternal {
+        globalProtocol("ProtocolName") {
             choice(b) {
 
                 branch("Case1") {
@@ -78,7 +78,7 @@ public class Samples {
         val server = SKRole("Server")
         val client = SKRole("Client")
 
-        globalProtocolInternal {
+        globalProtocol("ProtocolName") {
             val t = miu()
             choice(client) {
 
