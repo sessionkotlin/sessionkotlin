@@ -57,9 +57,6 @@ class EnabledExecTest {
 
     @Test
     fun `not enabled in exec after map`() {
-        val x = SKRole("X")
-        val y = SKRole("Y")
-
         fun subProtocol(x: SKRole, y: SKRole): GlobalProtocol = {
             send<Int>(x, y)
             send<Int>(y, x)
