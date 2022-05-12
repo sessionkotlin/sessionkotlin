@@ -20,6 +20,9 @@ jobs:
 
       - name: Tests
         run: cd sessionkotlin && gradle wrapper && ./gradlew clean build
+        env:
+          USERNAME: ${{ secrets.ACTIONS_ACTOR }}
+          TOKEN: ${{ secrets.ACTIONS_TOKEN }}
 
       - name: Checkout badges branch dedicated to storing badges only
         uses: actions/checkout@v3
@@ -30,6 +33,10 @@ jobs:
 
       - name: Generate report
         run: cd sessionkotlin && gradle wrapper && ./gradlew clean codeCoverageReport
+        env:
+          USERNAME: ${{ secrets.ACTIONS_ACTOR }}
+          TOKEN: ${{ secrets.ACTIONS_TOKEN }}
+
 
       - name: Generate Jacoco Badge
         id: jacoco
@@ -62,21 +69,20 @@ jobs:
           name: jacoco-report
           path: sessionkotlin/build/reports/jacoco/codeCoverageReport
 
-      - name: Prepare Build docs
-        uses: actions/checkout@v2
-        with:
-          persist-credentials: false
-      - name: Set up JDK
-        uses: actions/setup-java@v1
-        with:
-          java-version: 8
-      - name: Build docs
-        run: cd sessionkotlin && gradle wrapper && ./gradlew test dokkaHtmlMultiModule
-
+#      - name: Prepare Build docs
+#        uses: actions/checkout@v2
+#        with:
+#          persist-credentials: false
+#      - name: Set up JDK
+#        uses: actions/setup-java@v1
+#        with:
+#          java-version: 8
+#      - name: Build docs
+#        run: cd sessionkotlin && gradle wrapper && ./gradlew test dokkaHtmlMultiModule
 #      - name: Publish docs to Github Pages
 #        uses: JamesIves/github-pages-deploy-action@releases/v3
 #        with:
-#          ACCESS_TOKEN: ${{ secrets.DOCS_ACCESS_TOKEN }}
+#          ACCESS_TOKEN: ${{ secrets.ACTIONS_TOKEN }}
 #          BRANCH: gh-pages
 #          FOLDER: sessionkotlin/build/dokka/htmlMultiModule
 #          TARGET_FOLDER: dokkadocs
