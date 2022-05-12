@@ -1,5 +1,6 @@
 package dsl.unfinished
 
+import com.github.d_costa.sessionkotlin.dsl.GlobalProtocol
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.exception.UnfinishedRolesException
 import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
@@ -23,7 +24,7 @@ class UnfinishedExecTest {
 
     @Test
     fun `choice agnostic`() {
-        val aux = globalProtocolInternal {
+        val aux: GlobalProtocol = {
             send<String>(b, c)
             send<Int>(a, b)
             send<Long>(b, c)
@@ -31,10 +32,10 @@ class UnfinishedExecTest {
         val g = globalProtocolInternal {
             choice(a) {
                 branch("1") {
-                    exec(aux)
+                    aux()
                 }
                 branch("2") {
-                    exec(aux)
+                    aux()
                 }
                 // branches mergeable for 'b', even without being activated for the first send
             }
@@ -52,9 +53,9 @@ class UnfinishedExecTest {
 
     @Test
     fun `unfinished after map`() {
-        val subprotocol = globalProtocolInternal {
-            send<Int>(a, b)
-            send<Int>(a, c)
+        fun subProtocol(x: SKRole, y: SKRole): GlobalProtocol = {
+            send<Int>(x, y)
+            send<Int>(x, c)
         }
 
         assertFailsWith<UnfinishedRolesException> {
@@ -63,10 +64,10 @@ class UnfinishedExecTest {
                 send<Int>(a, c)
                 choice(a) {
                     branch("1") {
-                        exec(subprotocol, mapOf(a to b, b to a))
+                        subProtocol(b, a)()
                     }
                     branch("2") {
-                        exec(subprotocol)
+                        subProtocol(a, b)()
                     }
                 }
             }
@@ -75,8 +76,8 @@ class UnfinishedExecTest {
 
     @Test
     fun `unfinished after map 2`() {
-        val subprotocol = globalProtocolInternal {
-            send<Int>(a, b)
+        fun subProtocol(x: SKRole): GlobalProtocol = {
+            send<Int>(a, x)
             send<Int>(a, c)
         }
 
@@ -84,10 +85,10 @@ class UnfinishedExecTest {
             globalProtocolInternal {
                 choice(a) {
                     branch("1") {
-                        exec(subprotocol)
+                        subProtocol(b)()
                     }
                     branch("2") {
-                        exec(subprotocol, mapOf(b to c))
+                        subProtocol(c)()
                     }
                 }
             }

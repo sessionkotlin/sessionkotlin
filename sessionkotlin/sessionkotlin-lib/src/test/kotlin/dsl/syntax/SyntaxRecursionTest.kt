@@ -1,5 +1,6 @@
 package dsl.syntax
 
+import com.github.d_costa.sessionkotlin.dsl.GlobalProtocol
 import com.github.d_costa.sessionkotlin.dsl.RecursionTag
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.exception.TerminalInstructionException
@@ -133,13 +134,13 @@ class SyntaxRecursionTest {
     fun `recursion variable defined in subprotocol`() {
         lateinit var t: RecursionTag
 
-        val aux = globalProtocolInternal {
+        val aux: GlobalProtocol = {
             t = miu()
         }
 
         val g = globalProtocolInternal {
             send<Int>(a, b)
-            exec(aux)
+            aux()
             choice(b) {
                 branch("1") {
                     send<Int>(b, c)
@@ -277,7 +278,7 @@ class SyntaxRecursionTest {
 
     @Test
     fun `exec after goto`() {
-        val aux = globalProtocolInternal {
+        val aux: GlobalProtocol = {
             send<Int>(a, b)
         }
         assertFailsWith<TerminalInstructionException> {
@@ -286,7 +287,7 @@ class SyntaxRecursionTest {
                 send<Int>(a, b)
                 goto(t)
                 // goto is a terminal instruction
-                exec(aux)
+                aux()
             }
         }
     }

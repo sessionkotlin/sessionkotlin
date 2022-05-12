@@ -4,7 +4,6 @@ import com.github.d_costa.sessionkotlin.api.generateAPI
 import com.github.d_costa.sessionkotlin.dsl.exception.*
 import com.github.d_costa.sessionkotlin.dsl.types.*
 import com.github.d_costa.sessionkotlin.parser.RefinementParser
-import com.github.d_costa.sessionkotlin.util.getOrKey
 import com.github.d_costa.sessionkotlin.util.printlnIndent
 import org.sosy_lab.common.ShutdownManager
 import org.sosy_lab.common.configuration.Configuration
@@ -12,6 +11,8 @@ import org.sosy_lab.common.log.BasicLogManager
 import org.sosy_lab.common.log.LogManager
 import org.sosy_lab.java_smt.SolverContextFactory
 import org.sosy_lab.java_smt.SolverContextFactory.Solvers
+
+public typealias GlobalProtocol = GlobalEnv.() -> Unit
 
 @SessionKotlinDSL
 public sealed class GlobalEnv(
@@ -123,35 +124,7 @@ public sealed class GlobalEnv(
 
     /**
      *
-     * Inlines a global protocol.
-     *
-     * @param [protocolBuilder] protocol to inline
-     * @param [roleMapper] optional map to replace roles in the protocol
-     *
-     * @sample [com.github.d_costa.sessionkotlin.dsl.Samples.exec]
-     *
-     */
-    public open fun exec(protocolBuilder: GlobalEnv, roleMapper: Map<SKRole, SKRole> = emptyMap()) {
-        // We must merge the protocols
-        val cleanMap = roleMapper.filterKeys { protocolBuilder.roles.contains(it) }
-        instructions.addAll(protocolBuilder.instructions.map { it.mapped(cleanMap) })
-        roles.addAll(protocolBuilder.roles.map { cleanMap.getOrKey(it) })
-        recursionVariables.addAll(protocolBuilder.recursionVariables)
-
-        for (l in protocolBuilder.msgLabels) {
-            if (l in msgLabels) {
-                throw DuplicateMessageLabelException(l)
-            } else {
-                msgLabels.add(l)
-            }
-        }
-    }
-
-    /**
-     *
      * Recursion definition.
-     *
-     * @param label unique recursion label (optional)
      *
      * @sample [com.github.d_costa.sessionkotlin.dsl.Samples.goto]
      *
@@ -288,18 +261,7 @@ internal fun globalProtocolInternal(name: String = "Proto", protocolBuilder: Glo
 }
 
 /**
- * Auxiliary Global protocol builder.
- *
- * Useful when composing protocols with [GlobalEnv.exec]
- * Does not generate local APIs.
- */
-public fun auxGlobalProtocol(protocolBuilder: GlobalEnv.() -> Unit): RootEnv =
-    globalProtocolInternal("Proto", protocolBuilder)
-
-/**
- * Global protocol builder.
- *
- * Generates local APIs.
+ * Global protocol builder. Generates local APIs.
  */
 public fun globalProtocol(name: String, callbacks: Boolean = false, protocolBuilder: GlobalEnv.() -> Unit) {
     generateAPI(globalProtocolInternal(name, protocolBuilder), callbacks)

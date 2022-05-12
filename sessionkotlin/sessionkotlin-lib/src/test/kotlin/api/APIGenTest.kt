@@ -1,8 +1,8 @@
 package api
 
 import com.github.d_costa.sessionkotlin.api.exception.NoMessageLabelException
+import com.github.d_costa.sessionkotlin.dsl.GlobalProtocol
 import com.github.d_costa.sessionkotlin.dsl.SKRole
-import com.github.d_costa.sessionkotlin.dsl.auxGlobalProtocol
 import com.github.d_costa.sessionkotlin.dsl.globalProtocol
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFailsWith
@@ -95,23 +95,24 @@ class APIGenTest {
 
     @Test
     fun `test sub protocols`() {
-        val p1 = auxGlobalProtocol {
+        val p1: GlobalProtocol = {
             send<Long>(A, B, "val1", "val1 > 0")
         }
 
-        val p2 = auxGlobalProtocol {
+        val p2: GlobalProtocol = {
             send<Long>(A, B, "val2", "val2 <= 0")
         }
 
         globalProtocol("Test", callbacks = true) {
             send<Int>(A, B, "val0")
             val t = miu()
+
             choice(A) {
                 branch("1") {
-                    exec(p1)
+                    p1()
                 }
                 branch("2") {
-                    exec(p2)
+                    p2()
                     goto(t)
                 }
             }

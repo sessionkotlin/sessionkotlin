@@ -10,8 +10,8 @@ internal fun printlnIndent(indent: Int, message: Any?) {
 internal fun Map<SKRole, SKRole>.getOrKey(key: SKRole): SKRole = this.getOrDefault(key, key)
 
 internal fun String.asClassname() =
-    this.replace(" ", "")
-        .replaceFirstChar(Char::titlecase)
+    this.replace("\\s".toRegex(), "")
+        .capitalized()
 
 internal fun String.capitalized() =
     replaceFirstChar(Char::titlecase)

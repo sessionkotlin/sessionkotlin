@@ -49,26 +49,19 @@ public class Samples {
         val b = SKRole("B")
         val c = SKRole("C")
 
-        val z = SKRole("Z")
-
-        val case1 = auxGlobalProtocol {
-            send<Int>(b, a)
-            send<Int>(a, c)
-        }
-
-        val case2 = auxGlobalProtocol {
-            send<String>(b, a)
-            send<String>(a, z)
+        fun case(z: SKRole): GlobalProtocol = {
+            send<String>(a, b)
+            send<String>(a, c)
+            send<String>(z, a)
         }
 
         globalProtocol("ProtocolName") {
-            choice(b) {
-
+            choice(a) {
                 branch("Case1") {
-                    exec(case1)
+                    case(b)()
                 }
                 branch("Case2") {
-                    exec(case2, mapOf(z to c))
+                    case(c)()
                 }
             }
         }

@@ -1,5 +1,7 @@
 package dsl.syntax
 
+import com.github.d_costa.sessionkotlin.dsl.GlobalProtocol
+import com.github.d_costa.sessionkotlin.dsl.RecursionTag
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.exception.SendingToSelfException
 import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
@@ -22,13 +24,13 @@ class SyntaxExecTest {
 
     @Test
     fun `basic exec`() {
-        val x = globalProtocolInternal {
+        val x: GlobalProtocol = {
             send<Int>(b, c)
         }
 
         val g = globalProtocolInternal {
             send<Int>(a, b)
-            exec(x)
+            x()
         }
         val lA = LocalTypeSend(b, IntClass, LEnd)
         val lB = LocalTypeReceive(a, IntClass, LocalTypeSend(c, IntClass, LEnd))
@@ -40,13 +42,13 @@ class SyntaxExecTest {
 
     @Test
     fun `basic exec new roles`() {
-        val x = globalProtocolInternal {
+        val x: GlobalProtocol = {
             send<Int>(c, a)
         }
 
         val g = globalProtocolInternal {
             send<Int>(a, b)
-            exec(x)
+            x()
         }
         val lC = LocalTypeSend(a, IntClass, LEnd)
         assertEquals(g.project(c), lC)
@@ -55,12 +57,12 @@ class SyntaxExecTest {
     @Test
     fun `same role sending and receiving 2`() {
         assertFailsWith<SendingToSelfException> {
-            val x = globalProtocolInternal {
-                send<Int>(b, c)
+            fun aux(x: SKRole): GlobalProtocol = {
+                send<Int>(b, x)
             }
             globalProtocolInternal {
                 send<Int>(a, b)
-                exec(x, mapOf(c to b))
+                aux(b)()
             }
         }
     }
@@ -68,57 +70,35 @@ class SyntaxExecTest {
     @Test
     fun `same role sending and receiving 3`() {
         assertFailsWith<SendingToSelfException> {
-            val x = globalProtocolInternal {
-                choice(a) {
+            fun aux(x: SKRole): GlobalProtocol = {
+                choice(x) {
                     branch("1") {
-                        send<Int>(a, b)
+                        send<Int>(x, b)
                     }
                 }
             }
-
             globalProtocolInternal {
                 send<Int>(a, b)
-                exec(x, mapOf(a to b))
+                aux(b)()
             }
         }
-    }
-
-    @Test
-    fun `roles in map but not in protocol`() {
-        val subprotocol = globalProtocolInternal {
-            send<Int>(a, c)
-        }
-        val x = SKRole("X")
-
-        val g = globalProtocolInternal {
-            choice(a) {
-                branch("1") {
-                    exec(subprotocol)
-                }
-                branch("2") {
-                    // 'x' to 'c' is ignored
-                    exec(subprotocol, mapOf(x to c))
-                }
-            }
-        }
-        assert(!g.roles.contains(x))
     }
 
     @Test
     fun `reversed roles`() {
-        val subprotocol = globalProtocolInternal {
-            choice(a) {
+        fun subProtocol(x: SKRole, y: SKRole): GlobalProtocol = {
+            choice(x) {
                 branch("1") {
-                    send<String>(a, b)
-                    send<String>(b, a)
+                    send<String>(x, y)
+                    send<String>(y, x)
                 }
                 branch("2") {
-                    send<Unit>(a, b)
+                    send<Unit>(x, y)
                 }
             }
         }
         val g = globalProtocolInternal {
-            exec(subprotocol, mapOf(a to b, b to a)) // reverse roles
+            subProtocol(b, a)() // reverse roles
         }
 
         val lB = LocalTypeInternalChoice(
@@ -141,5 +121,31 @@ class SyntaxExecTest {
         )
         assertEquals(lA, g.project(a))
         assertEquals(lB, g.project(b))
+    }
+
+    @Test
+    fun `init test`() {
+        lateinit var t: RecursionTag
+        val aux: GlobalProtocol = {
+            t = miu()
+            send<Int>(a, b)
+        }
+        globalProtocolInternal {
+            aux()
+            goto(t)
+        }
+    }
+
+    @Test
+    fun `init test 2`() {
+        lateinit var t: RecursionTag
+        val aux: GlobalProtocol = {
+            send<Int>(a, b)
+            goto(t)
+        }
+        globalProtocolInternal {
+            t = miu()
+            aux()
+        }
     }
 }

@@ -1,5 +1,6 @@
 package dsl.examples
 
+import com.github.d_costa.sessionkotlin.dsl.GlobalProtocol
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
 import com.github.d_costa.sessionkotlin.dsl.types.*
@@ -18,7 +19,7 @@ class TwoBuyers {
         val b = SKRole("Client B")
         val seller = SKRole("Seller")
 
-        val aux = globalProtocolInternal {
+        val aux: GlobalProtocol = {
             choice(b) {
                 branch("Ok") {
                     send<Address>(b, seller)
@@ -40,7 +41,7 @@ class TwoBuyers {
 
             send<Int>(a, b)
 
-            exec(aux)
+            aux()
         }
 
         val lA = LocalTypeSend(

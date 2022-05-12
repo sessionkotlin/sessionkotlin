@@ -1,5 +1,6 @@
 package dsl.examples
 
+import com.github.d_costa.sessionkotlin.dsl.GlobalProtocol
 import com.github.d_costa.sessionkotlin.dsl.RecursionTag
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
@@ -21,17 +22,7 @@ class SMPT {
         lateinit var tMail3: RecursionTag
     }
 
-    @Test
-    fun main() {
-        val g = globalProtocolInternal {
-            send<Code220>(s, c)
-            exec(ehlo)
-        }
-        assertEquals(lS, g.project(s))
-        assertEquals(lC, g.project(c))
-    }
-
-    private val mail = globalProtocolInternal {
+    private val mail: GlobalProtocol = {
         tMail1 = miu()
 
         choice(c) {
@@ -82,7 +73,7 @@ class SMPT {
             }
         }
     }
-    private val auth = globalProtocolInternal {
+    private val auth: GlobalProtocol = {
         tAuth = miu()
         choice(c) {
             branch("Continue") {
@@ -90,7 +81,7 @@ class SMPT {
                 choice(s) {
                     branch("235") {
                         send<Code235>(s, c)
-                        exec(mail)
+                        mail()
                     }
                     branch("535") {
                         send<Code535>(s, c)
@@ -103,7 +94,7 @@ class SMPT {
             }
         }
     }
-    private val secureEhlo = globalProtocolInternal {
+    private val secureEhlo: GlobalProtocol = {
         choice(c) {
             branch("Continue") {
                 send<Ehlo>(c, s)
@@ -116,7 +107,7 @@ class SMPT {
                     }
                     branch("250d") {
                         send<Code250>(s, c)
-                        exec(auth)
+                        auth()
                     }
                 }
             }
@@ -125,20 +116,20 @@ class SMPT {
             }
         }
     }
-    private val startTLS = globalProtocolInternal {
+    private val startTLS: GlobalProtocol = {
         choice(c) {
             branch("Continue") {
                 send<Unit>(c, s)
                 send<Code220>(s, c)
                 // Do TLS handshake here
-                exec(secureEhlo)
+                secureEhlo()
             }
             branch("Quit") {
                 send<Unit>(c, s)
             }
         }
     }
-    private val ehlo = globalProtocolInternal {
+    private val ehlo: GlobalProtocol = {
         choice(c) {
             branch("Continue") {
                 send<Ehlo>(c, s)
@@ -151,7 +142,7 @@ class SMPT {
                     }
                     branch("250d") {
                         send<Code250>(s, c)
-                        exec(startTLS)
+                        startTLS()
                     }
                 }
             }
@@ -161,59 +152,68 @@ class SMPT {
         }
     }
 
-    // ********* LOCAL S *********//
-    private val lMailS = LocalTypeRecursionDefinition(
-        tMail1,
-        LocalTypeExternalChoice(
-            c,
-            mapOf(
-                "Mail" to LocalTypeReceive(
-                    c,
-                    Mail::class.java,
-                    LocalTypeInternalChoice(
-                        mapOf(
-                            "Quit" to LocalTypeSend(c, Code501::class.java, LocalTypeRecursion(tMail1), "Quit"),
-                            "250" to LocalTypeSend(
-                                c,
-                                Code250::class.java,
-                                LocalTypeRecursionDefinition(
-                                    tMail2,
-                                    LocalTypeExternalChoice(
-                                        c,
-                                        mapOf(
-                                            "Recipient" to LocalTypeReceive(
-                                                c,
-                                                Recipient::class.java,
-                                                LocalTypeSend(c, Code250::class.java, LocalTypeRecursion(tMail2))
-                                            ),
-                                            "Data" to LocalTypeReceive(
-                                                c,
-                                                Data::class.java,
-                                                LocalTypeSend(
+    @Test
+    fun main() {
+
+        val g = globalProtocolInternal {
+            send<Code220>(s, c)
+            ehlo()
+        }
+
+        // ********* LOCAL S *********//
+        val lMailS = LocalTypeRecursionDefinition(
+            tMail1,
+            LocalTypeExternalChoice(
+                c,
+                mapOf(
+                    "Mail" to LocalTypeReceive(
+                        c,
+                        Mail::class.java,
+                        LocalTypeInternalChoice(
+                            mapOf(
+                                "Quit" to LocalTypeSend(c, Code501::class.java, LocalTypeRecursion(tMail1), "Quit"),
+                                "250" to LocalTypeSend(
+                                    c,
+                                    Code250::class.java,
+                                    LocalTypeRecursionDefinition(
+                                        tMail2,
+                                        LocalTypeExternalChoice(
+                                            c,
+                                            mapOf(
+                                                "Recipient" to LocalTypeReceive(
                                                     c,
-                                                    Code354::class.java,
-                                                    LocalTypeRecursionDefinition(
-                                                        tMail3,
-                                                        LocalTypeExternalChoice(
-                                                            c,
-                                                            mapOf(
-                                                                "Data" to LocalTypeReceive(
-                                                                    c,
-                                                                    Dataline::class.java,
-                                                                    LocalTypeRecursion(tMail3)
-                                                                ),
-                                                                "Subject" to LocalTypeReceive(
-                                                                    c,
-                                                                    Subject::class.java,
-                                                                    LocalTypeRecursion(tMail3)
-                                                                ),
-                                                                "End" to LocalTypeReceive(
-                                                                    c,
-                                                                    EndOfData::class.java,
-                                                                    LocalTypeSend(
+                                                    Recipient::class.java,
+                                                    LocalTypeSend(c, Code250::class.java, LocalTypeRecursion(tMail2))
+                                                ),
+                                                "Data" to LocalTypeReceive(
+                                                    c,
+                                                    Data::class.java,
+                                                    LocalTypeSend(
+                                                        c,
+                                                        Code354::class.java,
+                                                        LocalTypeRecursionDefinition(
+                                                            tMail3,
+                                                            LocalTypeExternalChoice(
+                                                                c,
+                                                                mapOf(
+                                                                    "Data" to LocalTypeReceive(
                                                                         c,
-                                                                        Code250::class.java,
-                                                                        LocalTypeRecursion(tMail1)
+                                                                        Dataline::class.java,
+                                                                        LocalTypeRecursion(tMail3)
+                                                                    ),
+                                                                    "Subject" to LocalTypeReceive(
+                                                                        c,
+                                                                        Subject::class.java,
+                                                                        LocalTypeRecursion(tMail3)
+                                                                    ),
+                                                                    "End" to LocalTypeReceive(
+                                                                        c,
+                                                                        EndOfData::class.java,
+                                                                        LocalTypeSend(
+                                                                            c,
+                                                                            Code250::class.java,
+                                                                            LocalTypeRecursion(tMail1)
+                                                                        )
                                                                     )
                                                                 )
                                                             )
@@ -222,177 +222,196 @@ class SMPT {
                                                 )
                                             )
                                         )
-                                    )
-                                ),
-                                "250"
+                                    ),
+                                    "250"
+                                )
                             )
                         )
-                    )
-                ),
-                "Quit" to LocalTypeReceive(c, UnitClass, LocalTypeSend(c, Code221::class.java, LEnd))
+                    ),
+                    "Quit" to LocalTypeReceive(c, UnitClass, LocalTypeSend(c, Code221::class.java, LEnd))
+                )
             )
         )
-    )
-    private val lAuthS = LocalTypeRecursionDefinition(
-        tAuth,
-        LocalTypeExternalChoice(
+        val lAuthS = LocalTypeRecursionDefinition(
+            tAuth,
+            LocalTypeExternalChoice(
+                c,
+                mapOf(
+                    "Continue" to LocalTypeReceive(
+                        c,
+                        Auth::class.java,
+                        LocalTypeInternalChoice(
+                            mapOf(
+                                "235" to LocalTypeSend(c, Code235::class.java, lMailS, "235"),
+                                "535" to LocalTypeSend(c, Code535::class.java, LocalTypeRecursion(tAuth), "535")
+                            )
+                        )
+                    ),
+                    "Quit" to LocalTypeReceive(c, UnitClass, LEnd)
+                )
+            )
+        )
+        val lSecureEhloS = LocalTypeExternalChoice(
             c,
             mapOf(
                 "Continue" to LocalTypeReceive(
-                    c,
-                    Auth::class.java,
-                    LocalTypeInternalChoice(
-                        mapOf(
-                            "235" to LocalTypeSend(c, Code235::class.java, lMailS, "235"),
-                            "535" to LocalTypeSend(c, Code535::class.java, LocalTypeRecursion(tAuth), "535")
+                    c, Ehlo::class.java,
+                    LocalTypeRecursionDefinition(
+                        tsecureEhlo,
+                        LocalTypeInternalChoice(
+                            mapOf(
+                                "250" to LocalTypeSend(c, Code250d::class.java, LocalTypeRecursion(tsecureEhlo), "250"),
+                                "250d" to LocalTypeSend(c, Code250::class.java, lAuthS, "250d")
+                            )
                         )
                     )
                 ),
                 "Quit" to LocalTypeReceive(c, UnitClass, LEnd)
             )
         )
-    )
-    private val lSecureEhloS = LocalTypeExternalChoice(
-        c,
-        mapOf(
-            "Continue" to LocalTypeReceive(
-                c, Ehlo::class.java,
-                LocalTypeRecursionDefinition(
-                    tsecureEhlo,
-                    LocalTypeInternalChoice(
-                        mapOf(
-                            "250" to LocalTypeSend(c, Code250d::class.java, LocalTypeRecursion(tsecureEhlo), "250"),
-                            "250d" to LocalTypeSend(c, Code250::class.java, lAuthS, "250d")
-                        )
-                    )
-                )
-            ),
-            "Quit" to LocalTypeReceive(c, UnitClass, LEnd)
-        )
-    )
-    private val lStartTLSS = LocalTypeExternalChoice(
-        c,
-        mapOf(
-            "Continue" to LocalTypeReceive(
-                c,
-                UnitClass,
-                LocalTypeSend(
-                    c, Code220::class.java,
-                    lSecureEhloS
-                )
-            ),
-            "Quit" to LocalTypeReceive(c, UnitClass, LEnd)
-        )
-    )
-    private val lEhloS = LocalTypeExternalChoice(
-        c,
-        mapOf(
-            "Continue" to LocalTypeReceive(
-                c, Ehlo::class.java,
-                LocalTypeRecursionDefinition(
-                    tEhlo,
-                    LocalTypeInternalChoice(
-                        mapOf(
-                            "250" to LocalTypeSend(c, Code250d::class.java, LocalTypeRecursion(tEhlo), "250"),
-                            "250d" to LocalTypeSend(c, Code250::class.java, lStartTLSS, "250d")
-                        )
-                    )
-                )
-            ),
-            "Quit" to LocalTypeReceive(c, UnitClass, LEnd)
-        )
-    )
-
-    private val lS = LocalTypeSend(
-        c, Code220::class.java,
-        lEhloS
-    )
-
-    // ********* LOCAL C *********//
-    private val lMailC = LocalTypeRecursionDefinition(
-        tMail1,
-        LocalTypeInternalChoice(
+        val lStartTLSS = LocalTypeExternalChoice(
+            c,
             mapOf(
-                "Mail" to LocalTypeSend(
-                    s,
-                    Mail::class.java,
-                    LocalTypeExternalChoice(
+                "Continue" to LocalTypeReceive(
+                    c,
+                    UnitClass,
+                    LocalTypeSend(
+                        c, Code220::class.java,
+                        lSecureEhloS
+                    )
+                ),
+                "Quit" to LocalTypeReceive(c, UnitClass, LEnd)
+            )
+        )
+        val lEhloS = LocalTypeExternalChoice(
+            c,
+            mapOf(
+                "Continue" to LocalTypeReceive(
+                    c, Ehlo::class.java,
+                    LocalTypeRecursionDefinition(
+                        tEhlo,
+                        LocalTypeInternalChoice(
+                            mapOf(
+                                "250" to LocalTypeSend(c, Code250d::class.java, LocalTypeRecursion(tEhlo), "250"),
+                                "250d" to LocalTypeSend(c, Code250::class.java, lStartTLSS, "250d")
+                            )
+                        )
+                    )
+                ),
+                "Quit" to LocalTypeReceive(c, UnitClass, LEnd)
+            )
+        )
+
+        val lS = LocalTypeSend(
+            c, Code220::class.java,
+            lEhloS
+        )
+
+        // ********* LOCAL C *********//
+        val lMailC = LocalTypeRecursionDefinition(
+            tMail1,
+            LocalTypeInternalChoice(
+                mapOf(
+                    "Mail" to LocalTypeSend(
                         s,
-                        mapOf(
-                            "Quit" to LocalTypeReceive(s, Code501::class.java, LocalTypeRecursion(tMail1)),
-                            "250" to LocalTypeReceive(
-                                s,
-                                Code250::class.java,
-                                LocalTypeRecursionDefinition(
-                                    tMail2,
-                                    LocalTypeInternalChoice(
-                                        mapOf(
-                                            "Recipient" to LocalTypeSend(
-                                                s,
-                                                Recipient::class.java,
-                                                LocalTypeReceive(s, Code250::class.java, LocalTypeRecursion(tMail2)),
-                                                "Recipient"
-                                            ),
-                                            "Data" to LocalTypeSend(
-                                                s,
-                                                Data::class.java,
-                                                LocalTypeReceive(
+                        Mail::class.java,
+                        LocalTypeExternalChoice(
+                            s,
+                            mapOf(
+                                "Quit" to LocalTypeReceive(s, Code501::class.java, LocalTypeRecursion(tMail1)),
+                                "250" to LocalTypeReceive(
+                                    s,
+                                    Code250::class.java,
+                                    LocalTypeRecursionDefinition(
+                                        tMail2,
+                                        LocalTypeInternalChoice(
+                                            mapOf(
+                                                "Recipient" to LocalTypeSend(
                                                     s,
-                                                    Code354::class.java,
-                                                    LocalTypeRecursionDefinition(
-                                                        tMail3,
-                                                        LocalTypeInternalChoice(
-                                                            mapOf(
-                                                                "Data" to LocalTypeSend(
-                                                                    s,
-                                                                    Dataline::class.java,
-                                                                    LocalTypeRecursion(tMail3),
-                                                                    "Data"
-                                                                ),
-                                                                "Subject" to LocalTypeSend(
-                                                                    s,
-                                                                    Subject::class.java,
-                                                                    LocalTypeRecursion(tMail3),
-                                                                    "Subject"
-                                                                ),
-                                                                "End" to LocalTypeSend(
-                                                                    s, EndOfData::class.java,
-                                                                    LocalTypeReceive(
+                                                    Recipient::class.java,
+                                                    LocalTypeReceive(s, Code250::class.java, LocalTypeRecursion(tMail2)),
+                                                    "Recipient"
+                                                ),
+                                                "Data" to LocalTypeSend(
+                                                    s,
+                                                    Data::class.java,
+                                                    LocalTypeReceive(
+                                                        s,
+                                                        Code354::class.java,
+                                                        LocalTypeRecursionDefinition(
+                                                            tMail3,
+                                                            LocalTypeInternalChoice(
+                                                                mapOf(
+                                                                    "Data" to LocalTypeSend(
                                                                         s,
-                                                                        Code250::class.java,
-                                                                        LocalTypeRecursion(tMail1)
+                                                                        Dataline::class.java,
+                                                                        LocalTypeRecursion(tMail3),
+                                                                        "Data"
                                                                     ),
-                                                                    "End"
+                                                                    "Subject" to LocalTypeSend(
+                                                                        s,
+                                                                        Subject::class.java,
+                                                                        LocalTypeRecursion(tMail3),
+                                                                        "Subject"
+                                                                    ),
+                                                                    "End" to LocalTypeSend(
+                                                                        s, EndOfData::class.java,
+                                                                        LocalTypeReceive(
+                                                                            s,
+                                                                            Code250::class.java,
+                                                                            LocalTypeRecursion(tMail1)
+                                                                        ),
+                                                                        "End"
+                                                                    )
                                                                 )
                                                             )
                                                         )
-                                                    )
-                                                ),
-                                                "Data"
+                                                    ),
+                                                    "Data"
+                                                )
                                             )
                                         )
                                     )
                                 )
                             )
-                        )
+                        ),
+                        "Mail"
                     ),
-                    "Mail"
-                ),
-                "Quit" to LocalTypeSend(s, UnitClass, LocalTypeReceive(s, Code221::class.java, LEnd), "Quit")
+                    "Quit" to LocalTypeSend(s, UnitClass, LocalTypeReceive(s, Code221::class.java, LEnd), "Quit")
+                )
             )
         )
-    )
-    private val lAuthC = LocalTypeRecursionDefinition(
-        tAuth,
-        LocalTypeInternalChoice(
+        val lAuthC = LocalTypeRecursionDefinition(
+            tAuth,
+            LocalTypeInternalChoice(
+                mapOf(
+                    "Continue" to LocalTypeSend(
+                        s, Auth::class.java,
+                        LocalTypeExternalChoice(
+                            s,
+                            mapOf(
+                                "235" to LocalTypeReceive(s, Code235::class.java, lMailC),
+                                "535" to LocalTypeReceive(s, Code535::class.java, LocalTypeRecursion(tAuth))
+                            )
+                        ),
+                        "Continue"
+                    ),
+                    "Quit" to LocalTypeSend(s, UnitClass, LEnd, "Quit")
+                )
+            )
+        )
+        val lSecureEhloC = LocalTypeInternalChoice(
             mapOf(
                 "Continue" to LocalTypeSend(
-                    s, Auth::class.java,
-                    LocalTypeExternalChoice(
-                        s,
-                        mapOf(
-                            "235" to LocalTypeReceive(s, Code235::class.java, lMailC),
-                            "535" to LocalTypeReceive(s, Code535::class.java, LocalTypeRecursion(tAuth))
+                    s, Ehlo::class.java,
+                    LocalTypeRecursionDefinition(
+                        tsecureEhlo,
+                        LocalTypeExternalChoice(
+                            s,
+                            mapOf(
+                                "250" to LocalTypeReceive(s, Code250d::class.java, LocalTypeRecursion(tsecureEhlo)),
+                                "250d" to LocalTypeReceive(s, Code250::class.java, lAuthC)
+                            )
                         )
                     ),
                     "Continue"
@@ -400,63 +419,47 @@ class SMPT {
                 "Quit" to LocalTypeSend(s, UnitClass, LEnd, "Quit")
             )
         )
-    )
-    private val lSecureEhloC = LocalTypeInternalChoice(
-        mapOf(
-            "Continue" to LocalTypeSend(
-                s, Ehlo::class.java,
-                LocalTypeRecursionDefinition(
-                    tsecureEhlo,
-                    LocalTypeExternalChoice(
-                        s,
-                        mapOf(
-                            "250" to LocalTypeReceive(s, Code250d::class.java, LocalTypeRecursion(tsecureEhlo)),
-                            "250d" to LocalTypeReceive(s, Code250::class.java, lAuthC)
+        val lStartTLSC = LocalTypeInternalChoice(
+            mapOf(
+                "Continue" to LocalTypeSend(
+                    s,
+                    UnitClass,
+                    LocalTypeReceive(
+                        s, Code220::class.java,
+                        lSecureEhloC
+                    ),
+                    "Continue"
+                ),
+                "Quit" to LocalTypeSend(s, UnitClass, LEnd, "Quit")
+            )
+        )
+        val lEhloC = LocalTypeInternalChoice(
+            mapOf(
+                "Continue" to LocalTypeSend(
+                    s, Ehlo::class.java,
+                    LocalTypeRecursionDefinition(
+                        tEhlo,
+                        LocalTypeExternalChoice(
+                            s,
+                            mapOf(
+                                "250" to LocalTypeReceive(s, Code250d::class.java, LocalTypeRecursion(tEhlo)),
+                                "250d" to LocalTypeReceive(s, Code250::class.java, lStartTLSC)
+                            )
                         )
-                    )
+                    ),
+                    "Continue"
                 ),
-                "Continue"
-            ),
-            "Quit" to LocalTypeSend(s, UnitClass, LEnd, "Quit")
+                "Quit" to LocalTypeSend(s, UnitClass, LEnd, "Quit")
+            )
         )
-    )
-    private val lStartTLSC = LocalTypeInternalChoice(
-        mapOf(
-            "Continue" to LocalTypeSend(
-                s,
-                UnitClass,
-                LocalTypeReceive(
-                    s, Code220::class.java,
-                    lSecureEhloC
-                ),
-                "Continue"
-            ),
-            "Quit" to LocalTypeSend(s, UnitClass, LEnd, "Quit")
+        val lC = LocalTypeReceive(
+            s, Code220::class.java,
+            lEhloC
         )
-    )
-    private val lEhloC = LocalTypeInternalChoice(
-        mapOf(
-            "Continue" to LocalTypeSend(
-                s, Ehlo::class.java,
-                LocalTypeRecursionDefinition(
-                    tEhlo,
-                    LocalTypeExternalChoice(
-                        s,
-                        mapOf(
-                            "250" to LocalTypeReceive(s, Code250d::class.java, LocalTypeRecursion(tEhlo)),
-                            "250d" to LocalTypeReceive(s, Code250::class.java, lStartTLSC)
-                        )
-                    )
-                ),
-                "Continue"
-            ),
-            "Quit" to LocalTypeSend(s, UnitClass, LEnd, "Quit")
-        )
-    )
-    private val lC = LocalTypeReceive(
-        s, Code220::class.java,
-        lEhloC
-    )
+
+        assertEquals(lS, g.project(s))
+        assertEquals(lC, g.project(c))
+    }
 
     class Code220
     class Code221

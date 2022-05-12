@@ -1,5 +1,6 @@
 package dsl.refinements
 
+import com.github.d_costa.sessionkotlin.dsl.GlobalProtocol
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.exception.UnknownMessageLabelException
 import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
@@ -75,11 +76,11 @@ class VisibilityTest {
 
     @Test
     fun `label defined in exec`() {
-        val aux = globalProtocolInternal {
+        val aux: GlobalProtocol = {
             send<Int>(a, b, "val1")
         }
         globalProtocolInternal {
-            exec(aux)
+            aux()
             send<Int>(a, b, "val2", "val1 < val2")
         }
     }

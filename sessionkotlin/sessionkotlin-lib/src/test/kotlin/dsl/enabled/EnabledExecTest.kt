@@ -1,5 +1,6 @@
 package dsl.enabled
 
+import com.github.d_costa.sessionkotlin.dsl.GlobalProtocol
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.exception.RoleNotEnabledException
 import com.github.d_costa.sessionkotlin.dsl.exception.UnfinishedRolesException
@@ -17,7 +18,7 @@ class EnabledExecTest {
 
     @Test
     fun `exec not enabled`() {
-        val x = globalProtocolInternal {
+        val x: GlobalProtocol = {
             // 'c' not enabled
             send<Int>(c, b)
         }
@@ -26,7 +27,7 @@ class EnabledExecTest {
                 send<Int>(a, b)
                 choice(b) {
                     branch("Case1") {
-                        exec(x)
+                        x()
                     }
                     branch("Case2") {
                         send<Int>(b, c)
@@ -39,14 +40,14 @@ class EnabledExecTest {
 
     @Test
     fun `activated in exec`() {
-        val aux = globalProtocolInternal {
+        val aux: GlobalProtocol = {
             send<Int>(b, c)
         }
 
         globalProtocolInternal {
             choice(b) {
                 branch("Case1") {
-                    exec(aux)
+                    aux()
                     // 'c' was enabled inside aux
                     send<Int>(c, a)
                 }
@@ -58,19 +59,24 @@ class EnabledExecTest {
     fun `not enabled in exec after map`() {
         val x = SKRole("X")
         val y = SKRole("Y")
-        val subprotocol = globalProtocolInternal {
+
+        fun subProtocol(x: SKRole, y: SKRole): GlobalProtocol = {
             send<Int>(x, y)
             send<Int>(y, x)
         }
+
+        val branch1 = subProtocol(b, a)
+        val branch2 = subProtocol(a, b)
+
         assertFailsWith<RoleNotEnabledException> {
             globalProtocolInternal {
                 choice(a) {
                     branch("1") {
                         // b not enabled
-                        exec(subprotocol, mapOf(x to b, y to a))
+                        branch1()
                     }
                     branch("2") {
-                        exec(subprotocol, mapOf(x to a, y to b))
+                        branch2()
                     }
                 }
             }

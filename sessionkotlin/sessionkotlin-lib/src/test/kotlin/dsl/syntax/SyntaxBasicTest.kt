@@ -1,5 +1,6 @@
 package dsl.syntax
 
+import com.github.d_costa.sessionkotlin.dsl.GlobalProtocol
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.exception.*
 import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
@@ -294,25 +295,25 @@ class SyntaxBasicTest {
 
     @Test
     fun `dupe msg label exec 1`() {
-        val aux = globalProtocolInternal {
+        val aux: GlobalProtocol = {
             send<String>(a, b, "my_label")
         }
         assertFailsWith<DuplicateMessageLabelException> {
             globalProtocolInternal {
                 send<String>(a, b, "my_label")
-                exec(aux)
+                aux()
             }
         }
     }
 
     @Test
     fun `dupe msg label exec 2`() {
-        val aux = globalProtocolInternal {
+        val aux: GlobalProtocol = {
             send<String>(a, b, "my_label")
         }
         assertFailsWith<DuplicateMessageLabelException> {
             globalProtocolInternal {
-                exec(aux)
+                aux()
                 send<String>(a, b, "my_label")
             }
         }

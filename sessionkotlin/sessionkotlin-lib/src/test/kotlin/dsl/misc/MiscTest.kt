@@ -1,5 +1,6 @@
 package dsl.misc
 
+import com.github.d_costa.sessionkotlin.dsl.GlobalProtocol
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.exception.ProjectionTargetException
 import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
@@ -27,7 +28,7 @@ class MiscTest {
 
     @Test
     fun `test dump`() {
-        val case1 = globalProtocolInternal {
+        val case1: GlobalProtocol = {
             send<Int>(b, c)
             send<Int>(c, a)
         }
@@ -35,7 +36,7 @@ class MiscTest {
         globalProtocolInternal {
             choice(b) {
                 branch("1") {
-                    exec(case1)
+                    case1()
                     send<Int>(c, a)
                 }
             }
@@ -44,7 +45,7 @@ class MiscTest {
 
     @Test
     fun `test toStrings`() {
-        val case1 = globalProtocolInternal {
+        val case1: GlobalProtocol = {
             send<Int>(b, c)
             send<Int>(c, a)
         }
@@ -52,7 +53,7 @@ class MiscTest {
         val g = globalProtocolInternal {
             choice(b) {
                 branch("1") {
-                    exec(case1)
+                    case1()
                     send<Int>(c, a)
                 }
             }
