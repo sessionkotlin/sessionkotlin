@@ -39,7 +39,7 @@ globalProtocol("Protocol") {
 
 ### Templates
 
-#### Gradle
+#### Gradle (recommended)
 
 https://github.com/d-costa/sessionkotlin-template-gradle
 
