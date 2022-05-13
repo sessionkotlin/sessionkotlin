@@ -3,6 +3,7 @@ package com.github.d_costa.sessionkotlin.dsl.types
 import com.github.d_costa.sessionkotlin.dsl.exception.InvalidRefinementValueException
 import com.github.d_costa.sessionkotlin.parser.RefinementParser
 import com.github.d_costa.sessionkotlin.parser.symbols.*
+import com.github.d_costa.sessionkotlin.parser.symbols.values.StringValue
 import org.sosy_lab.java_smt.api.FormulaManager
 import org.sosy_lab.java_smt.api.SolverContext
 
@@ -60,7 +61,10 @@ internal class SatState(
 
     private fun Term.toSMT(): String =
         when (this) {
-            is Const -> "${v.value}"
+            is Const -> when (v) {
+                is StringValue -> "\"${v.value}\""
+                else -> "${v.value}"
+            }
             is Minus -> "(- ${t1.toSMT()} ${t2.toSMT()})"
             is Name -> id
             is Neg -> "(- ${t.toSMT()})"

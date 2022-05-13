@@ -36,6 +36,7 @@ internal val grammar: Grammar<BooleanExpression> = object : Grammar<BooleanExpre
     val term: Parser<Term> by
     (integer use { Const(text.toLong().toVal()) }) or
         (real use { Const(text.toDouble().toVal()) }) or
+        ((-singleQuote * singleQuote) map { Const("".toVal()) }) or
         ((-singleQuote * word * -singleQuote) use { Const(text.toVal()) }) or
         (word use { Name(text) }) or
         -lpar * parser(::expr) * -rpar or

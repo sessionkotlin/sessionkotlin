@@ -7,7 +7,7 @@ import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFailsWith
 
-class VisibilityTest {
+class RefinementTest {
 
     companion object {
         val a = SKRole("A")
@@ -116,6 +116,38 @@ class VisibilityTest {
         globalProtocolInternal {
             send<Int>(a, b, "val1")
             send<Int>(a, b, "val2", condition = "(-val1 + 1) > val2 + val1")
+        }
+    }
+
+    @Test
+    fun `test string literal equals`() {
+        globalProtocolInternal {
+            send<String>(a, b, "val1", "'something' == 'something'")
+            send<String>(a, b, "val2", condition = "val1 == 'something'")
+        }
+    }
+
+    @Test
+    fun `test string literal not equals`() {
+        globalProtocolInternal {
+            send<String>(a, b, "val1")
+            send<String>(a, b, "val2", condition = "val2 != 'something'")
+            send<String>(a, b, "val3", condition = "'else' != val3")
+        }
+    }
+
+    @Test
+    fun `test string literal not equals 2`() {
+        globalProtocolInternal {
+            send<String>(a, b, "val1")
+            send<String>(a, b, "val2", condition = "val1 != val2")
+        }
+    }
+
+    @Test
+    fun `test empty string literal`() {
+        globalProtocolInternal {
+            send<String>(a, b, "val1", "val1 != ''")
         }
     }
 }
