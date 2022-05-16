@@ -49,7 +49,7 @@
 - Para gerar a API de callbacks, as mensagens têm de ser anotadas com uma label, usada no nome do método.
 
 
-- API fluentes e de callbacks compatíveis (i.e. cada endpoint pode usar tanto uma como a outra).
+- API fluentes e de callbacks compatíveis (i.e. cada endpoint pode implementar uma diferente).
 
 
 - Templates de projetos gradle/maven
@@ -75,6 +75,7 @@
 
 - As expressões dos refinamentos permitem variáveis do tipo Byte, Short, Int, Long, Float, Double e String.
   Internamente Byte, Short e Int são promovidos para Long e Float para Double.
+
 
 - A visibilidade dos nomes é verificada durante a validação do protocolo global, validando a projeção
   para cada participante do protocolo.
