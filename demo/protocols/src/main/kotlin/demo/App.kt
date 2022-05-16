@@ -1,8 +1,8 @@
 package demo
 
+import com.github.d_costa.sessionkotlin.dsl.GlobalProtocol
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.globalProtocol
-import com.github.d_costa.sessionkotlin.dsl.auxGlobalProtocol
 
 
 fun main() {
@@ -10,7 +10,7 @@ fun main() {
     val b = SKRole("B")
     val c = SKRole("C")
 
-    val subProtocol = auxGlobalProtocol {
+    val subProtocol: GlobalProtocol = {
         send<Int>(a, b, "val1")
         send<Int>(b, c, "val2", "val2 > val1")
     }
@@ -19,7 +19,7 @@ fun main() {
         val t = miu()
         choice(a) {
             branch("1") {
-                exec(subProtocol)
+                subProtocol()
                 goto(t)
             }
             branch("2") {
