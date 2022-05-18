@@ -18,7 +18,7 @@ class Negotiation {
         lateinit var t: RecursionTag
 
         val g = globalProtocolInternal {
-            send<Int>(buyer, seller)
+            send<Int>(buyer, seller, "proposal")
             t = miu()
 
             choice(seller) {
@@ -30,7 +30,7 @@ class Negotiation {
                     send<Unit>(seller, buyer)
                 }
                 branch("Haggle1") {
-                    send<Int>(seller, buyer)
+                    send<Int>(seller, buyer, "counter", "counter > proposal")
                     choice(buyer) {
                         branch("Accept2") {
                             send<Unit>(buyer, seller)
@@ -40,7 +40,7 @@ class Negotiation {
                             send<Unit>(buyer, seller)
                         }
                         branch("Haggle2") {
-                            send<Int>(buyer, seller)
+                            send<Int>(buyer, seller, "proposal2", "proposal2 < counter")
                             goto(t)
                         }
                     }
@@ -66,13 +66,15 @@ class Negotiation {
                                         "Accept2"
                                     ),
                                     "Reject2" to LocalTypeSend(seller, UnitClass, LEnd, "Reject2"),
-                                    "Haggle2" to LocalTypeSend(seller, IntClass, LocalTypeRecursion(t), "Haggle2")
+                                    "Haggle2" to LocalTypeSend(seller, IntClass, LocalTypeRecursion(t), "Haggle2", "proposal2", "proposal2 < counter")
                                 )
-                            )
+                            ),
+                            "counter"
                         )
                     )
                 )
-            )
+            ),
+            msgLabel = "proposal"
         )
         val lSeller = LocalTypeReceive(
             buyer, IntClass,
@@ -92,14 +94,15 @@ class Negotiation {
                                         LocalTypeSend(buyer, UnitClass, LEnd)
                                     ),
                                     "Reject2" to LocalTypeReceive(buyer, UnitClass, LEnd),
-                                    "Haggle2" to LocalTypeReceive(buyer, IntClass, LocalTypeRecursion(t))
+                                    "Haggle2" to LocalTypeReceive(buyer, IntClass, LocalTypeRecursion(t), "proposal2")
                                 )
                             ),
-                            "Haggle1"
+                            "Haggle1", "counter", "counter > proposal"
                         )
                     )
                 )
-            )
+            ),
+            "proposal"
         )
         assertEquals(lBuyer, g.project(buyer))
         assertEquals(lSeller, g.project(seller))

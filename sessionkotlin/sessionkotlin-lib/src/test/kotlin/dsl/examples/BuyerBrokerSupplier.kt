@@ -26,9 +26,9 @@ class BuyerBrokerSupplier {
 
             choice(portal) {
                 branch("Approved") {
-                    send<Int>(portal, finance)
-                    send<Int>(finance, portal)
-                    send<Int>(portal, applicant)
+                    send<Int>(portal, finance, "askedAmount")
+                    send<Int>(finance, portal, "approvedAmount", "approvedAmount <= askedAmount")
+                    send<Int>(portal, applicant, "x", "x == approvedAmount")
                 }
                 branch("Denied") {
                     send<Unit>(portal, finance)
@@ -42,7 +42,7 @@ class BuyerBrokerSupplier {
             LocalTypeExternalChoice(
                 portal,
                 mapOf(
-                    "Approved" to LocalTypeReceive(portal, IntClass, LEnd),
+                    "Approved" to LocalTypeReceive(portal, IntClass, LEnd, "x"),
                     "Denied" to LocalTypeReceive(portal, UnitClass, LEnd)
                 )
             )
@@ -58,8 +58,8 @@ class BuyerBrokerSupplier {
                             "Approved" to LocalTypeSend(
                                 finance,
                                 IntClass,
-                                LocalTypeReceive(finance, IntClass, LocalTypeSend(applicant, IntClass, LEnd, "Approved")),
-                                "Approved"
+                                LocalTypeReceive(finance, IntClass, LocalTypeSend(applicant, IntClass, LEnd, "Approved", "x", "x == approvedAmount"), "approvedAmount"),
+                                "Approved", "askedAmount"
                             ),
                             "Denied" to LocalTypeSend(finance, UnitClass, LocalTypeSend(applicant, UnitClass, LEnd, "Denied"), "Denied")
                         )
@@ -74,7 +74,8 @@ class BuyerBrokerSupplier {
                 "Approved" to LocalTypeReceive(
                     portal,
                     IntClass,
-                    LocalTypeSend(portal, IntClass, LEnd)
+                    LocalTypeSend(portal, IntClass, LEnd, msgLabel = "approvedAmount", condition = "approvedAmount <= askedAmount"),
+                    "askedAmount"
                 ),
                 "Denied" to LocalTypeReceive(portal, UnitClass, LEnd)
             )

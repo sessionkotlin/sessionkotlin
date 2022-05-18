@@ -21,9 +21,9 @@ class Adder {
             t = miu()
             choice(c) {
                 branch("Continue") {
-                    send<Int>(c, s)
-                    send<Int>(c, s)
-                    send<Int>(s, c)
+                    send<Int>(c, s, "v1")
+                    send<Int>(c, s, "v2")
+                    send<Int>(s, c, "sum", "sum == v1 + v2")
                     goto(t)
                 }
                 branch("Quit") {
@@ -37,8 +37,8 @@ class Adder {
                 mapOf(
                     "Continue" to LocalTypeSend(
                         s, IntClass,
-                        LocalTypeSend(s, IntClass, LocalTypeReceive(s, IntClass, LocalTypeRecursion(t))),
-                        "Continue"
+                        LocalTypeSend(s, IntClass, LocalTypeReceive(s, IntClass, LocalTypeRecursion(t), msgLabel = "sum"), msgLabel = "v2"),
+                        "Continue", "v1"
                     ),
                     "Quit" to LocalTypeSend(s, UnitClass, LEnd, "Quit")
                 )
@@ -51,7 +51,8 @@ class Adder {
                 mapOf(
                     "Continue" to LocalTypeReceive(
                         c, IntClass,
-                        LocalTypeReceive(c, IntClass, LocalTypeSend(c, IntClass, LocalTypeRecursion(t)))
+                        LocalTypeReceive(c, IntClass, LocalTypeSend(c, IntClass, LocalTypeRecursion(t), msgLabel = "sum", condition = "sum == v1 + v2"), "v2"),
+                        "v1"
                     ),
                     "Quit" to LocalTypeReceive(c, UnitClass, LEnd)
                 )
