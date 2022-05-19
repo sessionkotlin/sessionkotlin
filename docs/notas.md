@@ -86,3 +86,7 @@
 
 - Como o Z3 não tem tem implementação disponível para a JVM é preciso mover as bibliotecas para uma pasta que o pacote
   java-smt está à espera. Para este efeito, foi criado um plugin gradle para automatizar o processo.
+
+
+- Como o tipo local da escolha interna não tem informação acerca de quem é que é preciso informar da informação,
+  o tipo local 'send' tem de ser assinalado quando corresponde a um ramo novo.

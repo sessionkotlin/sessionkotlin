@@ -4,6 +4,9 @@ import com.github.d_costa.sessionkotlin.parser.exception.IncompatibleTypesExcept
 
 public fun Double.toVal(): RealValue = RealValue(this)
 
+/**
+ * API for real values.
+ */
 public data class RealValue(override val value: Double) : RefinedValue(value) {
     override fun unaryMinus(): RealValue = RealValue(value.unaryMinus())
     override fun compareTo(other: RefinedValue): Int =

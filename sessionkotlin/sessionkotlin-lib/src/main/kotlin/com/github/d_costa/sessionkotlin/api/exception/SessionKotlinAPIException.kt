@@ -1,3 +1,6 @@
 package com.github.d_costa.sessionkotlin.api.exception
 
-public open class SessionKotlinAPIException(msg: String) : RuntimeException(msg)
+/**
+ * Base class for API exceptions.
+ */
+public abstract class SessionKotlinAPIException(msg: String) : RuntimeException(msg)

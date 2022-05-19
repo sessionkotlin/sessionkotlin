@@ -40,7 +40,7 @@ class StringRefinedValueTest {
     }
 
     @Test
-    fun `test float plus string`() {
+    fun `test double plus string`() {
         val ast = grammar.parseToEnd("a + 'v' < b")
         assertEquals(Lower(Plus(Name("a"), cString("v")), Name("b")), ast)
         assert(
@@ -54,7 +54,7 @@ class StringRefinedValueTest {
     }
 
     @Test
-    fun `test float plus non-string`() {
+    fun `test double plus non-string`() {
         val ast = grammar.parseToEnd("a + .3 == b")
         assertEquals(Eq(Plus(Name("a"), cDouble(.3)), Name("b")), ast)
         assert(

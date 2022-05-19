@@ -2,10 +2,10 @@ package com.github.d_costa.sessionkotlin.backend.endpoint
 
 import com.github.d_costa.sessionkotlin.api.SKGenRole
 import com.github.d_costa.sessionkotlin.backend.channel.SKChannel
-import com.github.d_costa.sessionkotlin.backend.channel.SKChannelEndpoint
+import com.github.d_costa.sessionkotlin.backend.channel.SKChannelConnection
 import com.github.d_costa.sessionkotlin.backend.message.ObjectFormatter
 import com.github.d_costa.sessionkotlin.backend.message.SKMessage
-import com.github.d_costa.sessionkotlin.backend.socket.SKSocketEndpoint
+import com.github.d_costa.sessionkotlin.backend.socket.SKSocketConnection
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
 import kotlinx.coroutines.Dispatchers
@@ -22,7 +22,7 @@ public open class SKMPEndpoint : AutoCloseable {
     /**
      * Maps generated roles to the individual endpoint that must be used for communication.
      */
-    private val connections = mutableMapOf<SKGenRole, SKEndpoint>()
+    private val connections = mutableMapOf<SKGenRole, SKConnection>()
 
     /**
      * Service that manages NIO selectors and selection threads.
@@ -54,6 +54,7 @@ public open class SKMPEndpoint : AutoCloseable {
      * and the other option was to make this method **public**.
      *
      */
+    @Suppress("MemberVisibilityCanBePrivate")
     protected suspend fun sendProtected(role: SKGenRole, msg: SKMessage) {
         val ch = connections[role] ?: throw NotConnectedException(role)
         ch.writeMsg(msg)
@@ -74,12 +75,13 @@ public open class SKMPEndpoint : AutoCloseable {
      * and the other option was to make this method **public**.
      *
      */
+    @Suppress("MemberVisibilityCanBePrivate")
     protected suspend fun receiveProtected(role: SKGenRole): SKMessage {
         try {
             val ch = connections[role] ?: throw NotConnectedException(role)
             return ch.readMsg()
         } catch (e: ClosedReceiveChannelException) {
-            throw ReadClosedChannelException(role)
+            throw ReadClosedConnectionException(role)
         }
     }
 
@@ -93,7 +95,7 @@ public open class SKMPEndpoint : AutoCloseable {
         val socket = aSocket(selectorManager)
             .tcp()
             .connect(hostname, port)
-        connections[role] = SKSocketEndpoint(socket, objectFormatter)
+        connections[role] = SKSocketConnection(socket, objectFormatter)
     }
 
     /**
@@ -108,7 +110,7 @@ public open class SKMPEndpoint : AutoCloseable {
             .bind(InetSocketAddress("localhost", port))
             .accept()
 
-        connections[role] = SKSocketEndpoint(socket, objectFormatter)
+        connections[role] = SKSocketConnection(socket, objectFormatter)
     }
 
     /**
@@ -118,6 +120,6 @@ public open class SKMPEndpoint : AutoCloseable {
         if (role in connections) {
             throw AlreadyConnectedException(role)
         }
-        connections[role] = SKChannelEndpoint(chan.getEndpoints(role))
+        connections[role] = SKChannelConnection(chan.getEndpoints(role))
     }
 }

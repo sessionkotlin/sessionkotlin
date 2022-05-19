@@ -4,6 +4,9 @@ import com.github.d_costa.sessionkotlin.parser.exception.IncompatibleTypesExcept
 
 public fun String.toVal(): StringValue = StringValue(this)
 
+/**
+ * API for string values.
+ */
 public data class StringValue(override val value: String) : RefinedValue(value) {
     override fun unaryMinus(): RefinedValue = throw NotImplementedError("String does not support operation: unaryMinus")
     override fun minus(other: RefinedValue): StringValue =

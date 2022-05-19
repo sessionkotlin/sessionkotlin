@@ -7,6 +7,9 @@ public fun Int.toVal(): IntegerValue = IntegerValue(this.toLong())
 public fun Short.toVal(): IntegerValue = IntegerValue(this.toLong())
 public fun Byte.toVal(): IntegerValue = IntegerValue(this.toLong())
 
+/**
+ * API for integer values.
+ */
 public data class IntegerValue(override val value: Long) : RefinedValue(value) {
     override fun unaryMinus(): IntegerValue = IntegerValue(value.unaryMinus())
     override fun compareTo(other: RefinedValue): Int =

@@ -32,7 +32,7 @@ public class SKChannel(private var role1: SKGenRole? = null, private var role2: 
                 doubleChan2
             }
             else -> {
-                throw BinaryEndpointsException(role)
+                throw BinaryConnectionException(role)
             }
         }
     }

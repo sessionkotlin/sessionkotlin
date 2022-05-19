@@ -2,6 +2,7 @@ package dsl.refinements
 
 import com.github.d_costa.sessionkotlin.dsl.GlobalProtocol
 import com.github.d_costa.sessionkotlin.dsl.SKRole
+import com.github.d_costa.sessionkotlin.dsl.exception.InvalidRefinementValueException
 import com.github.d_costa.sessionkotlin.dsl.exception.UnknownMessageLabelException
 import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
 import org.junit.jupiter.api.Test
@@ -148,6 +149,16 @@ class RefinementTest {
     fun `test empty string literal`() {
         globalProtocolInternal {
             send<String>(a, b, "val1", "val1 != ''")
+        }
+    }
+
+    @Test
+    fun `test invalid refinement value type`() {
+        assertFailsWith<InvalidRefinementValueException> {
+            class X
+            globalProtocolInternal {
+                send<X>(a, b, "val1")
+            }
         }
     }
 }

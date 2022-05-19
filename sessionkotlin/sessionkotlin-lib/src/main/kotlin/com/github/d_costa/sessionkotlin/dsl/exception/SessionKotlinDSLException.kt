@@ -1,3 +1,6 @@
 package com.github.d_costa.sessionkotlin.dsl.exception
 
-public open class SessionKotlinDSLException(msg: String) : RuntimeException(msg)
+/**
+ * Base class for DSL exceptions.
+ */
+public abstract class SessionKotlinDSLException(msg: String) : RuntimeException(msg)

@@ -19,13 +19,16 @@ public open class SKLinearEndpoint {
     }
 }
 
+/**
+ * Abstract linear endpoint that corresponds to an output.
+ */
 public abstract class SKOutputEndpoint(private val e: SKMPEndpoint) : SKLinearEndpoint() {
 
     /**
      * Sends a message with payload of type [T] to the target [role].
      *
-     * If [branch] is not null, sends a message with it,
-     * before sending the message with the [payload].
+     * If [branch] is not null, an [SKBranch] message is sent
+     * before the [payload] message.
      */
     protected suspend fun <T> send(role: SKGenRole, payload: T, branch: String? = null) {
         use()
@@ -37,6 +40,9 @@ public abstract class SKOutputEndpoint(private val e: SKMPEndpoint) : SKLinearEn
     }
 }
 
+/**
+ * Abstract linear endpoint that corresponds to an input.
+ */
 @Suppress("unchecked_cast")
 public abstract class SKInputEndpoint(private val e: SKMPEndpoint) : SKLinearEndpoint() {
 
@@ -51,17 +57,15 @@ public abstract class SKInputEndpoint(private val e: SKMPEndpoint) : SKLinearEnd
     }
 }
 
-// public abstract class SKInternalEndpoint(private val e: SKMPEndpoint) : SKEndpoint() {
-//    public suspend fun sendBranch(role: SKGenRole, label: String) {
-//        use()
-//        e.send(role, SKBranch(label))
-//    }
-// }
-
+/**
+ * Abstract linear endpoint that corresponds to an external choice.
+ */
 public abstract class SKExternalEndpoint(private val e: SKMPEndpoint) : SKLinearEndpoint() {
 
     /**
      * Receives a branch message from [role].
+     *
+     * @return the branch label
      */
     protected suspend fun receiveBranch(role: SKGenRole): String {
         use()

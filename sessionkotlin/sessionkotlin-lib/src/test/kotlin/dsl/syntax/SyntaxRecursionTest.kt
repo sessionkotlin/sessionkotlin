@@ -391,4 +391,23 @@ class SyntaxRecursionTest {
             }
         }
     }
+
+    @Test
+    fun `empty recursions`() {
+        globalProtocolInternal {
+            miu() // unused
+            send<Int>(a, b)
+            send<Int>(a, c)
+            val t1 = miu()
+            choice(a) {
+                branch("1") {
+                    send<Long>(a, b)
+                }
+                branch("2") {
+                    send<String>(a, b)
+                    goto(t1)
+                }
+            }
+        }
+    }
 }

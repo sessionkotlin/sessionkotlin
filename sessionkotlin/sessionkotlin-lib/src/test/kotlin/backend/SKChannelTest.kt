@@ -1,9 +1,9 @@
 package backend
 
 import com.github.d_costa.sessionkotlin.api.SKGenRole
-import com.github.d_costa.sessionkotlin.backend.channel.BinaryEndpointsException
+import com.github.d_costa.sessionkotlin.backend.channel.BinaryConnectionException
 import com.github.d_costa.sessionkotlin.backend.channel.SKChannel
-import com.github.d_costa.sessionkotlin.backend.endpoint.ReadClosedChannelException
+import com.github.d_costa.sessionkotlin.backend.endpoint.ReadClosedConnectionException
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -141,7 +141,7 @@ class SKChannelTest {
         chan1.getEndpoints(A)
         chan1.getEndpoints(B)
 
-        assertFailsWith<BinaryEndpointsException> {
+        assertFailsWith<BinaryConnectionException> {
             chan1.getEndpoints(C)
         }
     }
@@ -149,7 +149,7 @@ class SKChannelTest {
     @Test
     fun `test read from closed channel`() {
         val chan = SKChannel()
-        assertFailsWith<ReadClosedChannelException> {
+        assertFailsWith<ReadClosedConnectionException> {
             runBlocking {
                 launch {
                     SKMPEndpoint().use {

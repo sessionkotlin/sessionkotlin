@@ -3,6 +3,9 @@ package com.github.d_costa.sessionkotlin.dsl.types
 import com.github.d_costa.sessionkotlin.dsl.RecursionTag
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 
+/**
+ * State used when projecting global protocols.
+ */
 internal class ProjectionState(
     private val projectedRole: SKRole,
     /**
@@ -21,13 +24,13 @@ internal class ProjectionState(
     var activeRoles: MutableSet<SKRole> = mutableSetOf(),
 
     /**
-     * List of recursion tags that correspond to unguarded recursions.
+     * List of recursion tags that correspond to empty recursions.
      *
-     * Tag presence in this list after projection means that
-     * the correspondent recursion is unguarded.
+     * Tag presence in this list after projection means that the correspondent recursion is empty,
+     * i.e. the role does not send or receive after the recursion definition.
      *
      */
-    var unguardedRecursions: MutableSet<RecursionTag> = mutableSetOf()
+    var emptyRecursions: MutableSet<RecursionTag> = mutableSetOf(),
 ) {
 
     /**
@@ -52,6 +55,6 @@ internal class ProjectionState(
         activeRoles: MutableSet<SKRole> = this.activeRoles.toMutableSet(),
         branchLabel: String? = this.branchLabel,
         names: MutableSet<String> = this.names.toMutableSet(),
-        unguardedRecursions: MutableSet<RecursionTag> = this.unguardedRecursions,
-    ): ProjectionState = ProjectionState(projectedRole, names, branchLabel, activeRoles, unguardedRecursions)
+        emptyRecursions: MutableSet<RecursionTag> = this.emptyRecursions,
+    ): ProjectionState = ProjectionState(projectedRole, names, branchLabel, activeRoles, emptyRecursions)
 }

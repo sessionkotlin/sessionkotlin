@@ -1,6 +1,6 @@
 package com.github.d_costa.sessionkotlin.backend.socket
 
-import com.github.d_costa.sessionkotlin.backend.endpoint.SKEndpoint
+import com.github.d_costa.sessionkotlin.backend.endpoint.SKConnection
 import com.github.d_costa.sessionkotlin.backend.message.SKMessage
 import com.github.d_costa.sessionkotlin.backend.message.SKMessageFormatter
 import io.ktor.network.sockets.*
@@ -10,10 +10,10 @@ import java.nio.ByteBuffer
 /**
  * Endpoint implementation with sockets.
  */
-internal class SKSocketEndpoint(
+internal class SKSocketConnection(
     private var s: Socket,
     private val objFormatter: SKMessageFormatter,
-) : SKEndpoint {
+) : SKConnection {
 
     /**
      * As messages are often very small, we must flush after every send or else

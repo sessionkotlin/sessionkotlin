@@ -12,6 +12,9 @@ import org.sosy_lab.common.log.LogManager
 import org.sosy_lab.java_smt.SolverContextFactory
 import org.sosy_lab.java_smt.SolverContextFactory.Solvers
 
+/**
+ * Alias of a function type with [GlobalEnv] as receiver.
+ */
 public typealias GlobalProtocol = GlobalEnv.() -> Unit
 
 @SessionKotlinDSL
@@ -35,12 +38,8 @@ public sealed class GlobalEnv(
      *
      * @param [from] role that sends the message
      * @param [to] role that receives the message
-     * @param [label] message label. Required if using callbacks API.
-     *
-     * @throws [com.github.d_costa.sessionkotlin.dsl.exception.SendingToSelfException]
-     * if [from] and [to] are the same.
-     * @throws [DuplicateMessageLabelException] if [label] is not null and not unique in this protocol.
-     *
+     * @param [label] optional, but unique, message label. Required if using callbacks API.
+     * @param [condition] optional refinement expression
      *
      * @sample [com.github.d_costa.sessionkotlin.dsl.Samples.send]
      *
@@ -58,10 +57,9 @@ public sealed class GlobalEnv(
      *
      * @param [from] role that sends the message
      * @param [to] role that receives the message
-     *
-     * @throws [com.github.d_costa.sessionkotlin.dsl.exception.SendingToSelfException]
-     * if [from] and [to] are the same.
-     * @throws [DuplicateMessageLabelException] if [label] is not null and not unique in this protocol.
+     * @param [type] message type
+     * @param [label] optional, but unique, message label. Required if using callbacks API.
+     * @param [condition] optional refinement expression
      *
      * @sample [com.github.d_costa.sessionkotlin.dsl.Samples.sendTypes]
      *
@@ -97,7 +95,7 @@ public sealed class GlobalEnv(
      * Declares an internal choice at [at].
      *
      * @param [at] role that makes the decision
-     * @param [branches] block that defines the choices
+     * @param [branches] block that defines choice branches
      *
      *
      * @sample [com.github.d_costa.sessionkotlin.dsl.Samples.choice]
@@ -174,7 +172,7 @@ public sealed class GlobalEnv(
         val state = ProjectionState(role)
         return asGlobalType()
             .project(role, state)
-            .removeRecursions(state.unguardedRecursions)
+            .removeRecursions(state.emptyRecursions)
     }
 
     internal fun validate() {
@@ -238,7 +236,7 @@ private fun buildGlobalType(
 /**
  * Base environment
  */
-public class RootEnv(
+internal class RootEnv(
     internal val protocolName: String,
 ) : GlobalEnv(emptySet(), emptySet())
 

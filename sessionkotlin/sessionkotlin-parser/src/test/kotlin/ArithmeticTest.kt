@@ -106,14 +106,14 @@ class ArithmeticTest {
     }
 
     @Test
-    fun `test floating`() {
+    fun `test double`() {
         val ast = grammar.parseToEnd("a == 0.3")
         assertEquals(Eq(Name("a"), cDouble(.3)), ast)
         assert(ast.value(mapOf("a" to .3.toVal())))
     }
 
     @Test
-    fun `test floating 2`() {
+    fun `test double 2`() {
         val ast = grammar.parseToEnd("a == .3")
         assertEquals(Eq(Name("a"), cDouble(.3)), ast)
         assert(ast.value(mapOf("a" to .3.toVal())))
@@ -123,20 +123,6 @@ class ArithmeticTest {
     fun `test string plus int`() {
         val ast = grammar.parseToEnd("a + b == c")
         assert(ast.value(mapOf("a" to "ab".toVal(), "b" to 3.toVal(), "c" to "ab3".toVal())))
-    }
-
-    @Test
-    fun `test double`() {
-        val ast = grammar.parseToEnd("a == 3.0")
-        assertEquals(Eq(Name("a"), cDouble(3.0)), ast)
-        assert(ast.value(mapOf("a" to 3.0.toVal())))
-    }
-
-    @Test
-    fun `test double 2`() {
-        val ast = grammar.parseToEnd("a == .3")
-        assertEquals(Eq(Name("a"), cDouble(.3)), ast)
-        assert(ast.value(mapOf("a" to .3.toVal())))
     }
 
     @Test
@@ -223,21 +209,21 @@ class ArithmeticTest {
     }
 
     @Test
-    fun `test float sum 1`() {
+    fun `test double sum 1`() {
         val ast = grammar.parseToEnd("a + 3.0 == c")
         assertEquals(Eq(Plus(Name("a"), cDouble(3.0)), Name("c")), ast)
         assert(ast.value(mapOf("a" to 1.toVal(), "c" to 4L.toVal())))
     }
 
     @Test
-    fun `test float sum 2`() {
+    fun `test double sum 2`() {
         val ast = grammar.parseToEnd("a + 3.2 >= c")
         assertEquals(GreaterEq(Plus(Name("a"), cDouble(3.2)), Name("c")), ast)
         assert(ast.value(mapOf("a" to 1.toVal(), "c" to 4L.toVal())))
     }
 
     @Test
-    fun `test float sum 3`() {
+    fun `test double sum 3`() {
         val ast = grammar.parseToEnd("a + .2 <= c")
         assertEquals(LowerEq(Plus(Name("a"), cDouble(.2)), Name("c")), ast)
         assert(ast.value(mapOf("a" to 1.toVal(), "c" to 4L.toVal())))

@@ -1,7 +1,7 @@
 plugins {
     kotlin("jvm")
     application
-    id("com.github.d-costa.sessionkotlin.plugin") version "0.1"
+    id("com.github.d-costa.sessionkotlin.plugin") version "0.1.1"
 }
 
 dependencies {

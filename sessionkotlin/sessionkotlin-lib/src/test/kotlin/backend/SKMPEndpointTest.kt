@@ -1,3 +1,0 @@
-package backend
-
-class SKMPEndpointTest

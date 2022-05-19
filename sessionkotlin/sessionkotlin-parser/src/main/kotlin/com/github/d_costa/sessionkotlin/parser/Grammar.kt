@@ -4,12 +4,14 @@ import com.github.d_costa.sessionkotlin.parser.symbols.*
 import com.github.d_costa.sessionkotlin.parser.symbols.values.toVal
 import com.github.h0tk3y.betterParse.combinators.*
 import com.github.h0tk3y.betterParse.grammar.Grammar
-import com.github.h0tk3y.betterParse.grammar.parseToEnd
 import com.github.h0tk3y.betterParse.grammar.parser
 import com.github.h0tk3y.betterParse.lexer.literalToken
 import com.github.h0tk3y.betterParse.lexer.regexToken
 import com.github.h0tk3y.betterParse.parser.Parser
 
+/**
+ * The refinement grammar.
+ */
 internal val grammar: Grammar<BooleanExpression> = object : Grammar<BooleanExpression>() {
     val lTrue by literalToken("true")
     val lFalse by literalToken("false")
@@ -63,8 +65,4 @@ internal val grammar: Grammar<BooleanExpression> = object : Grammar<BooleanExpre
     val implication: Parser<BooleanExpression> by rightAssociative(orChain, impl) { l, _, r -> Impl(l, r) }
 
     override val rootParser: Parser<BooleanExpression> by implication
-}
-
-public object RefinementParser {
-    public fun parseToEnd(input: String): BooleanExpression = grammar.parseToEnd(input)
 }

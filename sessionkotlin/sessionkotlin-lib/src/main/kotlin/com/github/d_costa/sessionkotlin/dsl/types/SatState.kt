@@ -7,6 +7,9 @@ import com.github.d_costa.sessionkotlin.parser.symbols.values.StringValue
 import org.sosy_lab.java_smt.api.FormulaManager
 import org.sosy_lab.java_smt.api.SolverContext
 
+/**
+ * State used when testing global protocol satisfiability.
+ */
 internal class SatState(
     private val ctx: SolverContext,
 ) {

@@ -9,7 +9,16 @@ import com.github.d_costa.sessionkotlin.dsl.exception.UnknownMessageLabelExcepti
 import com.github.d_costa.sessionkotlin.parser.RefinementParser
 
 internal sealed interface GlobalType {
+    /**
+     * Projects the global type to a local view for [role].
+     */
     fun project(role: SKRole, state: ProjectionState = ProjectionState(role)): LocalType
+
+    /**
+     * Checks refinement satisfiability.
+     *
+     * @return whether the refinements are satisfiable.
+     */
     fun sat(state: SatState): Boolean
 }
 
@@ -24,7 +33,7 @@ internal class GlobalTypeSend(
     override fun project(role: SKRole, state: ProjectionState): LocalType =
         when (role) {
             from -> {
-                state.unguardedRecursions.removeAll { true }
+                state.emptyRecursions.removeAll { true }
                 if (!state.enabled()) {
                     state.sentWhileDisabled = true
                 }
@@ -53,7 +62,7 @@ internal class GlobalTypeSend(
                 }
             }
             to -> {
-                state.unguardedRecursions.removeAll { true }
+                state.emptyRecursions.removeAll { true }
 
                 if (!state.enabled()) {
                     state.enabledBy = from
@@ -100,7 +109,7 @@ internal class GlobalTypeChoice(
                 val newState = state.copy(
                     role,
                     names = state.names.toMutableSet(),
-                    unguardedRecursions = state.unguardedRecursions
+                    emptyRecursions = state.emptyRecursions
                 )
 
                 // Generate a new state for each branch, with the choice subject activated
@@ -108,7 +117,7 @@ internal class GlobalTypeChoice(
                 var localType =
                     LocalTypeExternalChoice(at, branches.mapValues { it.value.project(role, states.getValue(it.key)) })
 
-                localType = localType.removeRecursions(newState.unguardedRecursions)
+                localType = localType.removeRecursions(newState.emptyRecursions)
 
                 /**
                  * The roles that enabled the projected role
@@ -173,7 +182,7 @@ internal class GlobalTypeRecursionDefinition(
     private val cont: GlobalType,
 ) : GlobalType {
     override fun project(role: SKRole, state: ProjectionState): LocalType {
-        state.unguardedRecursions.add(tag)
+        state.emptyRecursions.add(tag)
         val projectedContinuation = cont.project(role, state)
         return if (!projectedContinuation.containsTag(tag)) {
             // Recursion tag is not used. Skip recursion definition.

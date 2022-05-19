@@ -16,7 +16,7 @@ public class ChoiceEnv(
     /**
      * Add a branch to a choice.
      *
-     * @param label the branch label
+     * @param label the **unique** branch label.
      * @param protocolBuilder protocol definition for the branch
      */
     public fun branch(label: String, protocolBuilder: GlobalEnv.() -> Unit) {

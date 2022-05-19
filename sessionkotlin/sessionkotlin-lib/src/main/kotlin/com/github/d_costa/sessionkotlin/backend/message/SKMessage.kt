@@ -8,7 +8,7 @@ import java.io.Serializable
 public sealed interface SKMessage : Serializable
 
 /**
- * A message that contains information about a branch [label].
+ * A message that contains information about a branch.
  */
 public data class SKBranch(val label: String) : SKMessage
 

@@ -1,8 +1,16 @@
 package com.github.d_costa.sessionkotlin.parser.util
 
-internal fun <V> Map<String, V>.getOrThrow(name: String, throwable: () -> Throwable): V {
+/**
+ * Gets the value corresponding to the [key]. If the key is not present, throw [throwable].
+ *
+ * ```
+ * val myMap: Map<String, Int> = mapOf("a" to 1, "b" to 2)
+ * val v: Int = myMap.getOrThrow("a") { MyCustomException() }
+ * ```
+ */
+internal fun <K, V> Map<K, V>.getOrThrow(key: K, throwable: () -> Throwable): V {
     try {
-        return getValue(name)
+        return getValue(key)
     } catch (e: NoSuchElementException) {
         throw throwable()
     }

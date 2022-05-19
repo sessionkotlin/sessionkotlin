@@ -1,11 +1,11 @@
 package backend
 
 import com.github.d_costa.sessionkotlin.api.SKGenRole
-import com.github.d_costa.sessionkotlin.backend.channel.BinaryEndpointsException
+import com.github.d_costa.sessionkotlin.backend.channel.BinaryConnectionException
 import com.github.d_costa.sessionkotlin.backend.channel.SKChannel
 import com.github.d_costa.sessionkotlin.backend.endpoint.AlreadyConnectedException
 import com.github.d_costa.sessionkotlin.backend.endpoint.NotConnectedException
-import com.github.d_costa.sessionkotlin.backend.endpoint.ReadClosedChannelException
+import com.github.d_costa.sessionkotlin.backend.endpoint.ReadClosedConnectionException
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
 import com.github.d_costa.sessionkotlin.backend.message.SKBranch
 import com.github.d_costa.sessionkotlin.backend.message.SKPayload
@@ -239,7 +239,7 @@ class SocketsTest {
     @Test
     fun `binary endpoint not found`() {
         val chan = SKChannel(A, B)
-        assertFailsWith<BinaryEndpointsException> {
+        assertFailsWith<BinaryConnectionException> {
             runBlocking {
                 launch {
                     SKMPEndpoint().use { endpoint ->
@@ -254,7 +254,7 @@ class SocketsTest {
     fun `test read from closed channel`() {
         val port = nextPort()
 
-        assertFailsWith<ReadClosedChannelException> {
+        assertFailsWith<ReadClosedConnectionException> {
             runBlocking {
                 launch {
                     SKMPEndpoint().use {
