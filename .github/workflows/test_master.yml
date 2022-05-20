@@ -21,8 +21,15 @@ jobs:
       - name: Add summary header
         run: echo "### Summary" >> $GITHUB_STEP_SUMMARY
 
+      - name: Checkout badges branch dedicated to storing badges only
+        uses: actions/checkout@v3
+        with:
+          ref: badges
+          path: badges
+
       - name: Tests
-        run: cd sessionkotlin && ./gradlew clean build
+        working-directory: sessionkotlin
+        run: ./gradlew clean build codeCoverageReport
         env:
           USERNAME: ${{ secrets.ACTIONS_ACTOR }}
           TOKEN: ${{ secrets.ACTIONS_TOKEN }}
@@ -30,19 +37,10 @@ jobs:
       - name: Log test summary
         if: always()
         run: |
+          echo "#### Tests" >> $GITHUB_STEP_SUMMARY
+          echo "| Module | Status | Passed | Failed | Skipped | Duration |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|--------|--------|--------|---------|----------|" >> $GITHUB_STEP_SUMMARY
           cat sessionkotlin/build/test_summary.md >> $GITHUB_STEP_SUMMARY
-
-      - name: Checkout badges branch dedicated to storing badges only
-        uses: actions/checkout@v3
-        with:
-          ref: badges
-          path: badges
-
-      - name: Generate report
-        run: cd sessionkotlin && ./gradlew clean codeCoverageReport
-        env:
-          USERNAME: ${{ secrets.ACTIONS_ACTOR }}
-          TOKEN: ${{ secrets.ACTIONS_TOKEN }}
 
       - name: Generate Jacoco Badge
         id: jacoco
@@ -85,7 +83,8 @@ jobs:
 #        with:
 #          java-version: 8
 #      - name: Build docs
-#        run: cd sessionkotlin && ./gradlew test dokkaHtmlMultiModule
+#        working-directory: sessionkotlin
+#        run: ./gradlew test dokkaHtmlMultiModule
 #      - name: Publish docs to Github Pages
 #        uses: JamesIves/github-pages-deploy-action@releases/v3
 #        with:
