@@ -48,6 +48,68 @@ allprojects {
     }
 }
 
+fun File.appendLine(line: String) {
+    appendText(line)
+    appendText("\n")
+}
+
+lateinit var testSummary: File
+
+subprojects {
+    afterEvaluate {
+        tasks.test {
+            testLogging {
+                lifecycle {
+                    showExceptions = true
+                    showCauses = true
+                    showStackTraces = false
+                    showStandardStreams = false
+                }
+                info.exceptionFormat = lifecycle.exceptionFormat
+            }
+
+            // See https://github.com/gradle/kotlin-dsl/issues/836
+            addTestListener(object : TestListener {
+                override fun beforeSuite(suite: TestDescriptor) {}
+                override fun beforeTest(testDescriptor: TestDescriptor) {}
+                override fun afterTest(testDescriptor: TestDescriptor, result: TestResult) {}
+
+                override fun afterSuite(suite: TestDescriptor, result: TestResult) {
+                    if (suite.parent == null) { // root suite
+                        val reg = "(?<=:).*(?=:)".toRegex()
+                        val module = reg.find(suite.displayName)?.value
+                        val success = result.successfulTestCount
+                        val failed = result.failedTestCount
+                        val skipped = result.skippedTestCount
+
+                        val elapsed = (result.endTime - result.startTime)
+                        val sec = (elapsed / 1000) % 60
+                        val min = (elapsed / (1000 * 60)) % 60
+                        val duration = "${min}min ${sec}s"
+
+                        testSummary.appendLine("| $module | ${result.resultType} | $success | $failed | $skipped | $duration |")
+                    }
+                }
+            })
+        }
+    }
+}
+
+tasks.register("finalizeTests") {
+    project.subprojects.forEach { dependsOn("${it.name}:test") }
+}
+
+tasks.test {
+    val dir = File(buildDir.path)
+    if (!dir.exists()) {
+        dir.mkdir()
+    }
+    testSummary = File(dir, "test_summary.md")
+    testSummary.writeText("") // truncate file
+
+    finalizedBy("finalizeTests")
+}
+
 // Gather code coverage from multiple subprojects
 // https://docs.gradle.org/6.5.1/samples/sample_jvm_multi_project_with_code_coverage.html
 tasks.register<JacocoReport>("codeCoverageReport") {

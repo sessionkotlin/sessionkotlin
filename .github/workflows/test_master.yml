@@ -17,12 +17,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        
+      - name: Add summary header
+        run: echo "### Summary" >> $GITHUB_STEP_SUMMARY
 
       - name: Tests
-        run: cd sessionkotlin && gradle wrapper && ./gradlew clean build
+        run: cd sessionkotlin && ./gradlew clean build
         env:
           USERNAME: ${{ secrets.ACTIONS_ACTOR }}
           TOKEN: ${{ secrets.ACTIONS_TOKEN }}
+
+      - name: Log test summary
+        if: always()
+        run: |
+          cat sessionkotlin/build/test_summary.md >> $GITHUB_STEP_SUMMARY
 
       - name: Checkout badges branch dedicated to storing badges only
         uses: actions/checkout@v3
@@ -30,13 +38,11 @@ jobs:
           ref: badges
           path: badges
 
-
       - name: Generate report
-        run: cd sessionkotlin && gradle wrapper && ./gradlew clean codeCoverageReport
+        run: cd sessionkotlin && ./gradlew clean codeCoverageReport
         env:
           USERNAME: ${{ secrets.ACTIONS_ACTOR }}
           TOKEN: ${{ secrets.ACTIONS_TOKEN }}
-
 
       - name: Generate Jacoco Badge
         id: jacoco
@@ -48,8 +54,9 @@ jobs:
 
       - name: Log coverage percentage
         run: |
-          echo "coverage = ${{ steps.jacoco.outputs.coverage }}"
-          echo "branches = ${{ steps.jacoco.outputs.branches }}"
+          echo "#### Jacoco report" >> $GITHUB_STEP_SUMMARY
+          echo "- Coverage: ${{ steps.jacoco.outputs.coverage }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Branch coverage: ${{ steps.jacoco.outputs.branches }}" >> $GITHUB_STEP_SUMMARY
 
       - name: Commit and push
         if: ${{ github.event_name != 'pull_request' }}
@@ -78,7 +85,7 @@ jobs:
 #        with:
 #          java-version: 8
 #      - name: Build docs
-#        run: cd sessionkotlin && gradle wrapper && ./gradlew test dokkaHtmlMultiModule
+#        run: cd sessionkotlin && ./gradlew test dokkaHtmlMultiModule
 #      - name: Publish docs to Github Pages
 #        uses: JamesIves/github-pages-deploy-action@releases/v3
 #        with:
