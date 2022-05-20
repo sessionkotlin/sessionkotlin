@@ -24,14 +24,8 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
 
-    - name: Build with Gradle
-      run: cd sessionkotlin && gradle wrapper && ./gradlew clean build
-      env:
-        USERNAME: ${{ secrets.ACTIONS_ACTOR }}
-        TOKEN: ${{ secrets.ACTIONS_TOKEN }}
-
-    - name: Publish to GitHub Packages
-      run: cd sessionkotlin && gradle wrapper && ./gradlew publish
+    - name: Build and publish
+      run: cd sessionkotlin && ./gradlew clean build publish
       env:
         USERNAME: ${{ secrets.ACTIONS_ACTOR }}
         TOKEN: ${{ secrets.ACTIONS_TOKEN }}

@@ -10,23 +10,35 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Add summary header
+        run: echo "### Summary" >> $GITHUB_STEP_SUMMARY
+
       - name: Tests
-        run: cd sessionkotlin && gradle wrapper && ./gradlew clean build
+        working-directory: sessionkotlin
+        run: ./gradlew clean build codeCoverageReport
         env:
           USERNAME: ${{ secrets.ACTIONS_ACTOR }}
           TOKEN: ${{ secrets.ACTIONS_TOKEN }}
 
-      - name: Checkout badges branch dedicated to storing badges only
-        uses: actions/checkout@v3
+      - name: Log test summary
+        if: always()
+        run: |
+          echo "#### Tests" >> $GITHUB_STEP_SUMMARY
+          echo "| Module | Status | Passed | Failed | Skipped | Duration |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|--------|--------|--------|---------|----------|" >> $GITHUB_STEP_SUMMARY
+          cat sessionkotlin/build/test_summary.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Generate JaCoCo Badge
+        id: jacoco
+        uses: cicirello/jacoco-badge-generator@v2
         with:
-          ref: badges
-          path: badges
+          jacoco-csv-file: sessionkotlin/build/reports/jacoco/codeCoverageReport/codeCoverageReport.csv
 
-      - name: Generate report
-        run: cd sessionkotlin && gradle wrapper && ./gradlew clean build codeCoverageReport
-        env:
-          USERNAME: ${{ secrets.ACTIONS_ACTOR }}
-          TOKEN: ${{ secrets.ACTIONS_TOKEN }}
+      - name: Log coverage percentage
+        run: |
+          echo "#### Jacoco report" >> $GITHUB_STEP_SUMMARY
+          echo "- Coverage: ${{ steps.jacoco.outputs.coverage }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Branch coverage: ${{ steps.jacoco.outputs.branches }}" >> $GITHUB_STEP_SUMMARY
 
       - name: Upload Jacoco coverage report
         uses: actions/upload-artifact@v2
