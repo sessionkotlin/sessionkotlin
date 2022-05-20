@@ -1,3 +1,4 @@
+
 pluginManagement {
     // Versions are declared in 'gradle.properties' file
     val kotlinVersion: String by settings
@@ -36,3 +37,5 @@ rootProject.name = "sessionkotlin"
 include(":sessionkotlin-parser")
 include(":sessionkotlin-lib")
 include(":sessionkotlin-plugin")
+include(":test-protocol")
+include(":test-app")

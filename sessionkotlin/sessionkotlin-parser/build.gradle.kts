@@ -2,8 +2,8 @@ plugins {
     kotlin("jvm")
     `java-library`
     jacoco // Code coverage`
-    `maven-publish`
     id("org.jetbrains.dokka") //  Documentation
+    `maven-publish`
 }
 
 val betterParseVersion: String by project

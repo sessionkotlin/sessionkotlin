@@ -4,7 +4,7 @@ plugins {
     jacoco // Code coverage`
     id("org.jetbrains.dokka") //  Documentation
     `maven-publish`
-    id("com.github.d-costa.sessionkotlin.plugin") version "0.1"
+    id("com.github.d-costa.sessionkotlin.plugin")
 }
 
 val kotlinPoetVersion: String by project

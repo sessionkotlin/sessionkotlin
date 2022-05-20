@@ -21,7 +21,7 @@ internal data class Send(
     internal val to: SKRole,
     internal val type: Class<*>,
     internal val msgLabel: String?,
-    internal val condition: String
+    internal val condition: String,
 ) : Instruction {
 
     init {
@@ -31,7 +31,7 @@ internal data class Send(
     }
 
     override fun dump(indent: Int) {
-        printlnIndent(indent, "Send($msgLabel)<${type.simpleName}>[$from -> $to]")
+        printlnIndent(indent, "Send(${msgLabel ?: ""})<${type.simpleName}>[$from -> $to]")
     }
 
     override fun mapped(mapping: Map<SKRole, SKRole>): Instruction =

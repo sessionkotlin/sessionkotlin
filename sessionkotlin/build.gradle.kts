@@ -15,6 +15,7 @@ plugins {
     id("org.jetbrains.dokka") // Documentation
     `maven-publish`
     jacoco
+    id("com.github.d-costa.sessionkotlin.plugin") version "0.1.1" apply false
 }
 
 allprojects {
@@ -57,40 +58,46 @@ lateinit var testSummary: File
 
 subprojects {
     afterEvaluate {
-        tasks.test {
-            testLogging {
-                lifecycle {
-                    showExceptions = true
-                    showCauses = true
-                    showStackTraces = false
-                    showStandardStreams = false
-                }
-                info.exceptionFormat = lifecycle.exceptionFormat
-            }
-
-            // See https://github.com/gradle/kotlin-dsl/issues/836
-            addTestListener(object : TestListener {
-                override fun beforeSuite(suite: TestDescriptor) {}
-                override fun beforeTest(testDescriptor: TestDescriptor) {}
-                override fun afterTest(testDescriptor: TestDescriptor, result: TestResult) {}
-
-                override fun afterSuite(suite: TestDescriptor, result: TestResult) {
-                    if (suite.parent == null) { // root suite
-                        val reg = "(?<=:).*(?=:)".toRegex()
-                        val module = reg.find(suite.displayName)?.value
-                        val success = result.successfulTestCount
-                        val failed = result.failedTestCount
-                        val skipped = result.skippedTestCount
-
-                        val elapsed = (result.endTime - result.startTime)
-                        val sec = (elapsed / 1000) % 60
-                        val min = (elapsed / (1000 * 60)) % 60
-                        val duration = "${min}min ${sec}s"
-
-                        testSummary.appendLine("| $module | ${result.resultType} | $success | $failed | $skipped | $duration |")
+        if (tasks.test.isPresent) {
+            tasks.test {
+                testLogging {
+                    lifecycle {
+                        showExceptions = true
+                        showCauses = true
+                        showStackTraces = false
+                        showStandardStreams = false
                     }
+                    info.exceptionFormat = lifecycle.exceptionFormat
                 }
-            })
+
+                // See https://github.com/gradle/kotlin-dsl/issues/836
+                addTestListener(object : TestListener {
+                    override fun beforeSuite(suite: TestDescriptor) {}
+                    override fun beforeTest(testDescriptor: TestDescriptor) {}
+                    override fun afterTest(testDescriptor: TestDescriptor, result: TestResult) {}
+
+                    override fun afterSuite(suite: TestDescriptor, result: TestResult) {
+                        if (suite.parent == null) { // root suite
+                            val reg = "(?<=:).*(?=:)".toRegex()
+                            val module = reg.find(suite.displayName)?.value
+                            val success = result.successfulTestCount
+                            val failed = result.failedTestCount
+                            val skipped = result.skippedTestCount
+
+                            val elapsed = (result.endTime - result.startTime)
+                            val sec = (elapsed / 1000) % 60
+                            val min = (elapsed / (1000 * 60)) % 60
+                            val duration = "${min}min ${sec}s"
+
+                            try {
+                                testSummary.appendLine("| $module | ${result.resultType} | $success | $failed | $skipped | $duration |")
+                            } catch (e: UninitializedPropertyAccessException) {
+                                // skip
+                            }
+                        }
+                    }
+                })
+            }
         }
     }
 }
