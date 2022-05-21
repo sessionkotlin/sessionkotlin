@@ -6,6 +6,7 @@ plugins {
     `java-gradle-plugin`
     `maven-publish`
     jacoco
+    id("org.jlleitschuh.gradle.ktlint")
 }
 
 repositories {

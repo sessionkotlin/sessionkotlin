@@ -19,8 +19,6 @@ plugins {
 }
 
 allprojects {
-    apply(plugin = "org.jlleitschuh.gradle.ktlint") // Linter
-
     repositories {
         mavenCentral()
         maven {
@@ -39,13 +37,6 @@ allprojects {
                 password = props.getProperty("TOKEN") ?: System.getenv("TOKEN")
             }
         }
-    }
-
-    ktlint {
-        verbose.set(true)
-        outputToConsole.set(true)
-        coloredOutput.set(true)
-        disabledRules.set(setOf("no-wildcard-imports"))
     }
 }
 
@@ -142,4 +133,8 @@ tasks.register<JacocoReport>("codeCoverageReport") {
         csv.required.set(true)
         html.required.set(true)
     }
+}
+
+ktlint {
+    disabledRules.set(setOf("no-wildcard-imports"))
 }

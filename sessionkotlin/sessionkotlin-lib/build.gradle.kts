@@ -5,6 +5,7 @@ plugins {
     id("org.jetbrains.dokka") //  Documentation
     `maven-publish`
     id("com.github.d-costa.sessionkotlin.plugin")
+    id("org.jlleitschuh.gradle.ktlint")
 }
 
 val kotlinPoetVersion: String by project
@@ -77,4 +78,8 @@ tasks.dokkaHtml {
             )
         }
     }
+}
+
+ktlint {
+    disabledRules.set(setOf("no-wildcard-imports"))
 }

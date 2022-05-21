@@ -4,6 +4,7 @@ plugins {
     jacoco // Code coverage`
     id("org.jetbrains.dokka") //  Documentation
     `maven-publish`
+    id("org.jlleitschuh.gradle.ktlint")
 }
 
 val betterParseVersion: String by project
@@ -67,4 +68,8 @@ tasks.dokkaHtml {
             )
         }
     }
+}
+
+ktlint {
+    disabledRules.set(setOf("no-wildcard-imports"))
 }
