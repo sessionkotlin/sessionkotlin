@@ -5,12 +5,18 @@ For a demo, run:
 1. Clean:
 
 ```
-./gradlew protocols:clean app:clean
+./gradlew clean
 ```
 
 2. Generate the API and run the main app:
 
 ```
-./gradlew protocols:run
-./gradlew app:run
+./gradlew app-fluent:run
 ```
+
+or
+
+```
+./gradlew app-callbacks:run
+```
+

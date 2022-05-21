@@ -8,5 +8,5 @@ pluginManagement {
 
 rootProject.name = "demo"
 include("protocols")
-include("app_fluent")
-include("app_callbacks")
+include("app-fluent")
+include("app-callbacks")

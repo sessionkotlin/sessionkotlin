@@ -10,9 +10,9 @@ import SimpleCallbacksC
 import SimpleCallbacksClassA
 import SimpleCallbacksClassB
 import SimpleCallbacksClassC
+import com.github.d_costa.sessionkotlin.backend.channel.SKChannel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import com.github.d_costa.sessionkotlin.backend.channel.SKChannel
 
 
 fun main() {

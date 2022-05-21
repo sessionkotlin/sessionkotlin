@@ -12,12 +12,11 @@ import SimpleC1
 import SimpleC1_Interface
 import SimpleC2_1
 import SimpleC4_2
-
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import com.github.d_costa.sessionkotlin.backend.SKBuffer
 import com.github.d_costa.sessionkotlin.backend.channel.SKChannel
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 fun main() {
     val chanAB = SKChannel(A, B)
