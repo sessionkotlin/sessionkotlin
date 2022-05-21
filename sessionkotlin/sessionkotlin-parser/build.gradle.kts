@@ -2,8 +2,9 @@ plugins {
     kotlin("jvm")
     `java-library`
     jacoco // Code coverage`
-    `maven-publish`
     id("org.jetbrains.dokka") //  Documentation
+    `maven-publish`
+    id("org.jlleitschuh.gradle.ktlint")
 }
 
 val betterParseVersion: String by project
@@ -67,4 +68,8 @@ tasks.dokkaHtml {
             )
         }
     }
+}
+
+ktlint {
+    disabledRules.set(setOf("no-wildcard-imports"))
 }

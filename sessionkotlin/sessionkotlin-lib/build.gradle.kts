@@ -4,7 +4,8 @@ plugins {
     jacoco // Code coverage`
     id("org.jetbrains.dokka") //  Documentation
     `maven-publish`
-    id("com.github.d-costa.sessionkotlin.plugin") version "0.1"
+    id("com.github.d-costa.sessionkotlin.plugin")
+    id("org.jlleitschuh.gradle.ktlint")
 }
 
 val kotlinPoetVersion: String by project
@@ -77,4 +78,8 @@ tasks.dokkaHtml {
             )
         }
     }
+}
+
+ktlint {
+    disabledRules.set(setOf("no-wildcard-imports"))
 }
