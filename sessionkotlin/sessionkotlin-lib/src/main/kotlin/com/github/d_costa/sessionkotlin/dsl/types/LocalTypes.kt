@@ -101,7 +101,7 @@ internal fun LocalType.asString(): String =
         is LocalTypeExternalChoice -> "&$to ${branches.map { (k, v) -> "$k: ${v.asString()}" }}"
         is LocalTypeInternalChoice -> "+ ${branches.map { (k, v) -> "$k: ${v.asString()}" }}"
         is LocalTypeRecursion -> "$tag"
-        is LocalTypeRecursionDefinition -> "miu_$tag . ${cont.asString()}"
+        is LocalTypeRecursionDefinition -> "mu_$tag . ${cont.asString()}"
         LocalTypeEnd -> "end"
     }
 
@@ -120,6 +120,6 @@ internal fun LocalType.asFormattedString(i: Int = 0): String =
         branches.map { (k, v) -> "$k: ${v.asFormattedString(i + 1)}" }.joinToString("\n${tabs(i)}")
         }"
         is LocalTypeRecursion -> "$tag"
-        is LocalTypeRecursionDefinition -> "miu_$tag . ${cont.asFormattedString(i)}"
+        is LocalTypeRecursionDefinition -> "mu_$tag . ${cont.asFormattedString(i)}"
         LocalTypeEnd -> "end"
     }

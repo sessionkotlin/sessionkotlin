@@ -356,7 +356,7 @@ class SyntaxBasicTest {
 
             // 'a' does nothing beyond this point
             send<String>(b, c)
-            val t = miu()
+            val t = mu()
             send<Int>(b, c)
             send<Int>(c, b)
             goto(t)

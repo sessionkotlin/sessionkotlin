@@ -80,7 +80,7 @@ internal class Choice(
 
 internal class RecursionDefinition(internal val tag: RecursionTag) : Instruction {
     override fun dump(indent: Int) {
-        printlnIndent(indent, "miu_$tag")
+        printlnIndent(indent, "mu_$tag")
     }
 
     override fun mapped(mapping: Map<SKRole, SKRole>): Instruction =

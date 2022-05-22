@@ -16,7 +16,7 @@ fun main() {
     }
 
     globalProtocol("Simple", true) {
-        val t = miu()
+        val t = mu()
         choice(a) {
             branch("1") {
                 subProtocol()

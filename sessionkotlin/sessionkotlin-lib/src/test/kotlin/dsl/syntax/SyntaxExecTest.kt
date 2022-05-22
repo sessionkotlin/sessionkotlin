@@ -127,7 +127,7 @@ class SyntaxExecTest {
     fun `init test`() {
         lateinit var t: RecursionTag
         val aux: GlobalProtocol = {
-            t = miu()
+            t = mu()
             send<Int>(a, b)
         }
         globalProtocolInternal {
@@ -144,7 +144,7 @@ class SyntaxExecTest {
             goto(t)
         }
         globalProtocolInternal {
-            t = miu()
+            t = mu()
             aux()
         }
     }

@@ -129,7 +129,7 @@ public sealed class GlobalEnv(
      * @return a [RecursionTag] to be used in [goto] calls.
      *
      */
-    public open fun miu(): RecursionTag {
+    public open fun mu(): RecursionTag {
         val tag = RecursionTag()
         val msg = RecursionDefinition(tag)
         instructions.add(msg)

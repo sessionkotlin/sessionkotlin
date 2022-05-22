@@ -47,7 +47,7 @@ class APIGenTest {
     fun `test api generation with recursion`() {
         globalProtocol("Test", callbacks = false) {
             send<Int>(A, B)
-            val t = miu()
+            val t = mu()
             choice(A) {
                 branch("1") {
                     send<Long>(A, B, "val1", "val1 > 0")
@@ -64,7 +64,7 @@ class APIGenTest {
     fun `test api generation with recursion and callbacks`() {
         globalProtocol("Test", callbacks = true) {
             send<Int>(A, B, "val0")
-            val t = miu()
+            val t = mu()
             choice(A) {
                 branch("1") {
                     send<Long>(A, B, "val1", "val1 > 0")
@@ -105,7 +105,7 @@ class APIGenTest {
 
         globalProtocol("Test", callbacks = true) {
             send<Int>(A, B, "val0")
-            val t = miu()
+            val t = mu()
 
             choice(A) {
                 branch("1") {

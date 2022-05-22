@@ -72,7 +72,7 @@ public class Samples {
         val client = SKRole("Client")
 
         globalProtocol("ProtocolName") {
-            val t = miu()
+            val t = mu()
             choice(client) {
 
                 branch("Add") {

@@ -14,7 +14,7 @@ class GuessTheNumber {
 
         globalProtocolInternal {
             send<Int>(chooser, middleman, "num", "num > 0 && num < 100")
-            val t = miu()
+            val t = mu()
             send<Int>(guesser, middleman, "guess",)
             choice(middleman) {
                 branch("lower") {

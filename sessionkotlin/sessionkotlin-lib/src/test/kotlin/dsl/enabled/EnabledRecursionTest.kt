@@ -24,7 +24,7 @@ class EnabledRecursionTest {
     fun `rec disabled role`() {
         assertFailsWith<RoleNotEnabledException> {
             globalProtocolInternal {
-                val t = miu()
+                val t = mu()
                 send<Int>(a, b)
                 send<Int>(c, b)
                 choice(b) {
@@ -45,7 +45,7 @@ class EnabledRecursionTest {
     fun `rec and choice not enabled`() {
         assertFailsWith<RoleNotEnabledException> {
             globalProtocolInternal {
-                val t = miu()
+                val t = mu()
                 choice(a) {
                     branch("1") {
                         send<Unit>(a, b)
@@ -72,7 +72,7 @@ class EnabledRecursionTest {
     fun `rec and choice not enabled nested choice`() {
         assertFailsWith<RoleNotEnabledException> {
             globalProtocolInternal {
-                val t = miu()
+                val t = mu()
                 choice(a) {
                     branch("1") {
                         send<Unit>(a, b)
@@ -100,7 +100,7 @@ class EnabledRecursionTest {
     fun `rec and choice not enabled but mergeable`() {
         lateinit var t: RecursionTag
         val g = globalProtocolInternal {
-            t = miu()
+            t = mu()
             choice(a) {
                 branch("1") {
                     send<Unit>(a, b)
@@ -139,10 +139,10 @@ class EnabledRecursionTest {
         assertFailsWith<UnfinishedRolesException> {
             globalProtocolInternal {
                 send<Int>(a, c)
-                val y = miu()
+                val y = mu()
                 send<Unit>(a, b)
                 send<Unit>(b, a)
-                val x = miu()
+                val x = mu()
                 send<Int>(a, b)
 
                 choice(a) {
