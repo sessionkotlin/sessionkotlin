@@ -8,7 +8,6 @@
 - In a choice, a role must be enabled exactly zero times or in every branch (no unfinished roles);
 - In a choice branch, if a disabled role sends a message, is the subject of a choice,
   or if the branch ends in recursion, its behaviour (local type) must be the same for all branches;
-- If a recursion definitions is directly followed by the recursion point, then both constructs are
 - The sender must know all the names used in the refinement condition, if present.
 - All message labels must be unique.
 - All branch labels must be unique.
@@ -17,6 +16,6 @@
 # Projection optimizations
 
 - Recursion definitions that have no corresponding recursion points are erased.
-- In choice branches, if a role does not send or receive messages after a recursion definition it means that the role
+- If a role does not send, receive, choose after a recursion definition it means that it
   does not participate for the rest of the protocol. The recursion is (locally) erased.
 - In a choice, if all branches are empty (i.e. LocalTypeEnd), the choice is (locally) erased.

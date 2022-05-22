@@ -410,4 +410,17 @@ class SyntaxRecursionTest {
             }
         }
     }
+
+    @Test
+    fun `empty recursions 2`() {
+        val g = globalProtocolInternal {
+            send<Int>(a, b)
+            send<Int>(a, c)
+            val t = mu()
+            send<Int>(a, c)
+            goto(t)
+        }
+        val lB = LocalTypeReceive(a, IntClass, LEnd)
+        assertEquals(lB, g.project(b))
+    }
 }
