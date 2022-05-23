@@ -6,6 +6,7 @@ import com.github.d_costa.sessionkotlin.dsl.exception.InvalidRefinementValueExce
 import com.github.d_costa.sessionkotlin.dsl.exception.UnknownMessageLabelException
 import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import kotlin.test.assertFailsWith
 
 class RefinementTest {
@@ -155,9 +156,8 @@ class RefinementTest {
     @Test
     fun `test invalid refinement value type`() {
         assertFailsWith<InvalidRefinementValueException> {
-            class X
             globalProtocolInternal {
-                send<X>(a, b, "val1")
+                send<LocalDate>(a, b, "val1", "val1 > 0")
             }
         }
     }

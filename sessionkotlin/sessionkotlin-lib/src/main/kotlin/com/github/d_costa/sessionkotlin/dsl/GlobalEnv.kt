@@ -5,6 +5,7 @@ import com.github.d_costa.sessionkotlin.dsl.exception.*
 import com.github.d_costa.sessionkotlin.dsl.types.*
 import com.github.d_costa.sessionkotlin.parser.RefinementParser
 import com.github.d_costa.sessionkotlin.util.printlnIndent
+import mu.KotlinLogging
 import org.sosy_lab.common.ShutdownManager
 import org.sosy_lab.common.configuration.Configuration
 import org.sosy_lab.common.log.BasicLogManager
@@ -16,6 +17,7 @@ import org.sosy_lab.java_smt.SolverContextFactory.Solvers
  * Alias of a function type with [GlobalEnv] as receiver.
  */
 public typealias GlobalProtocol = GlobalEnv.() -> Unit
+private val logger = KotlinLogging.logger {}
 
 @SessionKotlinDSL
 public sealed class GlobalEnv(
@@ -181,7 +183,7 @@ public sealed class GlobalEnv(
             try {
                 g.project(it)
             } catch (e: SessionKotlinDSLException) {
-                System.err.println("Exception while projecting $it:")
+                logger.error { "Exception while projecting onto $it" }
                 throw e
             }
         }

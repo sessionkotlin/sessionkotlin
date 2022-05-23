@@ -20,10 +20,12 @@ internal class SatState(
     }
 
     private data class SMTVariable(val id: String, val sort: SmtSort)
+    private data class UnsupportedVariable(val id: String, val type: Class<*>)
 
     private var formulaManager: FormulaManager = ctx.formulaManager
     private var variables: MutableSet<SMTVariable> = mutableSetOf()
     private var constraints: MutableList<String> = mutableListOf()
+    private var unsupportedVariable: MutableSet<UnsupportedVariable> = mutableSetOf()
 
     fun addVariable(id: String, type: Class<*>) {
         val sort: SmtSort = when (type) {
@@ -37,6 +39,10 @@ internal class SatState(
         }
 
         variables.add(SMTVariable(id, sort))
+    }
+
+    fun addUnsupportedVariableType(id: String, type: Class<*>) {
+        unsupportedVariable.add(UnsupportedVariable(id, type))
     }
 
     fun addCondition(condition: String) {
@@ -69,7 +75,14 @@ internal class SatState(
                 else -> "${v.value}"
             }
             is Minus -> "(- ${t1.toSMT()} ${t2.toSMT()})"
-            is Name -> id
+            is Name -> {
+                val unsupported = unsupportedVariable.find { it.id == id }
+                if (unsupported != null) {
+                    // id was declared but is not supported
+                    throw InvalidRefinementValueException(unsupported.type)
+                }
+                id
+            }
             is Neg -> "(- ${t.toSMT()})"
             is Plus -> "(+ ${t1.toSMT()} ${t2.toSMT()})"
         }

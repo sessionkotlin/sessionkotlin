@@ -1,0 +1,1 @@
+This folder contains run configurations for IntelliJ.

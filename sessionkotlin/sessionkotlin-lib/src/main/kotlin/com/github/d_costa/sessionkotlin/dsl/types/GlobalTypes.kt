@@ -2,10 +2,7 @@ package com.github.d_costa.sessionkotlin.dsl.types
 
 import com.github.d_costa.sessionkotlin.dsl.RecursionTag
 import com.github.d_costa.sessionkotlin.dsl.SKRole
-import com.github.d_costa.sessionkotlin.dsl.exception.InconsistentExternalChoiceException
-import com.github.d_costa.sessionkotlin.dsl.exception.RoleNotEnabledException
-import com.github.d_costa.sessionkotlin.dsl.exception.UnfinishedRolesException
-import com.github.d_costa.sessionkotlin.dsl.exception.UnknownMessageLabelException
+import com.github.d_costa.sessionkotlin.dsl.exception.*
 import com.github.d_costa.sessionkotlin.parser.RefinementParser
 
 internal sealed interface GlobalType {
@@ -82,7 +79,11 @@ internal class GlobalTypeSend(
 
     override fun sat(state: SatState): Boolean {
         if (msgLabel != null) {
-            state.addVariable(msgLabel, type)
+            try {
+                state.addVariable(msgLabel, type)
+            } catch (e: InvalidRefinementValueException) {
+                state.addUnsupportedVariableType(msgLabel, type)
+            }
         }
         if (condition.isNotBlank()) {
             state.addCondition(condition)
@@ -108,7 +109,6 @@ internal class GlobalTypeChoice(
             else -> {
                 val newState = state.copy(
                     role,
-                    names = state.names.toMutableSet(),
                     emptyRecursions = state.emptyRecursions
                 )
 
@@ -169,7 +169,7 @@ internal class GlobalTypeChoice(
         }
     }
 
-    override fun sat(state: SatState): Boolean = branches.any { it.value.sat(state.clone()) }
+    override fun sat(state: SatState): Boolean = branches.all { it.value.sat(state.clone()) }
 }
 
 internal object GlobalTypeEnd : GlobalType {
