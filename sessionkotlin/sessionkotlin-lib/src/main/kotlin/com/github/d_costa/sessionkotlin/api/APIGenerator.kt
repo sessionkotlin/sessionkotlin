@@ -205,24 +205,22 @@ private class APIGenerator(
                 else null
 
                 val codeBlock = CodeBlock.builder()
-                    .let {
+                    .also {
                         val pName = parameter?.name ?: "Unit"
                         if (l.msgLabel != null) {
                             it.addStatement("%L[%S] = %L.%M()", bindingsVariableName, l.msgLabel, pName, toValFunction)
-
-                            if (l.condition.isNotBlank()) {
-                                it.addStatement(
-                                    "%M(%S, %T.parseToEnd(%S).value(%L))",
-                                    assertFunction,
-                                    l.condition,
-                                    RefinementParser::class,
-                                    l.condition,
-                                    bindingsVariableName
-                                )
-                            }
+                        }
+                        if (l.condition.isNotBlank()) {
+                            it.addStatement(
+                                "%M(%S, %T.parseToEnd(%S).value(%L))",
+                                assertFunction,
+                                l.condition,
+                                RefinementParser::class,
+                                l.condition,
+                                bindingsVariableName
+                            )
                         }
                         it.addStatement("super.send(%L, %L, %S)", roleMap[l.to], pName, l.branchLabel)
-                        it
                     }
                     .addStatement("return %T(e)", ret.interfaceClassPair.className)
                     .build()
@@ -238,7 +236,7 @@ private class APIGenerator(
                 if (genCallbacksAPI) {
                     if (l.msgLabel == null) {
                         // Msg labels are required for callbacks API
-                        throw NoMessageLabelException(l.asString())
+                        throw NoMessageLabelException()
                     }
 
                     val callbackFunction =
@@ -270,7 +268,7 @@ private class APIGenerator(
                                 "%L[%S] = %L.%M()",
                                 bindingsVariableName, l.msgLabel, msgVariable(l.msgLabel), toValFunction
                             )
-                            .let {
+                            .also {
                                 if (l.condition.isNotBlank()) {
                                     it.addStatement(
                                         "%M(%S, %T.parseToEnd(%S).value(%L))",
@@ -281,7 +279,6 @@ private class APIGenerator(
                                         bindingsVariableName
                                     )
                                 }
-                                it
                             }
                             .addStatement(
                                 "super.sendProtected(%L, %T(%L))",
@@ -306,7 +303,7 @@ private class APIGenerator(
                 else null
 
                 val codeBlock = CodeBlock.builder()
-                    .let {
+                    .also {
                         if (parameter != null) {
                             it.addStatement("super.receive(%L, %L)", roleMap[l.from], parameter.name)
                             if (l.msgLabel != null) {
@@ -323,7 +320,6 @@ private class APIGenerator(
                                 "super.receive(%L, %T())", roleMap[l.from],
                                 SKBuffer::class.asClassName().parameterizedBy(Unit::class.asClassName())
                             )
-                        it
                     }
                     .addStatement("return %T(e)", ret.interfaceClassPair.className)
                     .build()
@@ -342,14 +338,13 @@ private class APIGenerator(
                 if (genCallbacksAPI) {
                     if (l.msgLabel == null) {
                         // Msg labels are required for callbacks API
-                        throw NoMessageLabelException(l.asString())
+                        throw NoMessageLabelException()
                     }
                     val callbackFunction = FunSpec.builder("onReceive${l.msgLabel.capitalized()}From${l.from}")
                         .addModifiers(KModifier.ABSTRACT)
-                        .let {
+                        .also {
                             if (parameter != null)
                                 it.addParameter(ParameterSpec.builder("value", l.type.kotlin).build())
-                            it
                         }
                         .build()
                     callbacksInterface.addFunction(callbackFunction)
@@ -428,12 +423,11 @@ private class APIGenerator(
                 val function = FunSpec.builder(methodName)
                     .returns(branchInterfaceName)
                     .addModifiers(KModifier.OVERRIDE, KModifier.SUSPEND)
-                    .let {
+                    .also {
                         it.beginControlFlow("return when(super.receiveBranch(${roleMap[l.to]}))")
                         it.addCode(whenBlock.build())
                         it.addStatement("else -> throw %T(\"This shouldn't happen\")", RuntimeException::class)
                         it.endControlFlow()
-                        it
                     }
 
                 interfaceBuilder.addFunction(abstractFunction.build())
@@ -480,9 +474,8 @@ private class APIGenerator(
                     val function = FunSpec.builder(methodName)
                         .returns(ret.interfaceClassPair.interfaceClassName)
                         .addModifiers(KModifier.OVERRIDE, KModifier.SUSPEND)
-                        .let {
+                        .also {
                             it.addStatement("return %T(e)", ret.interfaceClassPair.className)
-                            it
                         }
 
                     interfaceBuilder.addFunction(abstractFunction.build())
