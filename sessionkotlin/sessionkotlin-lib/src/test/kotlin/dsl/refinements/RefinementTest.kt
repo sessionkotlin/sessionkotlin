@@ -161,4 +161,11 @@ class RefinementTest {
             }
         }
     }
+
+    @Test
+    fun `test invalid refinement value type but not used`() {
+        globalProtocolInternal {
+            send<LocalDate>(a, b, "val1")
+        }
+    }
 }
