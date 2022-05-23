@@ -66,15 +66,15 @@ class Negotiation {
                                         "Accept2"
                                     ),
                                     "Reject2" to LocalTypeSend(seller, UnitClass, LEnd, "Reject2"),
-                                    "Haggle2" to LocalTypeSend(seller, IntClass, LocalTypeRecursion(t), "Haggle2", "proposal2", "proposal2 < counter")
+                                    "Haggle2" to LocalTypeSend(seller, IntClass, LocalTypeRecursion(t), "Haggle2", MsgLabel("proposal2", true), "proposal2 < counter")
                                 )
                             ),
-                            "counter"
+                            MsgLabel("counter", true)
                         )
                     )
                 )
             ),
-            msgLabel = "proposal"
+            msgLabel = MsgLabel("proposal", true)
         )
         val lSeller = LocalTypeReceive(
             buyer, IntClass,
@@ -94,15 +94,15 @@ class Negotiation {
                                         LocalTypeSend(buyer, UnitClass, LEnd)
                                     ),
                                     "Reject2" to LocalTypeReceive(buyer, UnitClass, LEnd),
-                                    "Haggle2" to LocalTypeReceive(buyer, IntClass, LocalTypeRecursion(t), "proposal2")
+                                    "Haggle2" to LocalTypeReceive(buyer, IntClass, LocalTypeRecursion(t), MsgLabel("proposal2", true))
                                 )
                             ),
-                            "Haggle1", "counter", "counter > proposal"
+                            "Haggle1", MsgLabel("counter", true), "counter > proposal"
                         )
                     )
                 )
             ),
-            "proposal"
+            MsgLabel("proposal", true)
         )
         assertEquals(lBuyer, g.project(buyer))
         assertEquals(lSeller, g.project(seller))

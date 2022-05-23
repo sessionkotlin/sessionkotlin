@@ -207,8 +207,8 @@ private class APIGenerator(
                 val codeBlock = CodeBlock.builder()
                     .also {
                         val pName = parameter?.name ?: "Unit"
-                        if (l.msgLabel != null) {
-                            it.addStatement("%L[%S] = %L.%M()", bindingsVariableName, l.msgLabel, pName, toValFunction)
+                        if (l.msgLabel != null && l.msgLabel.mentioned) {
+                            it.addStatement("%L[%S] = %L.%M()", bindingsVariableName, l.msgLabel.label, pName, toValFunction)
                         }
                         if (l.condition.isNotBlank()) {
                             it.addStatement(
@@ -240,7 +240,7 @@ private class APIGenerator(
                     }
 
                     val callbackFunction =
-                        FunSpec.builder("onSend${l.msgLabel.capitalized()}To${l.to}")
+                        FunSpec.builder("onSend${l.msgLabel.label.capitalized()}To${l.to}")
                             .addModifiers(KModifier.ABSTRACT)
                             .returns(l.type.kotlin)
                             .build()
@@ -262,12 +262,16 @@ private class APIGenerator(
                         CodeBlock.builder()
                             .addStatement(
                                 "val %L = %L.%N()",
-                                msgVariable(l.msgLabel), callbacksParameterName, callbackFunction
+                                msgVariable(l.msgLabel.label), callbacksParameterName, callbackFunction
                             )
-                            .addStatement(
-                                "%L[%S] = %L.%M()",
-                                bindingsVariableName, l.msgLabel, msgVariable(l.msgLabel), toValFunction
-                            )
+                            .also {
+                                if (l.msgLabel.mentioned) {
+                                    it.addStatement(
+                                        "%L[%S] = %L.%M()",
+                                        bindingsVariableName, l.msgLabel.label, msgVariable(l.msgLabel.label), toValFunction
+                                    )
+                                }
+                            }
                             .also {
                                 if (l.condition.isNotBlank()) {
                                     it.addStatement(
@@ -282,7 +286,7 @@ private class APIGenerator(
                             }
                             .addStatement(
                                 "super.sendProtected(%L, %T(%L))",
-                                roleMap[l.to], SKPayload::class, msgVariable(l.msgLabel)
+                                roleMap[l.to], SKPayload::class, msgVariable(l.msgLabel.label)
                             )
                             .build()
                     )
@@ -306,11 +310,11 @@ private class APIGenerator(
                     .also {
                         if (parameter != null) {
                             it.addStatement("super.receive(%L, %L)", roleMap[l.from], parameter.name)
-                            if (l.msgLabel != null) {
+                            if (l.msgLabel != null && l.msgLabel.mentioned) {
                                 it.addStatement(
                                     "%L[%S] = %L.value.%M()",
                                     bindingsVariableName,
-                                    l.msgLabel,
+                                    l.msgLabel.label,
                                     parameter.name,
                                     toValFunction
                                 )
@@ -340,7 +344,7 @@ private class APIGenerator(
                         // Msg labels are required for callbacks API
                         throw NoMessageLabelException()
                     }
-                    val callbackFunction = FunSpec.builder("onReceive${l.msgLabel.capitalized()}From${l.from}")
+                    val callbackFunction = FunSpec.builder("onReceive${l.msgLabel.label.capitalized()}From${l.from}")
                         .addModifiers(KModifier.ABSTRACT)
                         .also {
                             if (parameter != null)
@@ -352,17 +356,21 @@ private class APIGenerator(
                         CodeBlock.builder()
                             .addStatement(
                                 "val %L = (super.receiveProtected(%L) as %T).payload",
-                                msgVariable(l.msgLabel),
+                                msgVariable(l.msgLabel.label),
                                 roleMap[l.from],
                                 SKPayload::class.parameterizedBy(l.type.kotlin)
                             )
-                            .addStatement(
-                                "%L[%S] = %L.%M()",
-                                bindingsVariableName,
-                                l.msgLabel,
-                                msgVariable(l.msgLabel),
-                                toValFunction
-                            )
+                            .also {
+                                if (l.msgLabel.mentioned) {
+                                    it.addStatement(
+                                        "%L[%S] = %L.%M()",
+                                        bindingsVariableName,
+                                        l.msgLabel.label,
+                                        msgVariable(l.msgLabel.label),
+                                        toValFunction
+                                    )
+                                }
+                            }
                             .also {
                                 if (parameter == null) {
                                     it.addStatement(
@@ -375,7 +383,7 @@ private class APIGenerator(
                                         "%L.%N(%L)",
                                         callbacksParameterName,
                                         callbackFunction,
-                                        msgVariable(l.msgLabel)
+                                        msgVariable(l.msgLabel.label)
                                     )
                                 }
                             }
@@ -537,6 +545,7 @@ private class APIGenerator(
         if (genCallbacksAPI) {
             val suppressUnchecked = AnnotationSpec.builder(ClassName("", "Suppress"))
                 .addMember("%S", "unchecked_cast")
+                .addMember("%S", "unused_variable")
                 .build()
 
             FileSpec

@@ -31,6 +31,11 @@ internal class ProjectionState(
      *
      */
     var emptyRecursions: MutableSet<RecursionTag> = mutableSetOf(),
+
+    /**
+     * Collection of message labels that were used in refinement conditions
+     */
+    var usedNames: MutableSet<String> = mutableSetOf(),
 ) {
 
     /**
@@ -56,5 +61,6 @@ internal class ProjectionState(
         branchLabel: String? = this.branchLabel,
         names: MutableSet<String> = this.names.toMutableSet(),
         emptyRecursions: MutableSet<RecursionTag> = this.emptyRecursions,
-    ): ProjectionState = ProjectionState(projectedRole, names, branchLabel, activeRoles, emptyRecursions)
+        usedNames: MutableSet<String> = this.usedNames,
+    ): ProjectionState = ProjectionState(projectedRole, names, branchLabel, activeRoles, emptyRecursions, usedNames)
 }

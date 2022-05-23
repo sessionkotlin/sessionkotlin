@@ -38,25 +38,30 @@ internal class GlobalTypeSend(
                     state.names.add(msgLabel)
                 }
                 if (condition.isNotBlank()) {
-                    val unknown = RefinementParser.parseToEnd(condition).names().minus(state.names)
+                    val mentionedNames = RefinementParser.parseToEnd(condition).names()
+                    val unknown = mentionedNames.minus(state.names)
                     if (unknown.isNotEmpty()) {
                         throw UnknownMessageLabelException(role, unknown)
                     }
+                    state.usedNames.addAll(mentionedNames)
                 }
 
+                var branchLabel: String? = null
                 if (!state.activeRoles.contains(to)) {
                     // We are activating role [to]
                     state.activeRoles.add(to)
-                    LocalTypeSend(
-                        to, type, cont.project(role, state),
-                        branchLabel = state.branchLabel, msgLabel = msgLabel, condition = condition
-                    )
-                } else {
-                    LocalTypeSend(
-                        to, type, cont.project(role, state),
-                        msgLabel = msgLabel, condition = condition
-                    )
+                    branchLabel = state.branchLabel
                 }
+                val projectedCont = cont.project(role, state)
+
+                val l: MsgLabel? = if (msgLabel != null)
+                    MsgLabel(msgLabel, state.usedNames.contains(msgLabel))
+                else null
+
+                LocalTypeSend(
+                    to, type, projectedCont,
+                    branchLabel = branchLabel, msgLabel = l, condition = condition
+                )
             }
             to -> {
                 state.emptyRecursions.removeAll { true }
@@ -67,9 +72,21 @@ internal class GlobalTypeSend(
                 if (msgLabel != null) {
                     state.names.add(msgLabel)
                 }
+
+                if (condition.isNotBlank()) {
+                    val mentionedNames = RefinementParser.parseToEnd(condition).names()
+                    state.usedNames.addAll(mentionedNames)
+                }
+
                 // Only the sender must enforce the condition
 
-                LocalTypeReceive(from, type, cont.project(role, state), msgLabel = msgLabel)
+                val projectedCont = cont.project(role, state)
+
+                val l: MsgLabel? = if (msgLabel != null)
+                    MsgLabel(msgLabel, state.usedNames.contains(msgLabel))
+                else null
+
+                LocalTypeReceive(from, type, projectedCont, msgLabel = l)
             }
             else -> {
                 state.activeRoles.add(to)

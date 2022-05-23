@@ -42,7 +42,7 @@ class BuyerBrokerSupplier {
             LocalTypeExternalChoice(
                 portal,
                 mapOf(
-                    "Approved" to LocalTypeReceive(portal, IntClass, LEnd, "x"),
+                    "Approved" to LocalTypeReceive(portal, IntClass, LEnd, MsgLabel("x", true)),
                     "Denied" to LocalTypeReceive(portal, UnitClass, LEnd)
                 )
             )
@@ -58,8 +58,8 @@ class BuyerBrokerSupplier {
                             "Approved" to LocalTypeSend(
                                 finance,
                                 IntClass,
-                                LocalTypeReceive(finance, IntClass, LocalTypeSend(applicant, IntClass, LEnd, "Approved", "x", "x == approvedAmount"), "approvedAmount"),
-                                "Approved", "askedAmount"
+                                LocalTypeReceive(finance, IntClass, LocalTypeSend(applicant, IntClass, LEnd, "Approved", MsgLabel("x", true), "x == approvedAmount"), MsgLabel("approvedAmount", true)),
+                                "Approved", MsgLabel("askedAmount", true)
                             ),
                             "Denied" to LocalTypeSend(finance, UnitClass, LocalTypeSend(applicant, UnitClass, LEnd, "Denied"), "Denied")
                         )
@@ -74,8 +74,8 @@ class BuyerBrokerSupplier {
                 "Approved" to LocalTypeReceive(
                     portal,
                     IntClass,
-                    LocalTypeSend(portal, IntClass, LEnd, msgLabel = "approvedAmount", condition = "approvedAmount <= askedAmount"),
-                    "askedAmount"
+                    LocalTypeSend(portal, IntClass, LEnd, msgLabel = MsgLabel("approvedAmount", true), condition = "approvedAmount <= askedAmount"),
+                    MsgLabel("askedAmount", true)
                 ),
                 "Denied" to LocalTypeReceive(portal, UnitClass, LEnd)
             )

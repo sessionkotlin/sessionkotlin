@@ -37,8 +37,8 @@ class Adder {
                 mapOf(
                     "Continue" to LocalTypeSend(
                         s, IntClass,
-                        LocalTypeSend(s, IntClass, LocalTypeReceive(s, IntClass, LocalTypeRecursion(t), msgLabel = "sum"), msgLabel = "v2"),
-                        "Continue", "v1"
+                        LocalTypeSend(s, IntClass, LocalTypeReceive(s, IntClass, LocalTypeRecursion(t), msgLabel = MsgLabel("sum", true)), msgLabel = MsgLabel("v2", true)),
+                        "Continue", MsgLabel("v1", true)
                     ),
                     "Quit" to LocalTypeSend(s, UnitClass, LEnd, "Quit")
                 )
@@ -51,8 +51,8 @@ class Adder {
                 mapOf(
                     "Continue" to LocalTypeReceive(
                         c, IntClass,
-                        LocalTypeReceive(c, IntClass, LocalTypeSend(c, IntClass, LocalTypeRecursion(t), msgLabel = "sum", condition = "sum == v1 + v2"), "v2"),
-                        "v1"
+                        LocalTypeReceive(c, IntClass, LocalTypeSend(c, IntClass, LocalTypeRecursion(t), msgLabel = MsgLabel("sum", true), condition = "sum == v1 + v2"), MsgLabel("v2", true)),
+                        MsgLabel("v1", true)
                     ),
                     "Quit" to LocalTypeReceive(c, UnitClass, LEnd)
                 )

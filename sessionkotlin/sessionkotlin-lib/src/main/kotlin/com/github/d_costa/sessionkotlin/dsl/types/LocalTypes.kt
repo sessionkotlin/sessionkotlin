@@ -10,13 +10,14 @@ internal sealed class LocalType {
      */
     abstract fun removeRecursions(tags: Set<RecursionTag>): LocalType
 }
+internal data class MsgLabel(val label: String, val mentioned: Boolean)
 
 internal data class LocalTypeSend(
     val to: SKRole,
     val type: Class<*>,
     val cont: LocalType,
     val branchLabel: String? = null,
-    val msgLabel: String? = null,
+    val msgLabel: MsgLabel? = null,
     val condition: String = "",
 ) : LocalType() {
     override fun removeRecursions(tags: Set<RecursionTag>) =
@@ -36,7 +37,7 @@ internal data class LocalTypeSend(
         var result = to.hashCode()
         result = 31 * result + type.hashCode()
         result = 31 * result + cont.hashCode()
-        result = 31 * result + (msgLabel?.hashCode() ?: 0)
+        result = 31 * result + msgLabel.hashCode()
         result = 31 * result + condition.hashCode()
         return result
     }
@@ -46,7 +47,7 @@ internal data class LocalTypeReceive(
     val from: SKRole,
     val type: Class<*>,
     val cont: LocalType,
-    val msgLabel: String? = null,
+    val msgLabel: MsgLabel? = null,
 ) : LocalType() {
     override fun removeRecursions(tags: Set<RecursionTag>) =
         LocalTypeReceive(from, type, cont.removeRecursions(tags), msgLabel)

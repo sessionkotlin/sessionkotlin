@@ -398,6 +398,7 @@ class SyntaxRecursionTest {
             mu() // unused
             send<Int>(a, b)
             send<Int>(a, c)
+            // c can terminate here
             val t1 = mu()
             choice(a) {
                 branch("1") {

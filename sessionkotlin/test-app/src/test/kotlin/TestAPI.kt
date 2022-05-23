@@ -88,7 +88,7 @@ class TestAPI {
                     override fun onSendVal1ToB(): Int = 1
                     override fun onSendVal3ToB(): Int = 3
                 }
-                SimpleCallbacksClassA(callbacks).use { e ->
+                SimpleCallbackEndpointA(callbacks).use { e ->
                     e.connect(B, chanAB)
                     e.start()
                 }
@@ -107,7 +107,7 @@ class TestAPI {
                         receivedInt = v
                     }
                 }
-                SimpleCallbacksClassB(callbacks).use { e ->
+                SimpleCallbackEndpointB(callbacks).use { e ->
                     e.connect(A, chanAB)
                     e.accept(C, 9999)
                     e.start()
@@ -119,7 +119,7 @@ class TestAPI {
                     override fun onReceiveVal2FromB(v: Int) = println(v)
                     override fun onReceiveVal4FromB(v: Int) = println(v)
                 }
-                SimpleCallbacksClassC(callbacks).use { e ->
+                SimpleCallbackEndpointC(callbacks).use { e ->
                     e.request(B, "localhost", 9999)
                     e.start()
                 }
