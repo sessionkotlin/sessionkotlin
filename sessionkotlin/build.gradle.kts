@@ -2,7 +2,7 @@ import java.io.FileInputStream
 import java.util.*
 
 group = "com.github.d-costa"
-version = "0.1.2"
+version = "0.1.3"
 
 if (JavaVersion.current() != JavaVersion.VERSION_11) {
     throw GradleException("This project requires Java 11, but it's running on ${JavaVersion.current()}")

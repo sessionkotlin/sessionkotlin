@@ -98,13 +98,13 @@ class TestAPI {
                 val callbacks = object : SimpleCallbacksB {
                     var receivedInt = -1
                     override fun onSendVal2ToC(): Int = receivedInt * 2
-                    override fun onReceiveVal1FromA(value: Int) {
-                        receivedInt = value
+                    override fun onReceiveVal1FromA(v: Int) {
+                        receivedInt = v
                     }
 
                     override fun onSendVal4ToC(): Int = receivedInt - 1
-                    override fun onReceiveVal3FromA(value: Int) {
-                        receivedInt = value
+                    override fun onReceiveVal3FromA(v: Int) {
+                        receivedInt = v
                     }
                 }
                 SimpleCallbacksClassB(callbacks).use { e ->
@@ -116,8 +116,8 @@ class TestAPI {
             launch {
                 // C
                 val callbacks = object : SimpleCallbacksC {
-                    override fun onReceiveVal2FromB(value: Int) = println(value)
-                    override fun onReceiveVal4FromB(value: Int) = println(value)
+                    override fun onReceiveVal2FromB(v: Int) = println(v)
+                    override fun onReceiveVal4FromB(v: Int) = println(v)
                 }
                 SimpleCallbacksClassC(callbacks).use { e ->
                     e.request(B, "localhost", 9999)

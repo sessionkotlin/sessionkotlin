@@ -101,7 +101,7 @@ private class APIGenerator(
     private val bindingsValueType = LinkedHashMap::class.parameterizedBy(String::class, RefinedValue::class)
     private val recursionMap: MutableMap<RecursionTag, ICNames> = mutableMapOf()
     private val callbacksInterfaceName = ClassName("", buildClassName(protocolName + "Callbacks", role))
-    private val callbacksClassName = ClassName("", buildClassName(protocolName + "CallbacksClass", role))
+    private val callbacksClassName = ClassName("", buildClassName(protocolName + "CallbackEndpoint", role))
     private val callbacksInterface = TypeSpec.interfaceBuilder(callbacksInterfaceName)
     private val callbacksInterfaceFile = FileSpec
         .builder(
@@ -344,7 +344,7 @@ private class APIGenerator(
                         .addModifiers(KModifier.ABSTRACT)
                         .also {
                             if (parameter != null)
-                                it.addParameter(ParameterSpec.builder("value", l.type.kotlin).build())
+                                it.addParameter(ParameterSpec.builder("v", l.type.kotlin).build())
                         }
                         .build()
                     callbacksInterface.addFunction(callbackFunction)
@@ -363,12 +363,22 @@ private class APIGenerator(
                                 msgVariable(l.msgLabel),
                                 toValFunction
                             )
-                            .addStatement(
-                                "%L.%N(%L)",
-                                callbacksParameterName,
-                                callbackFunction,
-                                msgVariable(l.msgLabel)
-                            )
+                            .also {
+                                if (parameter == null) {
+                                    it.addStatement(
+                                        "%L.%N()",
+                                        callbacksParameterName,
+                                        callbackFunction
+                                    )
+                                } else {
+                                    it.addStatement(
+                                        "%L.%N(%L)",
+                                        callbacksParameterName,
+                                        callbackFunction,
+                                        msgVariable(l.msgLabel)
+                                    )
+                                }
+                            }
                             .build()
                     )
                     callbackCode.add(nextCallbackCode.build())
