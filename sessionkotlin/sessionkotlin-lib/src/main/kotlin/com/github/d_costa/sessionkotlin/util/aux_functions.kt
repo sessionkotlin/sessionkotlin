@@ -23,3 +23,6 @@ public fun assertRefinement(refinement: String, evaluation: Boolean) {
     if (!evaluation)
         throw RefinementException(refinement)
 }
+
+internal fun hasWhitespace(label: String) =
+    label.any { it.isWhitespace() }

@@ -15,9 +15,9 @@ class BuyerBrokerSupplier {
     @Test
     fun main() {
         val applicant = SKRole("Applicant")
-        val portal = SKRole("Application Portal")
-        val proc = SKRole("Processing Department")
-        val finance = SKRole("Finance Department")
+        val portal = SKRole("ApplicationPortal")
+        val proc = SKRole("ProcessingDepartment")
+        val finance = SKRole("FinanceDepartment")
 
         val g = globalProtocolInternal {
             send<Application>(applicant, portal)

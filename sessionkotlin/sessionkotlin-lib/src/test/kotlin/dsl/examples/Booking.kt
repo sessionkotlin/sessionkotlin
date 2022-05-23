@@ -16,7 +16,7 @@ class Booking {
     fun main() {
         val client = SKRole("Client")
         val agency = SKRole("Agency")
-        val company = SKRole("Some company")
+        val company = SKRole("SomeCompany")
 
         lateinit var t: RecursionTag
 

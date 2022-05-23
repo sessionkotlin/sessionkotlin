@@ -1,7 +1,8 @@
 package com.github.d_costa.sessionkotlin.dsl
 
+import com.github.d_costa.sessionkotlin.dsl.exception.BranchLabelWhitespaceException
 import com.github.d_costa.sessionkotlin.dsl.exception.DuplicateBranchLabelException
-import com.github.d_costa.sessionkotlin.dsl.exception.InvalidBranchLabelException
+import com.github.d_costa.sessionkotlin.util.hasWhitespace
 
 @SessionKotlinDSL
 public class ChoiceEnv(
@@ -26,11 +27,8 @@ public class ChoiceEnv(
             throw DuplicateBranchLabelException(label)
         }
         if (hasWhitespace(label)) {
-            throw InvalidBranchLabelException(label)
+            throw BranchLabelWhitespaceException(label)
         }
         branchMap[label] = p
     }
-
-    private fun hasWhitespace(label: String) =
-        label.any { it.isWhitespace() }
 }

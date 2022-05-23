@@ -237,7 +237,7 @@ class SyntaxBasicTest {
 
     @Test
     fun `space in label`() {
-        assertFailsWith<InvalidBranchLabelException> {
+        assertFailsWith<BranchLabelWhitespaceException> {
             globalProtocolInternal {
                 choice(a) {
                     branch(" Case1") {
@@ -249,7 +249,7 @@ class SyntaxBasicTest {
 
     @Test
     fun `multiple spaces in label`() {
-        assertFailsWith<InvalidBranchLabelException> {
+        assertFailsWith<BranchLabelWhitespaceException> {
             globalProtocolInternal {
                 choice(a) {
                     branch("C ase 1") {
@@ -261,7 +261,7 @@ class SyntaxBasicTest {
 
     @Test
     fun `tab in label`() {
-        assertFailsWith<InvalidBranchLabelException> {
+        assertFailsWith<BranchLabelWhitespaceException> {
             globalProtocolInternal {
                 choice(a) {
                     branch("before\tafter") {
@@ -273,7 +273,7 @@ class SyntaxBasicTest {
 
     @Test
     fun `newline in label`() {
-        assertFailsWith<InvalidBranchLabelException> {
+        assertFailsWith<BranchLabelWhitespaceException> {
             globalProtocolInternal {
                 choice(a) {
                     branch("before\nafter") {
@@ -363,5 +363,33 @@ class SyntaxBasicTest {
         }
         val lA = LocalTypeSend(b, StringClass, LEnd)
         assertEquals(lA, g.project(a))
+    }
+
+    @Test
+    fun `space in role name`() {
+        assertFailsWith<RoleNameWhitespaceException> {
+            SKRole(" ")
+        }
+    }
+
+    @Test
+    fun `multiple spaces in role name`() {
+        assertFailsWith<RoleNameWhitespaceException> {
+            SKRole(" f ")
+        }
+    }
+
+    @Test
+    fun `tab in role name`() {
+        assertFailsWith<RoleNameWhitespaceException> {
+            SKRole("    f")
+        }
+    }
+
+    @Test
+    fun `newline in role name`() {
+        assertFailsWith<RoleNameWhitespaceException> {
+            SKRole("before\nafter")
+        }
     }
 }

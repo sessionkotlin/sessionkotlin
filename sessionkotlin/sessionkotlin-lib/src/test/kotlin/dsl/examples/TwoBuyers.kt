@@ -15,8 +15,8 @@ class TwoBuyers {
 
     @Test
     fun main() {
-        val a = SKRole("Client A")
-        val b = SKRole("Client B")
+        val a = SKRole("ClientA")
+        val b = SKRole("ClientB")
         val seller = SKRole("Seller")
 
         val aux: GlobalProtocol = {

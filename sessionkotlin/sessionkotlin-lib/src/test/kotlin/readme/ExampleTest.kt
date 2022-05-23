@@ -9,17 +9,17 @@ class ExampleTest {
 
     @Test
     fun `example 1`() {
-        val a = SKRole("Client A")
-        val b = SKRole("Client B")
+        val a = SKRole("ClientA")
+        val b = SKRole("ClientB")
         val seller = SKRole("Seller")
 
         globalProtocol("Protocol") {
             send<String>(a, seller)
 
-            send<Int>(seller, a, "valSentToA")
-            send<Int>(seller, b, "valSentToB", "valSentToA == valSentToB")
+            send<Int>(seller, a, "valA")
+            send<Int>(seller, b, "valB", "valA == valB")
 
-            send<Int>(a, b, "proposal", "proposal <= valSentToA")
+            send<Int>(a, b, "proposal", "proposal <= valA")
 
             choice(b) {
                 branch("Ok") {
