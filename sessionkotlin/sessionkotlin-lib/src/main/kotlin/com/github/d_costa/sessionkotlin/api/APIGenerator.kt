@@ -33,7 +33,7 @@ private val roleMap = mutableMapOf<SKRole, ClassName>()
 internal fun generateAPI(globalEnv: RootEnv, genCallbacksAPI: Boolean) {
     val outputDirectory = File("build/generated/sessionkotlin/main/kotlin")
     val globalType = globalEnv.asGlobalType()
-    genRoles(globalEnv.roles, outputDirectory) // populates roleMap
+    genRoles(globalEnv.roles, globalEnv.protocolName.asClassname(), outputDirectory) // populates roleMap
     globalEnv.roles.forEach {
         APIGenerator(globalEnv.protocolName.asClassname(), it, globalType.project(it, ProjectionState(it)), genCallbacksAPI)
             .writeTo(outputDirectory)
@@ -67,10 +67,10 @@ private fun genEndClass(outputDirectory: File) {
     fileSpecBuilder.build().writeTo(outputDirectory)
 }
 
-private fun genRoles(roles: Set<SKRole>, outputDirectory: File) {
+private fun genRoles(roles: Set<SKRole>, protocolName: String, outputDirectory: File) {
     val fileSpecBuilder = FileSpec.builder(
         packageName = "",
-        fileName = "Roles"
+        fileName = "${protocolName}Roles"
     )
     fileSpecBuilder.addFileComment(GENERATED_COMMENT)
     roles.forEach {
