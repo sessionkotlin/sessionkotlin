@@ -1,7 +1,8 @@
 package com.github.d_costa.sessionkotlin.backend.channel
 
 import com.github.d_costa.sessionkotlin.backend.message.SKMessage
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.channels.SendChannel
 import java.io.Closeable
 
 /**
@@ -10,7 +11,7 @@ import java.io.Closeable
  *
  * Two channels must be used to prevent the sender from reading its own messages.
  */
-internal data class SKDoubleChannel(val input: Channel<SKMessage>, val output: Channel<SKMessage>) : Closeable {
+internal data class SKDoubleChannel(val input: ReceiveChannel<SKMessage>, val output: SendChannel<SKMessage>) : Closeable {
     suspend fun receive(): SKMessage = input.receive()
     suspend fun send(msg: SKMessage) = output.send(msg)
 

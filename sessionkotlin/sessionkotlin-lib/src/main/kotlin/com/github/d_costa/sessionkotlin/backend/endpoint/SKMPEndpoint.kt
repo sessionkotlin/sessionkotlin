@@ -99,7 +99,7 @@ public open class SKMPEndpoint : AutoCloseable {
     }
 
     /**
-     * Request a TCP connection to [role] on [port].
+     * Accept a TCP connection from [role] on [port].
      */
     public suspend fun accept(role: SKGenRole, port: Int) {
         if (role in connections) {
