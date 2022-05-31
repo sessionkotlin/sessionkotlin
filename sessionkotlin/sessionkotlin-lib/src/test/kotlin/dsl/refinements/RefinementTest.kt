@@ -4,6 +4,7 @@ import com.github.d_costa.sessionkotlin.dsl.GlobalProtocol
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.exception.InvalidRefinementValueException
 import com.github.d_costa.sessionkotlin.dsl.exception.UnknownMessageLabelException
+import com.github.d_costa.sessionkotlin.dsl.exception.UnsatisfiableRefinementsException
 import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -166,6 +167,41 @@ class RefinementTest {
     fun `test invalid refinement value type but not used`() {
         globalProtocolInternal {
             send<LocalDate>(a, b, "val1")
+        }
+    }
+
+    @Test
+    fun `test unsat same message`() {
+        assertFailsWith<UnsatisfiableRefinementsException> {
+            globalProtocolInternal {
+                send<Int>(a, b, "val1", "val1 < 0 && val1 > 0")
+            }
+        }
+    }
+
+    @Test
+    fun `test unsat sifferent messages`() {
+        assertFailsWith<UnsatisfiableRefinementsException> {
+            globalProtocolInternal {
+                send<Int>(a, b, "val1", "val1 < 0")
+                send<Int>(a, b, "val2", "val2 > 0 && val2 == val1")
+            }
+        }
+    }
+
+    @Test
+    fun `test unsat no branch`() {
+        assertFailsWith<UnsatisfiableRefinementsException> {
+            globalProtocolInternal {
+                choice(a) {
+                    branch("1") {
+                        send<Int>(a, b, "val1")
+                    }
+                    branch("2") {
+                        send<Int>(a, b, "val2", "0 == 1")
+                    }
+                }
+            }
         }
     }
 }
