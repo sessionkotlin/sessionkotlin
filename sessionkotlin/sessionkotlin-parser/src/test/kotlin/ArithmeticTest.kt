@@ -236,4 +236,27 @@ class ArithmeticTest {
         assert(ast.value(mapOf("a" to 3.toVal(), "c" to 2.toVal())))
         assertEquals(setOf("a", "c"), ast.names())
     }
+
+    @Test
+    fun `test unary minus precedence`() {
+        val ast = grammar.parseToEnd("-1-2 == -3")
+        assertEquals(Eq(Minus(Neg(cLong(1)), cLong(2)), Neg(cLong(3))), ast)
+        assert(ast.value(emptyMap()))
+    }
+
+    @Test
+    fun `test unary minus precedence 2`() {
+        val ast = grammar.parseToEnd("-a-2 == -3")
+        assertEquals(Eq(Minus(Neg(Name("a")), cLong(2)), Neg(cLong(3))), ast)
+        println(ast)
+        assert(ast.value(mapOf("a" to (1).toVal())))
+    }
+
+    @Test
+    fun `test unary minus precedence 3`() {
+        val ast = grammar.parseToEnd("-(a-2) == -3")
+        assertEquals(Eq(Neg(Minus(Name("a"), cLong(2))), Neg(cLong(3))), ast)
+        println(ast)
+        assert(ast.value(mapOf("a" to (5).toVal())))
+    }
 }

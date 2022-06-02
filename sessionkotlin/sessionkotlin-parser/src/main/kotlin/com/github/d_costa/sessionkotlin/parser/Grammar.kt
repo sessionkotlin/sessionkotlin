@@ -42,7 +42,7 @@ internal val grammar: Grammar<BooleanExpression> = object : Grammar<BooleanExpre
         ((-singleQuote * word * -singleQuote) use { Const(text.toVal()) }) or
         (word use { Name(text) }) or
         -lpar * parser(::expr) * -rpar or
-        (-minus * parser(::expr) map { Neg(it) })
+        (-minus * parser(::term) map { Neg(it) })
 
     val expr: Parser<Term> =
         leftAssociative(term, plus or minus) { l, op, r -> if (op.type == plus) Plus(l, r) else Minus(l, r) }
@@ -56,7 +56,6 @@ internal val grammar: Grammar<BooleanExpression> = object : Grammar<BooleanExpre
         ((expr * -lwrEq * expr) use { LowerEq(t1, t2) }) or
         ((expr * -gt * expr) use { Greater(t1, t2) }) or
         ((expr * -gtEq * expr) use { GreaterEq(t1, t2) }) or
-        ((expr * -lwrEq * expr) use { LowerEq(t1, t2) }) or
         (-not * parser(::booleanExpr) map { Not(it) }) or
         -lpar * parser(::rootParser) * -rpar
 

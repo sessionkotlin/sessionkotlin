@@ -55,18 +55,6 @@
 - Templates de projetos gradle/maven
 
 
-- Precedência dos operadores na gramática de refinamentos:
-
-| Operador           | Símbolo                                                                                                      | Precedência |
-|--------------------|--------------------------------------------------------------------------------------------------------------|-------------|
-| Parêntesis         | <code>(  )</code>                                                                                            | +           |
-| Menos unário       | <code>-</code>                                                                                               |             |
-| Soma / Subtração   | <code>+</code> <code>-</code>                                                                                |             |
-| Operadores lógicos | <code>==</code> <code>!=</code> <code><</code> <code><=</code> <code>></code> <code>>=</code> <code>!</code> |             |
-| Conjunção          | <code>&&</code>                                                                                              |             |
-| Disjunção          | <code>&#124;&#124;</code>                                                                                    |             |
-| Implicação         | <code>-></code>                                                                                              | -           |
-
 - As labels das mensagens têm de ser únicas porque são usadas nos refinamentos e para geração de nomes de métodos.
 
 

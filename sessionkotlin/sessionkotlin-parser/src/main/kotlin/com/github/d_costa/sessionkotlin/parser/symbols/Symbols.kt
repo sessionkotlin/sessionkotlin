@@ -82,11 +82,13 @@ public data class Neq(val e1: Term, val e2: Term) : BooleanExpression {
 public object True : BooleanExpression {
     override fun value(bindings: Map<String, RefinedValue>): Boolean = true
     override fun names(): Set<String> = emptySet()
+    override fun toString(): String = "True"
 }
 
 public object False : BooleanExpression {
     override fun value(bindings: Map<String, RefinedValue>): Boolean = false
     override fun names(): Set<String> = emptySet()
+    override fun toString(): String = "False"
 }
 
 public data class Not(val cond: BooleanExpression) : BooleanExpression {
