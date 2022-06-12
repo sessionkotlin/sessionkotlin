@@ -291,4 +291,28 @@ class SocketsTest {
             }
         }
     }
+
+    @Test
+    fun `test reuse port`() {
+        val port = nextPort()
+
+        runBlocking {
+            launch {
+                SKMPEndpoint().use { endpoint ->
+                    endpoint.accept(A, port)
+                    endpoint.accept(B, port)
+                }
+            }
+            launch {
+                SKMPEndpoint().use { endpoint ->
+                    endpoint.request(C, "localhost", port)
+                }
+            }
+            launch {
+                SKMPEndpoint().use { endpoint ->
+                    endpoint.request(C, "localhost", port)
+                }
+            }
+        }
+    }
 }

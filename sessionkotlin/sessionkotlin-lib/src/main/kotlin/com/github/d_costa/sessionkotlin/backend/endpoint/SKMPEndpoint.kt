@@ -31,6 +31,11 @@ public open class SKMPEndpoint : AutoCloseable {
     private val objectFormatter = ObjectFormatter()
 
     /**
+     * Map of ports that are bound and the corresponding server socket
+     */
+    private val serverSockets = mutableMapOf<Int, ServerSocket>()
+
+    /**
      * Close all individual endpoints.
      */
     override fun close() {
@@ -105,12 +110,21 @@ public open class SKMPEndpoint : AutoCloseable {
         if (role in connections) {
             throw AlreadyConnectedException(role)
         }
-        val socket = aSocket(selectorManager)
+        // Create a server socket if none is present for this port
+        val socket = (serverSockets[port] ?: bind(port)).accept()
+        connections[role] = SKSocketConnection(socket, objectFormatter)
+    }
+
+    /**
+     * Creates a socket and binds it.
+     *
+     */
+    private fun bind(port: Int): ServerSocket {
+        val serverSocket = aSocket(selectorManager)
             .tcp()
             .bind(InetSocketAddress("localhost", port))
-            .accept()
-
-        connections[role] = SKSocketConnection(socket, objectFormatter)
+        serverSockets[port] = serverSocket
+        return serverSocket
     }
 
     /**

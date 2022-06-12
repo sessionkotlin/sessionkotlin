@@ -19,8 +19,6 @@ java {
     targetCompatibility = JavaVersion.VERSION_11
 }
 
-val dependenciesFolder = "$buildDir/dependencies"
-
 dependencies {
     api(project(":sessionkotlin-parser"))
     testImplementation(kotlin("test"))
