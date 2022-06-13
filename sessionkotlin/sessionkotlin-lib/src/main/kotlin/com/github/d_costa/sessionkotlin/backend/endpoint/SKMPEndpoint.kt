@@ -18,7 +18,7 @@ import kotlinx.coroutines.channels.ClosedReceiveChannelException
  * and to send and receive messages.
  *
  */
-public open class SKMPEndpoint : AutoCloseable {
+public open class SKMPEndpoint(private val id: String = "") : AutoCloseable {
     /**
      * Maps generated roles to the individual endpoint that must be used for communication.
      */
@@ -41,6 +41,9 @@ public open class SKMPEndpoint : AutoCloseable {
     override fun close() {
         for (ch in connections.values) {
             ch.close()
+        }
+        for (s in serverSockets.values) {
+            s.close()
         }
     }
 
@@ -104,31 +107,33 @@ public open class SKMPEndpoint : AutoCloseable {
     }
 
     /**
-     * Accept a TCP connection from [role] on [port].
+     * Bind [port] and accept a connection, attributing it to [role].
      */
     public suspend fun accept(role: SKGenRole, port: Int) {
         if (role in connections) {
             throw AlreadyConnectedException(role)
         }
         // Create a server socket if none is present for this port
-        val socket = (serverSockets[port] ?: bind(port)).accept()
+        val serverSocket = serverSockets[port] ?: SKServer.bind(port).ss
+        val socket = serverSocket.accept()
         connections[role] = SKSocketConnection(socket, objectFormatter)
     }
 
     /**
-     * Creates a socket and binds it.
+     * Accept a connection on the provided [serverSocket], attributing it to [role].
      *
+     * An instance of [SKServerSocket] is obtained by calling [SKServer.bind].
      */
-    private fun bind(port: Int): ServerSocket {
-        val serverSocket = aSocket(selectorManager)
-            .tcp()
-            .bind(InetSocketAddress("localhost", port))
-        serverSockets[port] = serverSocket
-        return serverSocket
+    public suspend fun accept(role: SKGenRole, serverSocket: SKServerSocket) {
+        if (role in connections) {
+            throw AlreadyConnectedException(role)
+        }
+        val socket = serverSocket.ss.accept()
+        connections[role] = SKSocketConnection(socket, objectFormatter)
     }
 
     /**
-     * Connect to [role] over [chan].
+     * Use [chan] to connect to [role].
      */
     public fun connect(role: SKGenRole, chan: SKChannel) {
         if (role in connections) {

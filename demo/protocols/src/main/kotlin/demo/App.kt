@@ -1,31 +1,15 @@
 package demo
 
-import com.github.d_costa.sessionkotlin.dsl.GlobalProtocol
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.globalProtocol
-
+import java.util.*
 
 fun main() {
-    val a = SKRole("A")
-    val b = SKRole("B")
-    val c = SKRole("C")
+    val s = SKRole("Server")
+    val c = SKRole("Client")
 
-    val subProtocol: GlobalProtocol = {
-        send<Int>(a, b, "val1")
-        send<Int>(b, c, "val2", "val2 > val1")
-    }
-
-    globalProtocol("Simple", true) {
-        val t = mu()
-        choice(a) {
-            branch("1") {
-                subProtocol()
-                goto(t)
-            }
-            branch("2") {
-                send<Int>(a, b, "val3")
-                send<Int>(b, c, "val4", "val4 < val3")
-            }
-        }
+    globalProtocol("SimpleServer", true) {
+        send<Int>(c, s, "request")
+        send<Int>(s, c, "response")
     }
 }
