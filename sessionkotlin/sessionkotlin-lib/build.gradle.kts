@@ -13,6 +13,8 @@ val kotlinVersion: String by project
 val kotlinxCoroutinesVersion: String by project
 val ktorVersion: String by project
 val betterParseVersion: String by project
+val kotlinLoggingVersion: String by project
+val slf4jVersion: String by project
 
 java {
     sourceCompatibility = JavaVersion.VERSION_11
@@ -25,8 +27,8 @@ dependencies {
     implementation("com.squareup:kotlinpoet:$kotlinPoetVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
     implementation("io.ktor:ktor-network:$ktorVersion")
-    implementation("io.github.microutils:kotlin-logging-jvm:2.1.20")
-    implementation("org.slf4j:slf4j-simple:1.7.36")
+    implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLoggingVersion")
+    implementation("org.slf4j:slf4j-simple:$slf4jVersion")
 }
 
 tasks.test {
