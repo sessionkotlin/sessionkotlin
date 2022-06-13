@@ -18,22 +18,36 @@ import kotlinx.coroutines.channels.ClosedReceiveChannelException
  * and to send and receive messages.
  *
  */
-public open class SKMPEndpoint(private val id: String = "") : AutoCloseable {
+public open class SKMPEndpoint : AutoCloseable {
     /**
      * Maps generated roles to the individual endpoint that must be used for communication.
      */
     private val connections = mutableMapOf<SKGenRole, SKConnection>()
 
-    /**
-     * Service that manages NIO selectors and selection threads.
-     */
-    private val selectorManager = ActorSelectorManager(Dispatchers.IO)
     private val objectFormatter = ObjectFormatter()
 
     /**
      * Map of ports that are bound and the corresponding server socket
      */
     private val serverSockets = mutableMapOf<Int, ServerSocket>()
+
+    public companion object {
+        /**
+         * Service that manages NIO selectors and selection threads.
+         */
+        private val selectorManager = ActorSelectorManager(Dispatchers.IO)
+
+        /**
+         * Create a server socket and bind it to [port].
+         */
+        public fun bind(port: Int): SKServerSocket {
+            return SKServerSocket(
+                aSocket(selectorManager)
+                    .tcp()
+                    .bind(InetSocketAddress("localhost", port))
+            )
+        }
+    }
 
     /**
      * Close all individual endpoints.
@@ -114,7 +128,10 @@ public open class SKMPEndpoint(private val id: String = "") : AutoCloseable {
             throw AlreadyConnectedException(role)
         }
         // Create a server socket if none is present for this port
-        val serverSocket = serverSockets[port] ?: SKServer.bind(port).ss
+        val serverSocket = serverSockets[port] ?: bind(port)
+            .ss
+            .also { serverSockets[port] = it }
+
         val socket = serverSocket.accept()
         connections[role] = SKSocketConnection(socket, objectFormatter)
     }
@@ -122,7 +139,7 @@ public open class SKMPEndpoint(private val id: String = "") : AutoCloseable {
     /**
      * Accept a connection on the provided [serverSocket], attributing it to [role].
      *
-     * An instance of [SKServerSocket] is obtained by calling [SKServer.bind].
+     * An instance of [SKServerSocket] is obtained by calling [SKMPEndpoint.bind].
      */
     public suspend fun accept(role: SKGenRole, serverSocket: SKServerSocket) {
         if (role in connections) {

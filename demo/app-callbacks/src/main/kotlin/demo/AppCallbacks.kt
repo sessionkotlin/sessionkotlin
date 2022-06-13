@@ -7,11 +7,7 @@ import SimpleServerCallbackEndpointClient
 import SimpleServerCallbackEndpointServer
 import SimpleServerCallbacksClient
 import SimpleServerCallbacksServer
-import com.github.d_costa.sessionkotlin.backend.SKBuffer
-
-import com.github.d_costa.sessionkotlin.backend.channel.SKChannel
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
-import com.github.d_costa.sessionkotlin.backend.endpoint.SKServer
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -24,7 +20,7 @@ fun main() {
         // Server
         launch {
             var i = 0
-            val ss = SKServer.bind(8888)
+            val ss = SKMPEndpoint.bind(8888)
             do {
                 var state = 0
                 val callbacks = object : SimpleServerCallbacksServer {

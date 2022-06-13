@@ -7,7 +7,6 @@ import SimpleServerClient1
 import SimpleServerServer1
 import com.github.d_costa.sessionkotlin.backend.SKBuffer
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
-import com.github.d_costa.sessionkotlin.backend.endpoint.SKServer
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -24,9 +23,9 @@ fun fluent() {
         // Server
         launch {
             var i = 0
-            val ss = SKServer.bind(8888)
+            val ss = SKMPEndpoint.bind(8888)
             do {
-                SKMPEndpoint("server$i").use { e ->
+                SKMPEndpoint().use { e ->
                     val intBuf = SKBuffer<Int>()
                     e.accept(Client, ss)
                     SimpleServerServer1(e)
@@ -42,7 +41,7 @@ fun fluent() {
             launch {
                 delay(Random.nextLong(0L, 100L))
                 val intBuf = SKBuffer<Int>()
-                SKMPEndpoint("client$i").use { e ->
+                SKMPEndpoint().use { e ->
                     e.request(Server, "localhost", 8888)
                     SimpleServerClient1(e)
                         .sendToServer(i)
