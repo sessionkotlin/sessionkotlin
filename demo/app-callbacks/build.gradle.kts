@@ -15,7 +15,7 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClass.set("demo.AppKt")
+    mainClass.set("demo.AppCallbacksKt")
 }
 
 /**
