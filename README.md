@@ -157,6 +157,16 @@ SKMPEndpoint().use { e ->
 }
 ```
 
+## Plugin
+
+To configure the plugin use the extension (the default values are shown):
+
+```kotlin
+sessionkotlin {
+    cleanBeforeCopying = false //  always clean the solver dependencies before copying
+}
+```
+
 ## Local development
 
 1. Build and publish the library:

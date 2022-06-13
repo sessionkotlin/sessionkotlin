@@ -37,7 +37,7 @@ gradlePlugin {
         id = "com.github.d-costa.sessionkotlin.plugin"
         displayName = "SessionKotlin Plugin"
         description = "Plugin for SessionKotlin"
-        implementationClass = "com.github.d_costa.sessionkotlin.CopyZ3"
+        implementationClass = "com.github.d_costa.sessionkotlin.SessionKotlinPlugin"
     }
 
     publishing {

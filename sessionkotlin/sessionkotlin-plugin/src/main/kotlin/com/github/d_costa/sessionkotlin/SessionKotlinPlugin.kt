@@ -8,9 +8,22 @@ import org.gradle.api.tasks.Delete
 import org.gradle.api.tasks.bundling.Tar
 import org.gradle.api.tasks.bundling.Zip
 
-class CopyZ3 : Plugin<Project> {
+abstract class SessionKotlinPluginExtension {
+    /**
+     * If set, the 'cleanDownloadedDependencies' task will execute before 'copyDependencies'.
+     *
+     * Default: false
+     */
+    var cleanBeforeCopying: Boolean = false
+}
+
+class SessionKotlinPlugin : Plugin<Project> {
+    private val extensionName = "sessionkotlin"
 
     override fun apply(project: Project) {
+
+        val extension = project.extensions.create(extensionName, SessionKotlinPluginExtension::class.java)
+
         val javaSMTVersion = "3.12.0"
         val javaSMTZ3Version = "4.8.15"
         val configName = "javaSMTConfig"
@@ -35,8 +48,10 @@ class CopyZ3 : Plugin<Project> {
 
         // Copy and rename all JavaSMT dependencies
         project.tasks.register("copyDependencies", Copy::class.java) {
-            it.description = "Copy and rename all JavaSMT dependencies (SessionKotlin)"
-            it.dependsOn("cleanDownloadedDependencies")
+            it.description = "Copy and rename JavaSMT dependencies (SessionKotlin)"
+            if (extension.cleanBeforeCopying) {
+                it.dependsOn("cleanDownloadedDependencies")
+            }
             it.from(project.configurations.getByName("javaSMTConfig"))
             it.into(dependenciesFolder)
             it.rename(".*(lib[^-]*)-?.*.so", "\$1.so")
