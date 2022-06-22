@@ -1,15 +1,15 @@
 package demo
 
-import Client
 
-import Server
-import SimpleServerClient1
-import SimpleServerServer1
 import com.github.d_costa.sessionkotlin.backend.SKBuffer
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import simple_server.Client
+import simple_server.Server
+import simple_server.fluent.SimpleServerClient1
+import simple_server.fluent.SimpleServerServer1
 import kotlin.random.Random
 
 

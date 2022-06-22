@@ -1,16 +1,17 @@
 package demo
 
 
-import Client
-import Server
-import SimpleServerCallbackEndpointClient
-import SimpleServerCallbackEndpointServer
-import SimpleServerCallbacksClient
-import SimpleServerCallbacksServer
+
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import simple_server.Client
+import simple_server.Server
+import simple_server.callback.SimpleServerCallbackEndpointClient
+import simple_server.callback.SimpleServerCallbackEndpointServer
+import simple_server.callback.SimpleServerCallbacksClient
+import simple_server.callback.SimpleServerCallbacksServer
 import kotlin.random.Random
 
 

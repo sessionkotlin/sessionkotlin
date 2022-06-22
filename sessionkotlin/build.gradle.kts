@@ -2,7 +2,7 @@ import java.io.FileInputStream
 import java.util.*
 
 group = "com.github.d-costa"
-version = "0.1.5"
+version = "0.1.6"
 
 if (JavaVersion.current() != JavaVersion.VERSION_11) {
     throw GradleException("This project requires Java 11, but it's running on ${JavaVersion.current()}")
@@ -15,7 +15,7 @@ plugins {
     id("org.jetbrains.dokka") // Documentation
     `maven-publish`
     jacoco
-    id("com.github.d-costa.sessionkotlin.plugin") version "0.1.1" apply false
+    id("com.github.d-costa.sessionkotlin.plugin") version "0.1.5" apply false
 }
 
 allprojects {

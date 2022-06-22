@@ -5,7 +5,7 @@ plugins {
 }
 
 dependencies {
-    api("com.github.d-costa:sessionkotlin-lib:0.1.5")
+    api("com.github.d-costa:sessionkotlin-lib:0.1.6")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.2")
 }
 

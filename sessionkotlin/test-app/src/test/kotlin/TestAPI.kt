@@ -4,6 +4,11 @@ import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
+import simple.A
+import simple.B
+import simple.C
+import simple.callback.*
+import simple.fluent.*
 
 class TestAPI {
 

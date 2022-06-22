@@ -13,6 +13,11 @@ internal fun String.asClassname() =
     this.replace("\\s".toRegex(), "")
         .capitalized()
 
+internal fun String.asPackageName() =
+    this.trim()
+        .replace("\\s".toRegex(), "_")
+        .lowercase()
+
 internal fun String.capitalized() =
     replaceFirstChar(Char::titlecase)
 
