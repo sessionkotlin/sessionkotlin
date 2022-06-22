@@ -4,6 +4,7 @@ import com.github.d_costa.sessionkotlin.api.exception.SKLinearException
 import com.github.d_costa.sessionkotlin.backend.SKBuffer
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
 import com.github.d_costa.sessionkotlin.backend.message.SKBranch
+import com.github.d_costa.sessionkotlin.backend.message.SKEmptyMessage
 import com.github.d_costa.sessionkotlin.backend.message.SKPayload
 
 /**
@@ -33,10 +34,14 @@ public abstract class SKOutputEndpoint(private val e: SKMPEndpoint) : SKLinearEn
     protected suspend fun <T> send(role: SKGenRole, payload: T, branch: String? = null) {
         use()
         if (branch != null) {
-
             e.send(role, SKBranch(branch))
         }
-        e.send(role, SKPayload(payload))
+
+        if (payload is Unit) {
+            e.send(role, SKEmptyMessage)
+        } else {
+            e.send(role, SKPayload(payload))
+        }
     }
 }
 
@@ -53,7 +58,9 @@ public abstract class SKInputEndpoint(private val e: SKMPEndpoint) : SKLinearEnd
     protected suspend fun <T : Any> receive(role: SKGenRole, buf: SKBuffer<T>) {
         use()
         val msg = e.receive(role)
-        buf.value = (msg as SKPayload<T>).payload
+        if (msg is SKPayload<*>) {
+            buf.value = (msg as SKPayload<T>).payload
+        }
     }
 }
 

@@ -28,7 +28,7 @@ fun main() {
                     override fun onReceiveRequestFromClient(v: Int) {
                         state = v
                     }
-
+                    override fun onReceiveDummyFromClient() { }
                     override fun onSendResponseToClient(): Int = state * 2
                 }
                 SimpleServerCallbackEndpointServer(callbacks).use {
@@ -49,6 +49,7 @@ fun main() {
                     }
 
                     override fun onSendRequestToServer() = i
+                    override fun onSendDummyToServer() { }
                 }
                 SimpleServerCallbackEndpointClient(callbacks).use {
                     it.request(Server, "localhost", 8888)

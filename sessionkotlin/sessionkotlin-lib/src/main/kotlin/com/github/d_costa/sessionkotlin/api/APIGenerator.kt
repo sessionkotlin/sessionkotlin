@@ -4,6 +4,7 @@ import com.github.d_costa.sessionkotlin.api.exception.NoMessageLabelException
 import com.github.d_costa.sessionkotlin.backend.SKBuffer
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
 import com.github.d_costa.sessionkotlin.backend.message.SKBranch
+import com.github.d_costa.sessionkotlin.backend.message.SKEmptyMessage
 import com.github.d_costa.sessionkotlin.backend.message.SKPayload
 import com.github.d_costa.sessionkotlin.dsl.RecursionTag
 import com.github.d_costa.sessionkotlin.dsl.RootEnv
@@ -26,6 +27,7 @@ private fun buildClassName(protocolName: String, r: SKRole, count: Int? = null) 
     StringBuilder("${protocolName}$r")
         .append(if (count != null) "$count" else "")
         .toString()
+
 private fun callbacks(basePackageName: String) = "$basePackageName.callback"
 private fun fluent(basePackageName: String) = "$basePackageName.fluent"
 
@@ -114,7 +116,8 @@ private class APIGenerator(
     private val bindingsValueType = LinkedHashMap::class.parameterizedBy(String::class, RefinedValue::class)
     private val recursionMap: MutableMap<RecursionTag, ICNames> = mutableMapOf()
     private val callbacksInterfaceName = ClassName(callbacksPackage, buildClassName(protocolName + "Callbacks", role))
-    private val callbacksClassName = ClassName(callbacksPackage, buildClassName(protocolName + "CallbackEndpoint", role))
+    private val callbacksClassName =
+        ClassName(callbacksPackage, buildClassName(protocolName + "CallbackEndpoint", role))
     private val callbacksInterface = TypeSpec.interfaceBuilder(callbacksInterfaceName)
     private val callbacksInterfaceFile = FileSpec
         .builder(
@@ -222,7 +225,13 @@ private class APIGenerator(
                     .also {
                         val pName = parameter?.name ?: "Unit"
                         if (l.msgLabel != null && l.msgLabel.mentioned) {
-                            it.addStatement("%L[%S] = %L.%M()", bindingsVariableName, l.msgLabel.label, pName, toValFunction)
+                            it.addStatement(
+                                "%L[%S] = %L.%M()",
+                                bindingsVariableName,
+                                l.msgLabel.label,
+                                pName,
+                                toValFunction
+                            )
                         }
                         if (l.condition.isNotBlank()) {
                             it.addStatement(
@@ -282,7 +291,10 @@ private class APIGenerator(
                                 if (l.msgLabel.mentioned) {
                                     it.addStatement(
                                         "%L[%S] = %L.%M()",
-                                        bindingsVariableName, l.msgLabel.label, msgVariable(l.msgLabel.label), toValFunction
+                                        bindingsVariableName,
+                                        l.msgLabel.label,
+                                        msgVariable(l.msgLabel.label),
+                                        toValFunction
                                     )
                                 }
                             }
@@ -298,10 +310,19 @@ private class APIGenerator(
                                     )
                                 }
                             }
-                            .addStatement(
-                                "super.sendProtected(%L, %T(%L))",
-                                roleMap[l.to], SKPayload::class, msgVariable(l.msgLabel.label)
-                            )
+                            .also {
+                                if (parameter == null) {
+                                    it.addStatement(
+                                        "super.sendProtected(%L, %T)",
+                                        roleMap[l.to], SKEmptyMessage::class
+                                    )
+                                } else {
+                                    it.addStatement(
+                                        "super.sendProtected(%L, %T(%L))",
+                                        roleMap[l.to], SKPayload::class, msgVariable(l.msgLabel.label)
+                                    )
+                                }
+                            }
                             .build()
                     )
                     callbackCode.add(nextCallbackCode.build())
@@ -368,12 +389,21 @@ private class APIGenerator(
                     callbacksInterface.addFunction(callbackFunction)
                     callbackCode.add(
                         CodeBlock.builder()
-                            .addStatement(
-                                "val %L = (super.receiveProtected(%L) as %T).payload",
-                                msgVariable(l.msgLabel.label),
-                                roleMap[l.from],
-                                SKPayload::class.parameterizedBy(l.type.kotlin)
-                            )
+                            .also {
+                                if (parameter == null) {
+                                    it.addStatement(
+                                        "super.receiveProtected(%L)",
+                                        roleMap[l.from],
+                                    )
+                                } else {
+                                    it.addStatement(
+                                        "val %L = (super.receiveProtected(%L) as %T).payload",
+                                        msgVariable(l.msgLabel.label),
+                                        roleMap[l.from],
+                                        SKPayload::class.parameterizedBy(l.type.kotlin)
+                                    )
+                                }
+                            }
                             .also {
                                 if (l.msgLabel.mentioned) {
                                     it.addStatement(

@@ -8,6 +8,7 @@ fun main() {
     val c = SKRole("Client")
 
     globalProtocol("Simple Server", true) {
+        send<Unit>(c, s, "dummy")
         send<Int>(c, s, "request")
         send<Int>(s, c, "response")
     }

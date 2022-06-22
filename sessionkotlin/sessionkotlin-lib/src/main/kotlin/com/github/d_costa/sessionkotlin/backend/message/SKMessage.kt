@@ -16,3 +16,5 @@ public data class SKBranch(val label: String) : SKMessage
  * A message that contains a [payload] of type [T]
  */
 public data class SKPayload<T>(val payload: T) : SKMessage
+
+public object SKEmptyMessage : SKMessage

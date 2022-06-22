@@ -29,6 +29,7 @@ fun fluent() {
                     val intBuf = SKBuffer<Int>()
                     e.accept(Client, ss)
                     SimpleServerServer1(e)
+                        .receiveFromClient()
                         .receiveFromClient(intBuf)
                         .sendToClient(intBuf.value * 2)
                 }
@@ -44,6 +45,7 @@ fun fluent() {
                 SKMPEndpoint().use { e ->
                     e.request(Server, "localhost", 8888)
                     SimpleServerClient1(e)
+                        .sendToServer()
                         .sendToServer(i)
                         .receiveFromServer(intBuf)
                         .also { println("Client $i received ${intBuf.value}") }
