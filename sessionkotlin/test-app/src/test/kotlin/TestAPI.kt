@@ -79,6 +79,7 @@ class TestAPI {
         }
     }
 
+    @Test
     fun `test callbacks`() {
         val chanAB = SKChannel(A, B)
 
