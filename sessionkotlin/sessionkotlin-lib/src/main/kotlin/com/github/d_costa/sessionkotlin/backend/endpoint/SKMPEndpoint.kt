@@ -5,9 +5,11 @@ import com.github.d_costa.sessionkotlin.backend.channel.SKChannel
 import com.github.d_costa.sessionkotlin.backend.channel.SKChannelConnection
 import com.github.d_costa.sessionkotlin.backend.message.ObjectFormatter
 import com.github.d_costa.sessionkotlin.backend.message.SKMessage
+import com.github.d_costa.sessionkotlin.backend.message.SKMessageFormatter
 import com.github.d_costa.sessionkotlin.backend.socket.SKSocketConnection
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
+import io.ktor.util.network.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
 
@@ -17,14 +19,16 @@ import kotlinx.coroutines.channels.ClosedReceiveChannelException
  * Provides operations to connect to other endpoints along channels or sockets,
  * and to send and receive messages.
  *
+ * @param msgFormatter (optional) the message formatter. Used to serialize and deserialize messages.
+ *
  */
-public open class SKMPEndpoint : AutoCloseable {
+public open class SKMPEndpoint(
+    private val msgFormatter: SKMessageFormatter = ObjectFormatter()
+) : AutoCloseable {
     /**
      * Maps generated roles to the individual endpoint that must be used for communication.
      */
     private val connections = mutableMapOf<SKGenRole, SKConnection>()
-
-    private val objectFormatter = ObjectFormatter()
 
     /**
      * Map of ports that are bound and the corresponding server socket
@@ -39,8 +43,10 @@ public open class SKMPEndpoint : AutoCloseable {
 
         /**
          * Create a server socket and bind it to [port].
+         *
+         * @param port the port to bind. Default is zero (0), to use a port that is automatically allocated.
          */
-        public fun bind(port: Int): SKServerSocket {
+        public fun bind(port: Int = 0): SKServerSocket {
             return SKServerSocket(
                 aSocket(selectorManager)
                     .tcp()
@@ -117,13 +123,15 @@ public open class SKMPEndpoint : AutoCloseable {
         val socket = aSocket(selectorManager)
             .tcp()
             .connect(hostname, port)
-        connections[role] = SKSocketConnection(socket, objectFormatter)
+        connections[role] = SKSocketConnection(socket, msgFormatter)
     }
 
     /**
      * Bind [port] and accept a connection, attributing it to [role].
+     *
+     * @return the port that was bound
      */
-    public suspend fun accept(role: SKGenRole, port: Int) {
+    public suspend fun accept(role: SKGenRole, port: Int): Int {
         if (role in connections) {
             throw AlreadyConnectedException(role)
         }
@@ -133,7 +141,9 @@ public open class SKMPEndpoint : AutoCloseable {
             .also { serverSockets[port] = it }
 
         val socket = serverSocket.accept()
-        connections[role] = SKSocketConnection(socket, objectFormatter)
+        connections[role] = SKSocketConnection(socket, msgFormatter)
+
+        return serverSocket.localAddress.toJavaAddress().port
     }
 
     /**
@@ -146,7 +156,7 @@ public open class SKMPEndpoint : AutoCloseable {
             throw AlreadyConnectedException(role)
         }
         val socket = serverSocket.ss.accept()
-        connections[role] = SKSocketConnection(socket, objectFormatter)
+        connections[role] = SKSocketConnection(socket, msgFormatter)
     }
 
     /**

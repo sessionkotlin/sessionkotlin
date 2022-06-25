@@ -5,7 +5,7 @@ package com.github.d_costa.sessionkotlin.backend.message
  *
  * An implementation of this class is necessary to send messages in sockets.
  */
-internal interface SKMessageFormatter {
-    fun toBytes(msg: SKMessage): ByteArray
-    fun fromBytes(b: ByteArray): SKMessage
+public interface SKMessageFormatter {
+    public fun toBytes(msg: SKMessage): ByteArray
+    public fun fromBytes(b: ByteArray): SKMessage
 }

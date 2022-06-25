@@ -9,10 +9,10 @@ import com.github.d_costa.sessionkotlin.backend.endpoint.ReadClosedConnectionExc
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
 import com.github.d_costa.sessionkotlin.backend.message.SKBranch
 import com.github.d_costa.sessionkotlin.backend.message.SKPayload
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
@@ -23,18 +23,17 @@ class SocketsTest {
         object C : SKGenRole()
 
         val payloads = listOf<Any>("Hello world", 10, 10L, 2.3)
-        private var atomicPort = AtomicInteger(9000)
-        fun nextPort() = atomicPort.incrementAndGet()
     }
 
     @Test
     fun `test sockets`() {
-        val port = nextPort()
-
+        val c = Channel<Int>()
         runBlocking {
             launch {
                 SKMPEndpoint().use { endpoint ->
-                    endpoint.accept(B, port)
+                    val s = SKMPEndpoint.bind()
+                    c.send(s.port)
+                    endpoint.accept(B, s)
 
                     for (p in payloads) {
                         endpoint.send(B, SKPayload(p))
@@ -47,7 +46,7 @@ class SocketsTest {
             }
             launch {
                 SKMPEndpoint().use { endpoint ->
-                    endpoint.request(A, "localhost", port)
+                    endpoint.request(A, "localhost", c.receive())
 
                     for (p in payloads) {
                         val received = endpoint.receive(A) as SKPayload<*>
@@ -98,13 +97,14 @@ class SocketsTest {
     @Test
     fun `test channels and sockets`() {
         val chan = SKChannel(B, C)
-        val port = nextPort()
-
+        val c = Channel<Int>()
         runBlocking {
             // A
             launch {
                 SKMPEndpoint().use { endpoint ->
-                    endpoint.accept(B, port)
+                    val s = SKMPEndpoint.bind()
+                    c.send(s.port)
+                    endpoint.accept(B, s)
                     for (p in payloads) {
                         val received = endpoint.receive(B) as SKPayload<*>
                         assertEquals(received.payload, p)
@@ -114,11 +114,10 @@ class SocketsTest {
                     }
                 }
             }
-
             // B
             launch {
                 SKMPEndpoint().use { endpoint ->
-                    endpoint.request(A, "localhost", port)
+                    endpoint.request(A, "localhost", c.receive())
                     endpoint.connect(C, chan)
 
                     for (p in payloads) {
@@ -172,18 +171,20 @@ class SocketsTest {
 
     @Test
     fun `already connected accept`() {
-        val port = nextPort()
+        val c = Channel<Int>()
         assertFailsWith<AlreadyConnectedException> {
             runBlocking {
                 launch {
                     SKMPEndpoint().use { endpoint ->
-                        endpoint.accept(B, port)
-                        endpoint.accept(B, port)
+                        val s = SKMPEndpoint.bind()
+                        c.send(s.port)
+                        endpoint.accept(B, s)
+                        endpoint.accept(B, s)
                     }
                 }
                 launch {
                     SKMPEndpoint().use { endpoint ->
-                        endpoint.request(B, "localhost", port)
+                        endpoint.request(B, "localhost", c.receive())
                     }
                 }
             }
@@ -192,18 +193,21 @@ class SocketsTest {
 
     @Test
     fun `already connected request`() {
-        val port = nextPort()
         assertFailsWith<AlreadyConnectedException> {
+            val c = Channel<Int>(2)
             runBlocking {
                 launch {
                     SKMPEndpoint().use { endpoint ->
-                        endpoint.accept(B, port)
+                        val s = SKMPEndpoint.bind()
+                        c.send(s.port)
+                        c.send(s.port)
+                        endpoint.accept(B, s)
                     }
                 }
                 launch {
                     SKMPEndpoint().use { endpoint ->
-                        endpoint.request(B, "localhost", port)
-                        endpoint.request(B, "localhost", port)
+                        endpoint.request(B, "localhost", c.receive())
+                        endpoint.request(B, "localhost", c.receive())
                     }
                 }
             }
@@ -252,20 +256,23 @@ class SocketsTest {
 
     @Test
     fun `test read from closed channel`() {
-        val port = nextPort()
+        val c = Channel<Int>()
 
         assertFailsWith<ReadClosedConnectionException> {
             runBlocking {
                 launch {
                     SKMPEndpoint().use {
-                        it.accept(A, port)
-                        it.receive(A)
+                        val s = SKMPEndpoint.bind()
+                        c.send(s.port)
+                        it.accept(A, s)
+                        it.close()
                     }
                 }
                 launch {
                     SKMPEndpoint().use {
+                        val port = c.receive()
                         it.request(B, "localhost", port)
-                        it.close()
+                        it.receive(B)
                     }
                 }
             }
@@ -294,23 +301,25 @@ class SocketsTest {
 
     @Test
     fun `test reuse port`() {
-        val port = nextPort()
-
+        val c = Channel<Int>(2)
         runBlocking {
             launch {
                 SKMPEndpoint().use { endpoint ->
-                    endpoint.accept(A, port)
-                    endpoint.accept(B, port)
+                    val s = SKMPEndpoint.bind()
+                    c.send(s.port)
+                    c.send(s.port)
+                    endpoint.accept(A, s)
+                    endpoint.accept(B, s)
                 }
             }
             launch {
                 SKMPEndpoint().use { endpoint ->
-                    endpoint.request(C, "localhost", port)
+                    endpoint.request(C, "localhost", c.receive())
                 }
             }
             launch {
                 SKMPEndpoint().use { endpoint ->
-                    endpoint.request(C, "localhost", port)
+                    endpoint.request(C, "localhost", c.receive())
                 }
             }
         }
