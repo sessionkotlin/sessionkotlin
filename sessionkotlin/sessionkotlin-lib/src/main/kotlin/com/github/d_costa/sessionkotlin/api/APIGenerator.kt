@@ -3,8 +3,7 @@ package com.github.d_costa.sessionkotlin.api
 import com.github.d_costa.sessionkotlin.api.exception.NoMessageLabelException
 import com.github.d_costa.sessionkotlin.backend.SKBuffer
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
-import com.github.d_costa.sessionkotlin.backend.message.SKBranch
-import com.github.d_costa.sessionkotlin.backend.message.SKEmptyMessage
+import com.github.d_costa.sessionkotlin.backend.message.SKMessage
 import com.github.d_costa.sessionkotlin.backend.message.SKPayload
 import com.github.d_costa.sessionkotlin.dsl.RecursionTag
 import com.github.d_costa.sessionkotlin.dsl.RootEnv
@@ -52,6 +51,8 @@ internal fun generateAPI(globalEnv: RootEnv, genCallbacksAPI: Boolean) {
     genEndClass(outputDirectory, fluent(basePackageName))
 }
 
+private const val endpointVariable = "e"
+
 private fun genEndClass(outputDirectory: File, packageName: String) {
     val endClassName = ClassName(packageName, endSimpleClassName)
     val fileSpecBuilder = FileSpec.builder(
@@ -64,7 +65,7 @@ private fun genEndClass(outputDirectory: File, packageName: String) {
             FunSpec.constructorBuilder()
                 .addParameter(
                     ParameterSpec
-                        .builder("e", SKMPEndpoint::class)
+                        .builder(endpointVariable, SKMPEndpoint::class)
                         .build()
                 )
                 .build()
@@ -100,7 +101,7 @@ private fun genRoles(roles: Set<SKRole>, protocolName: String, outputDirectory: 
 
 private class APIGenerator(
     private val protocolName: String,
-    private val basePackage: String,
+    basePackage: String,
     val role: SKRole,
     private val localType: LocalType,
     private val genCallbacksAPI: Boolean,
@@ -113,6 +114,7 @@ private class APIGenerator(
     private val callbacksPackage = callbacks(basePackage)
     private val fluentPackage = fluent(basePackage)
     private val bindingsVariableName = "bindings"
+    private val caseMsgVariable = "msg"
     private val bindingsValueType = LinkedHashMap::class.parameterizedBy(String::class, RefinedValue::class)
     private val recursionMap: MutableMap<RecursionTag, ICNames> = mutableMapOf()
     private val callbacksInterfaceName = ClassName(callbacksPackage, buildClassName(protocolName + "Callbacks", role))
@@ -179,13 +181,13 @@ private class APIGenerator(
                 FunSpec.constructorBuilder()
                     .addParameter(
                         ParameterSpec
-                            .builder("e", SKMPEndpoint::class)
+                            .builder(endpointVariable, SKMPEndpoint::class)
                             .build()
                     )
                     .build()
             ).addProperty(
-                PropertySpec.builder("e", SKMPEndpoint::class)
-                    .initializer("e")
+                PropertySpec.builder(endpointVariable, SKMPEndpoint::class)
+                    .initializer(endpointVariable)
                     .addModifiers(KModifier.PRIVATE)
                     .build()
             )
@@ -211,7 +213,7 @@ private class APIGenerator(
             }
             is LocalTypeSend -> {
                 classBuilder.superclass(SKOutputEndpoint::class)
-                    .addSuperclassConstructorParameter("e")
+                    .addSuperclassConstructorParameter(endpointVariable)
                 val nextCallbackCode = CodeBlock.builder()
                 val ret = genLocals(l.cont, stateIndex + 1, nextCallbackCode)
                 val methodName = "sendTo${l.to}"
@@ -269,18 +271,6 @@ private class APIGenerator(
                             .build()
 
                     callbacksInterface.addFunction(callbackFunction)
-
-                    if (l.branchLabel != null) {
-                        // Send branch label
-                        callbackCode.add(
-                            CodeBlock.builder()
-                                .addStatement(
-                                    "super.sendProtected(%L, %T(\"%L\"))",
-                                    roleMap[l.to], SKBranch::class, l.branchLabel
-                                )
-                                .build()
-                        )
-                    }
                     callbackCode.add(
                         CodeBlock.builder()
                             .addStatement(
@@ -311,17 +301,11 @@ private class APIGenerator(
                                 }
                             }
                             .also {
-                                if (parameter == null) {
-                                    it.addStatement(
-                                        "super.sendProtected(%L, %T)",
-                                        roleMap[l.to], SKEmptyMessage::class
-                                    )
-                                } else {
-                                    it.addStatement(
-                                        "super.sendProtected(%L, %T(%L))",
-                                        roleMap[l.to], SKPayload::class, msgVariable(l.msgLabel.label)
-                                    )
-                                }
+                                it.addStatement(
+                                    "super.sendProtected(%L, %T(%L, %S))",
+                                    roleMap[l.to], SKPayload::class, msgVariable(l.msgLabel.label),
+                                    l.branchLabel
+                                )
                             }
                             .build()
                     )
@@ -330,12 +314,34 @@ private class APIGenerator(
                 GenRet(ICNames(interfaceName, className), ret.counter)
             }
             is LocalTypeReceive -> {
-                classBuilder.superclass(SKInputEndpoint::class)
-                    .addSuperclassConstructorParameter("e")
+                val superClass = if (branch == null) SKInputEndpoint::class else SKCaseEndpoint::class
+                classBuilder.superclass(superClass)
+                    .addSuperclassConstructorParameter(endpointVariable)
+
+                if (branch != null) {
+                    // use msg from branch
+                    classBuilder.addSuperclassConstructorParameter(caseMsgVariable)
+                    classBuilder.addProperty(
+                        PropertySpec.builder(caseMsgVariable, SKMessage::class)
+                            .initializer(caseMsgVariable)
+                            .addModifiers(KModifier.PRIVATE)
+                            .build()
+                    )
+                    classBuilder.primaryConstructor(
+                        (classBuilder.build().primaryConstructor?.toBuilder() ?: FunSpec.constructorBuilder())
+                            .addParameter(
+                                ParameterSpec
+                                    .builder(caseMsgVariable, SKMessage::class)
+                                    .build()
+                            )
+                            .build()
+                    )
+                }
+
                 val nextCallbackCode = CodeBlock.builder()
                 val ret = genLocals(l.cont, stateIndex + 1, nextCallbackCode)
                 val methodName = "receiveFrom${l.from}"
-                val parameter = if (l.type != Unit::class.java)
+                val bufferParam = if (l.type != Unit::class.java)
                     ParameterSpec
                         .builder("buf", SKBuffer::class.parameterizedBy(l.type.kotlin))
                         .build()
@@ -343,22 +349,20 @@ private class APIGenerator(
 
                 val codeBlock = CodeBlock.builder()
                     .also {
-                        if (parameter != null) {
-                            it.addStatement("super.receive(%L, %L)", roleMap[l.from], parameter.name)
+                        if (bufferParam == null) {
+                            it.addStatement("super.receiveDummy(%L)", roleMap[l.from])
+                        } else {
+                            it.addStatement("super.receivePayload(%L, %L)", roleMap[l.from], bufferParam.name)
                             if (l.msgLabel != null && l.msgLabel.mentioned) {
                                 it.addStatement(
                                     "%L[%S] = %L.value.%M()",
                                     bindingsVariableName,
                                     l.msgLabel.label,
-                                    parameter.name,
+                                    bufferParam.name,
                                     toValFunction
                                 )
                             }
-                        } else
-                            it.addStatement(
-                                "super.receive(%L, %T())", roleMap[l.from],
-                                SKBuffer::class.asClassName().parameterizedBy(Unit::class.asClassName())
-                            )
+                        }
                     }
                     .addStatement("return %T(e)", ret.interfaceClassPair.className)
                     .build()
@@ -366,7 +370,7 @@ private class APIGenerator(
                 val functions = genMsgPassing(
                     methodName,
                     codeBlock,
-                    parameter,
+                    bufferParam,
                     ret.interfaceClassPair.interfaceClassName
                 )
                 interfaceBuilder.addFunction(functions.abstractSpec)
@@ -382,7 +386,7 @@ private class APIGenerator(
                     val callbackFunction = FunSpec.builder("onReceive${l.msgLabel.label.capitalized()}From${l.from}")
                         .addModifiers(KModifier.ABSTRACT)
                         .also {
-                            if (parameter != null)
+                            if (bufferParam != null)
                                 it.addParameter(ParameterSpec.builder("v", l.type.kotlin).build())
                         }
                         .build()
@@ -390,18 +394,27 @@ private class APIGenerator(
                     callbackCode.add(
                         CodeBlock.builder()
                             .also {
-                                if (parameter == null) {
+                                if (bufferParam == null) {
                                     it.addStatement(
                                         "super.receiveProtected(%L)",
                                         roleMap[l.from],
                                     )
                                 } else {
-                                    it.addStatement(
-                                        "val %L = (super.receiveProtected(%L) as %T).payload",
-                                        msgVariable(l.msgLabel.label),
-                                        roleMap[l.from],
-                                        SKPayload::class.parameterizedBy(l.type.kotlin)
-                                    )
+                                    if (branch == null) {
+                                        it.addStatement(
+                                            "val %L = (super.receiveProtected(%L) as %T).payload",
+                                            msgVariable(l.msgLabel.label),
+                                            roleMap[l.from],
+                                            SKPayload::class.parameterizedBy(l.type.kotlin)
+                                        )
+                                    } else {
+                                        it.addStatement(
+                                            "val %L = %L.payload as %T",
+                                            msgVariable(l.msgLabel.label),
+                                            caseMsgVariable,
+                                            l.type.kotlin
+                                        )
+                                    }
                                 }
                             }
                             .also {
@@ -416,7 +429,7 @@ private class APIGenerator(
                                 }
                             }
                             .also {
-                                if (parameter == null) {
+                                if (bufferParam == null) {
                                     it.addStatement(
                                         "%L.%N()",
                                         callbacksParameterName,
@@ -439,8 +452,9 @@ private class APIGenerator(
                 GenRet(ICNames(interfaceName, className), ret.counter)
             }
             is LocalTypeExternalChoice -> {
-                classBuilder.superclass(SKExternalEndpoint::class)
-                    .addSuperclassConstructorParameter("e")
+                classBuilder.superclass(SKInputEndpoint::class)
+                    .addSuperclassConstructorParameter(endpointVariable)
+
                 val branchInterfaceName = ClassName(
                     fluentPackage,
                     buildClassName(protocolName, role, stateIndex + 1) + "Branch"
@@ -451,14 +465,15 @@ private class APIGenerator(
 
                 var newIndex = stateIndex + 1
                 val whenBlock = CodeBlock.builder()
-                callbackCode.beginControlFlow(
-                    "when((super.receiveProtected(%L) as %T).label)",
-                    roleMap[l.to]!!, SKBranch::class
+                callbackCode.addStatement(
+                    "val %L = super.receiveProtected(%L) as %T<*>",
+                    caseMsgVariable, roleMap[l.to]!!, SKPayload::class
                 )
+                callbackCode.beginControlFlow("when(%L.branch)", caseMsgVariable)
 
                 for ((k, v) in l.branches) {
                     val nextCallbackCode = CodeBlock.builder()
-                    callbackCode.add("\"%L\" -> ", k)
+                    callbackCode.add("%S -> ", k)
                     callbackCode.beginControlFlow("")
 
                     val ret = genLocals(
@@ -471,11 +486,15 @@ private class APIGenerator(
                     callbackCode.add(nextCallbackCode.build())
                     callbackCode.endControlFlow()
 
-                    whenBlock.addStatement("\"%L\" -> %T(e)", k, ret.interfaceClassPair.className)
+                    whenBlock.addStatement("%S -> %T(e, msg)", k, ret.interfaceClassPair.className)
                     ret.interfaceClassPair.className
                     newIndex = ret.counter + 1
                 }
+                val elseStatement = "else -> throw %T(\"This should not happen. branch: \${%L.branch}\")"
+                callbackCode.addStatement(elseStatement, RuntimeException::class, caseMsgVariable)
                 callbackCode.endControlFlow()
+
+                whenBlock.addStatement(elseStatement, RuntimeException::class, caseMsgVariable)
 
                 val methodName = "branch"
                 val abstractFunction = FunSpec.builder(methodName)
@@ -486,9 +505,12 @@ private class APIGenerator(
                     .returns(branchInterfaceName)
                     .addModifiers(KModifier.OVERRIDE, KModifier.SUSPEND)
                     .also {
-                        it.beginControlFlow("return when(super.receiveBranch(${roleMap[l.to]}))")
+                        it.addStatement(
+                            "val %L = super.receive<Any>(${roleMap[l.to]}) as %T<*>",
+                            caseMsgVariable, SKPayload::class
+                        )
+                        it.beginControlFlow("return when(%L.branch)", caseMsgVariable)
                         it.addCode(whenBlock.build())
-                        it.addStatement("else -> throw %T(\"This shouldn't happen\")", RuntimeException::class)
                         it.endControlFlow()
                     }
 

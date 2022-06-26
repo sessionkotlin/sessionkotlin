@@ -52,8 +52,8 @@ class TestAPI {
                             }
                         }
                     } while (true)
-                }
-            }
+                                }
+                                }
             launch {
                 // C
                 SKMPEndpoint().use { e ->
@@ -71,7 +71,7 @@ class TestAPI {
                                 b2.receiveFromB(bufString)
                                 println("Received int 2: ${bufString.value}")
                                 break
-                            }
+                        }
                         }
                     } while (true)
                 }

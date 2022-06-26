@@ -7,7 +7,6 @@ import com.github.d_costa.sessionkotlin.backend.endpoint.AlreadyConnectedExcepti
 import com.github.d_costa.sessionkotlin.backend.endpoint.NotConnectedException
 import com.github.d_costa.sessionkotlin.backend.endpoint.ReadClosedConnectionException
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
-import com.github.d_costa.sessionkotlin.backend.message.SKBranch
 import com.github.d_costa.sessionkotlin.backend.message.SKPayload
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
@@ -287,13 +286,13 @@ class SocketsTest {
             launch {
                 SKMPEndpoint().use { endpoint ->
                     endpoint.connect(B, chan)
-                    endpoint.send(B, SKBranch("b1"))
+                    endpoint.send(B, SKPayload(0, "b1"))
                 }
             }
             launch {
                 SKMPEndpoint().use { endpoint ->
                     endpoint.connect(A, chan)
-                    assertEquals("b1", (endpoint.receive(A) as SKBranch).label)
+                    assertEquals("b1", (endpoint.receive(A) as SKPayload<*>).branch)
                 }
             }
         }

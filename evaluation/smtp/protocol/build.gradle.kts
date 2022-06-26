@@ -3,9 +3,12 @@ plugins {
     application
     id("com.github.d-costa.sessionkotlin.plugin")
 }
+val kotlinxCoroutinesVersion: String by project
+val sessionkotlinVersion: String by project
 
 dependencies {
-    api(project(":sessionkotlin-lib"))
+    api("com.github.d-costa:sessionkotlin-lib:$sessionkotlinVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
 }
 
 application {
@@ -17,3 +20,4 @@ kotlin.sourceSets.main {
         file("$buildDir/generated/sessionkotlin/main/kotlin"),
     )
 }
+
