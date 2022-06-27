@@ -7,7 +7,7 @@ plugins {
 val kotlinxCoroutinesVersion: String by project
 
 dependencies {
-    implementation(project(":protocol"))
+    api(project(":protocol"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
 }
 
@@ -22,8 +22,8 @@ application {
  *
  */
 tasks.register("copyGenerated", Copy::class.java) {
-    dependsOn(":protocols:run")
-    from("../protocols/build/generated")
+    dependsOn(":protocol:run")
+    from("../protocol/build/generated")
     into("build/generated")
 }
 

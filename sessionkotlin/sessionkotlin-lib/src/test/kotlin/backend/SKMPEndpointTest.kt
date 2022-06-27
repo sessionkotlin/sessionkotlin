@@ -12,6 +12,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import java.net.BindException
+import java.nio.ByteBuffer
+import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
@@ -21,12 +23,12 @@ class SKMPEndpointTest {
         object B : SKGenRole()
         object C : SKGenRole()
 
-        val payloads = listOf<Any>("Hello world", 10, 10L, 2.3)
+        val payloads = listOf<Any>("Hello world", "stuff", 10, 10L, 2.3)
 
         fun getFormatter() = object : SKMessageFormatter {
             val f = ObjectFormatter()
-            override fun toBytes(msg: SKMessage): ByteArray = f.toBytes(msg)
-            override fun fromBytes(b: ByteArray): SKMessage = f.fromBytes(b)
+            override fun toBytes(msg: SKMessage) = f.toBytes(msg)
+            override fun fromBytes(b: ByteBuffer) = f.fromBytes(b)
         }
     }
 
@@ -46,27 +48,6 @@ class SKMPEndpointTest {
             launch {
                 SKMPEndpoint(getFormatter()).use { endpoint ->
                     endpoint.request(A, "localhost", c.receive())
-                    bProtocol(endpoint)
-                }
-            }
-        }
-    }
-
-    @Test
-    fun `test explicit objectFormatter with channels`() {
-        val chan = SKChannel(A, B)
-        runBlocking {
-            // A
-            launch {
-                SKMPEndpoint(getFormatter()).use { endpoint ->
-                    endpoint.connect(B, chan)
-                    aProtocol(endpoint)
-                }
-            }
-            // B
-            launch {
-                SKMPEndpoint(getFormatter()).use { endpoint ->
-                    endpoint.connect(A, chan)
                     bProtocol(endpoint)
                 }
             }

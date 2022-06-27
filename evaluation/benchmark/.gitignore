@@ -9,3 +9,5 @@ build
 /scribble-java/src/main/java/*
 /bench.txt
 /plot.svg
+/sj/
+/scribble-dist/
