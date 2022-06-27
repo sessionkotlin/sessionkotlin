@@ -20,10 +20,12 @@ import kotlinx.coroutines.channels.ClosedReceiveChannelException
  * and to send and receive messages.
  *
  * @param msgFormatter (optional) the message formatter. Used to serialize and deserialize messages.
+ * @param bufferSize (optional) size of the buffer, when using sockets.
  *
  */
 public open class SKMPEndpoint(
-    private val msgFormatter: SKMessageFormatter = ObjectFormatter()
+    private val msgFormatter: SKMessageFormatter = ObjectFormatter(),
+    private val bufferSize: Int = defaultBufferSize
 ) : AutoCloseable {
     /**
      * Maps generated roles to the individual endpoint that must be used for communication.
@@ -36,6 +38,8 @@ public open class SKMPEndpoint(
     private val serverSockets = mutableMapOf<Int, ServerSocket>()
 
     public companion object {
+        internal const val defaultBufferSize = 16_384
+
         /**
          * Service that manages NIO selectors and selection threads.
          */
@@ -123,7 +127,7 @@ public open class SKMPEndpoint(
         val socket = aSocket(selectorManager)
             .tcp()
             .connect(hostname, port)
-        connections[role] = SKSocketConnection(socket, msgFormatter)
+        connections[role] = SKSocketConnection(socket, msgFormatter, bufferSize)
     }
 
     /**
@@ -141,7 +145,7 @@ public open class SKMPEndpoint(
             .also { serverSockets[port] = it }
 
         val socket = serverSocket.accept()
-        connections[role] = SKSocketConnection(socket, msgFormatter)
+        connections[role] = SKSocketConnection(socket, msgFormatter, bufferSize)
 
         return serverSocket.localAddress.toJavaAddress().port
     }
@@ -156,7 +160,7 @@ public open class SKMPEndpoint(
             throw AlreadyConnectedException(role)
         }
         val socket = serverSocket.ss.accept()
-        connections[role] = SKSocketConnection(socket, msgFormatter)
+        connections[role] = SKSocketConnection(socket, msgFormatter, bufferSize)
     }
 
     /**

@@ -1,6 +1,5 @@
 package com.github.d_costa.sessionkotlin.backend.message
 
-import mu.KotlinLogging
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.ObjectInputStream
@@ -12,10 +11,11 @@ import java.util.*
  * Default implementation of the message formatter.
  *
  * Internally uses [ObjectOutputStream] and [ObjectInputStream].
+ *
+ * Sends the message size before the message.
  */
 internal class ObjectFormatter : SKMessageFormatter {
     private val intSize = 4
-    private val logger = KotlinLogging.logger {}
 
     override fun toBytes(msg: SKMessage): ByteArray {
         val bytes = serialize(msg)
@@ -26,24 +26,20 @@ internal class ObjectFormatter : SKMessageFormatter {
     }
 
     override fun fromBytes(b: ByteBuffer): Optional<SKMessage> {
-        println(b.remaining())
         if (b.remaining() <= intSize) {
-            logger.error { "Invalid msg size: ${b.remaining()}" }
+            // Nothing to read
             return Optional.empty()
         }
 
-        // Get without changing the position
-        val size = ByteBuffer.wrap(Arrays.copyOf(b.array(), intSize)).int
+        // Get the integer without modifying the position
+        val size = ByteBuffer.wrap(Arrays.copyOfRange(b.array(), b.position(), b.position() + intSize)).int
 
         if (b.remaining() >= intSize + size) {
             b.position(b.position() + intSize) // skip size
             val msgBytes = ByteArray(size)
             b.get(msgBytes) // get message
-            b.compact()
-            b.flip()
             return Optional.of(deserialize(msgBytes))
         }
-        logger.error { "Msg size $size expected, got ${b.remaining()}" }
         return Optional.empty()
     }
 

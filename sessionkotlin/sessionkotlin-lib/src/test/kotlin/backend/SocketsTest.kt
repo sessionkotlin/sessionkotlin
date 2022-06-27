@@ -254,7 +254,7 @@ class SocketsTest {
     }
 
     @Test
-    fun `test read from closed channel`() {
+    fun `test read from closed client socket`() {
         val c = Channel<Int>()
 
         assertFailsWith<ReadClosedConnectionException> {
@@ -264,7 +264,6 @@ class SocketsTest {
                         val s = SKMPEndpoint.bind()
                         c.send(s.port)
                         it.accept(A, s)
-                        it.close()
                     }
                 }
                 launch {
@@ -272,6 +271,30 @@ class SocketsTest {
                         val port = c.receive()
                         it.request(B, "localhost", port)
                         it.receive(B)
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `test read from closed server socket`() {
+        val c = Channel<Int>()
+
+        assertFailsWith<ReadClosedConnectionException> {
+            runBlocking {
+                launch {
+                    SKMPEndpoint().use {
+                        val port = c.receive()
+                        it.request(B, "localhost", port)
+                    }
+                }
+                launch {
+                    SKMPEndpoint().use {
+                        val s = SKMPEndpoint.bind()
+                        c.send(s.port)
+                        it.accept(A, s)
+                        it.receive(A)
                     }
                 }
             }

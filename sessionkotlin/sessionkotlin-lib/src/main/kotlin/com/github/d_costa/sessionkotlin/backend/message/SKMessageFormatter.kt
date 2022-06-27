@@ -17,7 +17,7 @@ public interface SKMessageFormatter {
 
     /**
      * If the provided bytes are not enough to form a valid message,
-     * [SKInvalidMessage] should be thrown.
+     * [Optional.empty()] should be thrown.
      */
     public fun fromBytes(b: ByteBuffer): Optional<SKMessage>
 }

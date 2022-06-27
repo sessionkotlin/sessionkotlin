@@ -5,9 +5,9 @@ import com.github.d_costa.sessionkotlin.backend.message.SKMessage
 import com.github.d_costa.sessionkotlin.backend.message.SKMessageFormatter
 import io.ktor.network.sockets.*
 import io.ktor.utils.io.*
-import kotlinx.coroutines.yield
+import kotlinx.coroutines.channels.ClosedReceiveChannelException
+import mu.KotlinLogging
 import java.nio.ByteBuffer
-import java.util.*
 
 /**
  * Endpoint implementation with sockets.
@@ -15,8 +15,8 @@ import java.util.*
 internal class SKSocketConnection(
     private var s: Socket,
     private val objFormatter: SKMessageFormatter,
+    bufferSize: Int,
 ) : SKConnection {
-    private val bufferSize = 16_384
 
     /**
      * As messages are often very small, we must flush after every send or else
@@ -25,18 +25,40 @@ internal class SKSocketConnection(
     private val outputStream = s.openWriteChannel(autoFlush = true)
     private val inputStream = s.openReadChannel()
     private val buffer = ByteBuffer.allocate(bufferSize)
+    private val queue = mutableListOf<SKMessage>()
+    private val logger = KotlinLogging.logger {}
 
     override fun close() {
         s.close()
     }
 
     override suspend fun readMsg(): SKMessage {
-        inputStream.read {
-            buffer.put(it)
+        return if (queue.isNotEmpty()) {
+            queue.removeFirst()
+        } else {
+            inputStream.read(0) {
+                println(it.remaining())
+                if (buffer.remaining() < it.remaining()) {
+                    logger.error { "Allocated buffer is too small: ${buffer.remaining()}. Needs to be at least ${it.remaining()}, but ${it.capacity()} is recommended." }
+                }
+                buffer.put(it)
+            }
             buffer.flip()
+
+            if (!buffer.hasRemaining()) {
+                // Connection lost
+                throw ClosedReceiveChannelException("")
+            }
+
+            // Fully process the buffer's content
+            var o = objFormatter.fromBytes(buffer)
+            while (o.isPresent) {
+                queue.add(o.get()) // populate queue
+                o = objFormatter.fromBytes(buffer)
+            }
+            buffer.compact()
+            readMsg()
         }
-        val o = objFormatter.fromBytes(buffer)
-        return if (o.isPresent) o.get() else readMsg()
     }
 
     override suspend fun writeMsg(msg: SKMessage) {

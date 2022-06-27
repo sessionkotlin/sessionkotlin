@@ -4,7 +4,6 @@ import com.github.d_costa.sessionkotlin.backend.message.ObjectFormatter
 import com.github.d_costa.sessionkotlin.backend.message.SKPayload
 import org.junit.jupiter.api.Test
 import java.nio.ByteBuffer
-import java.util.*
 import kotlin.test.assertEquals
 
 class ObjectFormatterTest {
@@ -13,7 +12,6 @@ class ObjectFormatterTest {
     fun `test one msg`() {
         val f = ObjectFormatter()
         val data = SKPayload(10)
-
 
         val bytes = ByteBuffer.wrap(f.toBytes(data))
         println(bytes)

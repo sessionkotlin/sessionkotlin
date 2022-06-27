@@ -1,19 +1,18 @@
 package backend
 
 import com.github.d_costa.sessionkotlin.api.SKGenRole
-import com.github.d_costa.sessionkotlin.backend.channel.SKChannel
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
 import com.github.d_costa.sessionkotlin.backend.message.ObjectFormatter
 import com.github.d_costa.sessionkotlin.backend.message.SKMessage
 import com.github.d_costa.sessionkotlin.backend.message.SKMessageFormatter
 import com.github.d_costa.sessionkotlin.backend.message.SKPayload
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import java.net.BindException
 import java.nio.ByteBuffer
-import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
@@ -67,9 +66,11 @@ class SKMPEndpointTest {
     private suspend fun aProtocol(endpoint: SKMPEndpoint) {
         for (p in payloads) {
             endpoint.send(B, SKPayload(p))
+            delay(10)
         }
         for (p in payloads) {
             val received = endpoint.receive(B) as SKPayload<*>
+            delay(10)
             assertEquals(received.payload, p)
         }
     }
