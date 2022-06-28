@@ -2,10 +2,7 @@ import com.github.d_costa.sessionkotlin.dsl.GlobalProtocol
 import com.github.d_costa.sessionkotlin.dsl.RecursionTag
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.globalProtocol
-import messages.C220
-import messages.C250
-import messages.C250Hyphen
-import messages.EHLO
+import messages.*
 
 fun main() {
 
@@ -18,10 +15,15 @@ fun main() {
 //    lateinit var tMail2: RecursionTag
 //    lateinit var tMail3: RecursionTag
 
+    val quit: GlobalProtocol = {
+        send<Quit>(client, server)
+        send<C221>(server, client)  // Service closing transmission channel
+    }
+
     val ehlo: GlobalProtocol = {
         choice(client) {
-            branch("Continue") {
-                send<EHLO>(client, server)
+            branch(Code.Ehlo) {
+                send<Ehlo>(client, server)
                 tEhlo = mu()
 
                 /*
@@ -29,26 +31,35 @@ fun main() {
                  * The last line does not have a hyphen.
                  */
                 choice(server) {
-                    branch("250") {
+                    branch(Code.C250Hyphen) {
                         send<C250Hyphen>(server, client)
                         goto(tEhlo)
                     }
-                    branch("250hyphen") {
+                    branch(Code.C250) {
                         send<C250>(server, client)
 //                        startTLS()
                     }
                 }
             }
-            branch("Quit") {
-                send<Unit>(client, server)
+            branch(Code.Quit) {
+                quit()
             }
         }
     }
 
     // RFC5321
     globalProtocol("SMTP") {
-        send<C220>(server, client)
-        ehlo()
+        choice(server) {
+            branch(Code.C220) {
+                // Service ready
+                send<C220>(server, client)
+                ehlo()
+            }
+            branch(Code.C554) {
+                // Transaction failed
+                send<C554>(server, client)
+            }
+        }
     }
 
 

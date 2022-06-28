@@ -61,13 +61,6 @@ public abstract class SKInputEndpoint(private val e: SKMPEndpoint) : SKLinearEnd
             buf.value = (msg as SKPayload<T>).payload
         }
     }
-
-    /**
-     * Receive a message from [role] and ignore its content.
-     */
-    protected suspend fun receiveDummy(role: SKGenRole) {
-        receive<Any>(role)
-    }
 }
 
 public abstract class SKCaseEndpoint(e: SKMPEndpoint, private val msg: SKMessage) : SKInputEndpoint(e) {

@@ -350,7 +350,7 @@ private class APIGenerator(
                 val codeBlock = CodeBlock.builder()
                     .also {
                         if (bufferParam == null) {
-                            it.addStatement("super.receiveDummy(%L)", roleMap[l.from])
+                            it.addStatement("super.receive(%L)", roleMap[l.from])
                         } else {
                             it.addStatement("super.receivePayload(%L, %L)", roleMap[l.from], bufferParam.name)
                             if (l.msgLabel != null && l.msgLabel.mentioned) {

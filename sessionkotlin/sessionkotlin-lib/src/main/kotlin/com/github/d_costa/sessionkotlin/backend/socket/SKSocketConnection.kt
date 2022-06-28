@@ -37,7 +37,6 @@ internal class SKSocketConnection(
             queue.removeFirst()
         } else {
             inputStream.read(0) {
-                println(it.remaining())
                 if (buffer.remaining() < it.remaining()) {
                     logger.error { "Allocated buffer is too small: ${buffer.remaining()}. Needs to be at least ${it.remaining()}, but ${it.capacity()} is recommended." }
                 }
