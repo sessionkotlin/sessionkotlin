@@ -23,21 +23,21 @@ class Booking {
         val g = globalProtocolInternal {
             t = mu()
             choice(client) {
-                branch("Book") {
+                branch {
                     send<String>(client, agency)
                     send<Int>(agency, client)
                     send<Unit>(agency, company) // dummy message
                     goto(t)
                 }
-                branch("Terminate") {
+                branch {
                     choice(client) {
-                        branch("Confirm") {
+                        branch {
                             send<Unit>(client, agency)
                             send<Unit>(agency, company)
                             send<PaymentInfo>(client, company)
                             send<Unit>(company, client)
                         }
-                        branch("Cancel") {
+                        branch {
                             send<Unit>(client, agency)
                             send<Unit>(agency, company)
                         }
@@ -49,16 +49,15 @@ class Booking {
         val lClient = LocalTypeRecursionDefinition(
             t,
             LocalTypeInternalChoice(
-                mapOf(
-                    "Book" to LocalTypeSend(
+                listOf(
+                    LocalTypeSend(
                         agency,
                         StringClass,
                         LocalTypeReceive(agency, IntClass, LocalTypeRecursion(t)),
-                        "Book"
                     ),
-                    "Terminate" to LocalTypeInternalChoice(
-                        mapOf(
-                            "Confirm" to LocalTypeSend(
+                    LocalTypeInternalChoice(
+                        listOf(
+                            LocalTypeSend(
                                 agency,
                                 UnitClass,
                                 LocalTypeSend(
@@ -66,10 +65,8 @@ class Booking {
                                     PaymentInfo::class.java,
                                     LocalTypeReceive(company, UnitClass, LEnd)
                                 ),
-                                "Confirm"
                             ),
-                            "Cancel" to LocalTypeSend(agency, UnitClass, LEnd, "Cancel")
-
+                            LocalTypeSend(agency, UnitClass, LEnd)
                         )
                     )
 
@@ -80,26 +77,25 @@ class Booking {
             t,
             LocalTypeExternalChoice(
                 client,
-                mapOf(
-                    "Book" to LocalTypeReceive(
+                listOf(
+                    LocalTypeReceive(
                         client,
                         StringClass,
-                        LocalTypeSend(client, IntClass, LocalTypeSend(company, UnitClass, LocalTypeRecursion(t), "Book"))
+                        LocalTypeSend(client, IntClass, LocalTypeSend(company, UnitClass, LocalTypeRecursion(t)))
                     ),
-                    "Confirm" to LocalTypeReceive(
+                    LocalTypeReceive(
                         client,
                         UnitClass,
                         LocalTypeSend(
                             company,
                             UnitClass,
                             LEnd,
-                            "Confirm"
                         )
                     ),
-                    "Cancel" to LocalTypeReceive(
+                    LocalTypeReceive(
                         client,
                         UnitClass,
-                        LocalTypeSend(company, UnitClass, LEnd, "Cancel")
+                        LocalTypeSend(company, UnitClass, LEnd)
                     )
                 )
             )
@@ -108,13 +104,13 @@ class Booking {
             t,
             LocalTypeExternalChoice(
                 agency,
-                mapOf(
-                    "Book" to LocalTypeReceive(
+                listOf(
+                    LocalTypeReceive(
                         agency,
                         UnitClass,
                         LocalTypeRecursion(t)
                     ),
-                    "Confirm" to LocalTypeReceive(
+                    LocalTypeReceive(
                         agency,
                         UnitClass,
                         LocalTypeReceive(
@@ -126,7 +122,7 @@ class Booking {
                             )
                         )
                     ),
-                    "Cancel" to LocalTypeReceive(agency, UnitClass, LEnd)
+                    LocalTypeReceive(agency, UnitClass, LEnd)
                 )
             )
         )

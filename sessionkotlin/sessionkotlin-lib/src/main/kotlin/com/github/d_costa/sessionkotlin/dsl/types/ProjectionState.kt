@@ -14,11 +14,6 @@ internal class ProjectionState(
     val names: MutableSet<String> = mutableSetOf(),
 
     /**
-     * Label for the current branch
-     */
-    var branchLabel: String? = null,
-
-    /**
      * The roles that received a message in the branch
      */
     var activeRoles: MutableSet<SKRole> = mutableSetOf(),
@@ -58,9 +53,8 @@ internal class ProjectionState(
     fun copy(
         projectedRole: SKRole = this.projectedRole,
         activeRoles: MutableSet<SKRole> = this.activeRoles.toMutableSet(),
-        branchLabel: String? = this.branchLabel,
         names: MutableSet<String> = this.names.toMutableSet(),
         emptyRecursions: MutableSet<RecursionTag> = this.emptyRecursions,
         usedNames: MutableSet<String> = this.usedNames,
-    ): ProjectionState = ProjectionState(projectedRole, names, branchLabel, activeRoles, emptyRecursions, usedNames)
+    ): ProjectionState = ProjectionState(projectedRole, names, activeRoles, emptyRecursions, usedNames)
 }

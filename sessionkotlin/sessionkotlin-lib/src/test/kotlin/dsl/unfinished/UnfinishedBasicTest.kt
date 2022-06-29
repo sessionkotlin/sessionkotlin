@@ -23,12 +23,12 @@ class UnfinishedBasicTest {
         assertFailsWith<UnfinishedRolesException> {
             globalProtocolInternal {
                 choice(a) {
-                    branch("Case1") {
+                    branch {
                         send<Unit>(a, b)
                         // 'c' not enabled
                         // 'b' enabled
                     }
-                    branch("Case2") {
+                    branch {
                         send<Unit>(a, c)
                         // 'c' enabled
                         // 'b' not enabled
@@ -44,10 +44,10 @@ class UnfinishedBasicTest {
             send<Unit>(a, b)
             send<Unit>(c, b)
             choice(a) {
-                branch("Case1") {
+                branch {
                     send<String>(a, b)
                 }
-                branch("Case2") {
+                branch {
                     send<Int>(a, b)
                 }
                 // 'c' not enabled in any branch

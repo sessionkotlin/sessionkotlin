@@ -17,24 +17,24 @@ class ConsistencyExecTest {
     @Test
     fun `inconsistent external in exec`() {
         val case1: GlobalProtocol = {
-            send<Int>(b, c)
-            send<Int>(c, a)
+            send<Int>(b, c, "c1")
+            send<Int>(c, a, "c1")
             // 'a' enabled by 'c'
         }
 
         val case2: GlobalProtocol = {
-            send<Int>(b, c)
-            send<String>(b, a)
+            send<Int>(b, c, "c2")
+            send<String>(b, a, "c2")
             // 'a' enabled by 'b'
         }
 
         assertFailsWith<InconsistentExternalChoiceException> {
             globalProtocolInternal {
                 choice(b) {
-                    branch("Case1") {
+                    branch {
                         case1()
                     }
-                    branch("Case2") {
+                    branch {
                         case2()
                     }
                 }

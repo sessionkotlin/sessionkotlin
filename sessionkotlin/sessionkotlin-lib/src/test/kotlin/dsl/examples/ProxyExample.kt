@@ -20,11 +20,11 @@ class ProxyExample {
             send<Request>(proxy, server)
 
             choice(server) {
-                branch("Ok") {
+                branch {
                     send<Response>(server, proxy)
                     send<Response>(proxy, client)
                 }
-                branch("Error") {
+                branch {
                     send<Error>(server, proxy)
                     send<Error>(proxy, client)
                 }
@@ -35,9 +35,9 @@ class ProxyExample {
             proxy, Request::class.java,
             LocalTypeExternalChoice(
                 proxy,
-                mapOf(
-                    "Ok" to LocalTypeReceive(proxy, Response::class.java, LEnd),
-                    "Error" to LocalTypeReceive(proxy, Error::class.java, LEnd)
+                listOf(
+                    LocalTypeReceive(proxy, Response::class.java, LEnd),
+                    LocalTypeReceive(proxy, Error::class.java, LEnd)
                 )
             )
         )
@@ -47,16 +47,16 @@ class ProxyExample {
                 server, Request::class.java,
                 LocalTypeExternalChoice(
                     server,
-                    mapOf(
-                        "Ok" to LocalTypeReceive(
+                    listOf(
+                        LocalTypeReceive(
                             server,
                             Response::class.java,
-                            LocalTypeSend(client, Response::class.java, LEnd, "Ok")
+                            LocalTypeSend(client, Response::class.java, LEnd)
                         ),
-                        "Error" to LocalTypeReceive(
+                        LocalTypeReceive(
                             server,
                             Error::class.java,
-                            LocalTypeSend(client, Error::class.java, LEnd, "Error")
+                            LocalTypeSend(client, Error::class.java, LEnd)
                         )
                     )
                 )
@@ -65,9 +65,9 @@ class ProxyExample {
         val lServer = LocalTypeReceive(
             proxy, Request::class.java,
             LocalTypeInternalChoice(
-                mapOf(
-                    "Ok" to LocalTypeSend(proxy, Response::class.java, LEnd, "Ok"),
-                    "Error" to LocalTypeSend(proxy, Error::class.java, LEnd, "Error")
+                listOf(
+                    LocalTypeSend(proxy, Response::class.java, LEnd),
+                    LocalTypeSend(proxy, Error::class.java, LEnd)
                 )
             )
         )

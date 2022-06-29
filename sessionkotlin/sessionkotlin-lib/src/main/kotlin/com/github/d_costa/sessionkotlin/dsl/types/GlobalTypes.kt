@@ -23,7 +23,7 @@ internal class GlobalTypeSend(
     private val from: SKRole,
     private val to: SKRole,
     private val type: Class<*>,
-    private val msgLabel: String?,
+    private val msgLabel: String,
     private val condition: String,
     private val cont: GlobalType,
 ) : GlobalType {
@@ -34,9 +34,7 @@ internal class GlobalTypeSend(
                 if (!state.enabled()) {
                     state.sentWhileDisabled = true
                 }
-                if (msgLabel != null) {
-                    state.names.add(msgLabel)
-                }
+                state.names.add(msgLabel)
                 if (condition.isNotBlank()) {
                     val mentionedNames = RefinementParser.parseToEnd(condition).names()
                     val unknown = mentionedNames.minus(state.names)
@@ -46,21 +44,19 @@ internal class GlobalTypeSend(
                     state.usedNames.addAll(mentionedNames)
                 }
 
-                var branchLabel: String? = null
                 if (!state.activeRoles.contains(to)) {
                     // We are activating role [to]
                     state.activeRoles.add(to)
-                    branchLabel = state.branchLabel
                 }
                 val projectedCont = cont.project(role, state)
 
-                val l: MsgLabel? = if (msgLabel != null)
-                    MsgLabel(msgLabel, state.usedNames.contains(msgLabel))
-                else null
+                val l = MsgLabel(msgLabel, state.usedNames.contains(msgLabel))
 
+                LocalTypeInternalChoice(
+                    to,
+                )
                 LocalTypeSend(
-                    to, type, projectedCont,
-                    branchLabel = branchLabel, msgLabel = l, condition = condition
+                    to, type, msgLabel = l, condition = condition, projectedCont
                 )
             }
             to -> {
@@ -69,9 +65,7 @@ internal class GlobalTypeSend(
                 if (!state.enabled()) {
                     state.enabledBy = from
                 }
-                if (msgLabel != null) {
-                    state.names.add(msgLabel)
-                }
+                state.names.add(msgLabel)
 
                 if (condition.isNotBlank()) {
                     val mentionedNames = RefinementParser.parseToEnd(condition).names()
@@ -82,11 +76,9 @@ internal class GlobalTypeSend(
 
                 val projectedCont = cont.project(role, state)
 
-                val l: MsgLabel? = if (msgLabel != null)
-                    MsgLabel(msgLabel, state.usedNames.contains(msgLabel))
-                else null
+                val l = MsgLabel(msgLabel, state.usedNames.contains(msgLabel))
 
-                LocalTypeReceive(from, type, projectedCont, msgLabel = l)
+                LocalTypeReceive(from, type, msgLabel = l, projectedCont)
             }
             else -> {
                 state.activeRoles.add(to)
@@ -95,12 +87,10 @@ internal class GlobalTypeSend(
         }
 
     override fun sat(state: SatState): Boolean {
-        if (msgLabel != null) {
-            try {
-                state.addVariable(msgLabel, type)
-            } catch (e: InvalidRefinementValueException) {
-                state.addUnsupportedVariableType(msgLabel, type)
-            }
+        try {
+            state.addVariable(msgLabel, type)
+        } catch (e: InvalidRefinementValueException) {
+            state.addUnsupportedVariableType(msgLabel, type)
         }
         if (condition.isNotBlank()) {
             state.addCondition(condition)
@@ -111,7 +101,7 @@ internal class GlobalTypeSend(
 
 internal class GlobalTypeChoice(
     private val at: SKRole,
-    private val branches: Map<String, GlobalType>,
+    private val branches: List<GlobalType>,
 ) : GlobalType {
     override fun project(role: SKRole, state: ProjectionState): LocalType {
         when (role) {
@@ -120,8 +110,9 @@ internal class GlobalTypeChoice(
                     state.sentWhileDisabled = true
                     state.enabledBy = at
                 }
-                val states = branches.mapValues { state.copy(branchLabel = it.key, activeRoles = mutableSetOf(at)) }
-                return LocalTypeInternalChoice(branches.mapValues { it.value.project(role, states.getValue(it.key)) })
+
+                val states = branches.map { state.copy(activeRoles = mutableSetOf(at)) }
+                return LocalTypeInternalChoice(branches.mapIndexed { i, g ->  g.project(role, states[i])})
             }
             else -> {
                 val newState = state.copy(
@@ -130,16 +121,15 @@ internal class GlobalTypeChoice(
                 )
 
                 // Generate a new state for each branch, with the choice subject activated
-                val states = branches.mapValues { newState.copy(branchLabel = it.key, activeRoles = mutableSetOf(at)) }
-                var localType =
-                    LocalTypeExternalChoice(at, branches.mapValues { it.value.project(role, states.getValue(it.key)) })
+                val states = branches.map { newState.copy(activeRoles = mutableSetOf(at)) }
+                var localType = LocalTypeExternalChoice(at, branches.mapIndexed { i, g -> g.project(role, states[i])})
 
                 localType = localType.removeRecursions(newState.emptyRecursions)
 
                 /**
                  * The roles that enabled the projected role
                  */
-                val enabledBy: List<SKRole> = states.values
+                val enabledBy: List<SKRole> = states
                     .mapNotNull { it.enabledBy }
                     .filter { it != role }
 
@@ -156,33 +146,22 @@ internal class GlobalTypeChoice(
                     }
                 }
 
-                val count = states.values.count { it.enabled() }
+                val count = states.count { it.enabled() }
                 if (count != 0 && count != branches.size) {
                     // Role is enabled in some but not all branches
                     throw UnfinishedRolesException(role)
                 }
 
                 // Erase empty choice
-                if (localType.branches.values.all { it is LocalTypeEnd }) {
+                if (localType.branches.all { it is LocalTypeEnd }) {
                     return LocalTypeEnd
                 }
 
-                // Flatten unguarded external choices
-                val merged = mutableMapOf<String, LocalType>()
-                for ((l, t) in localType.branches) {
-                    if (t is LocalTypeExternalChoice) {
-                        merged.putAll(t.branches)
-                    } else {
-                        merged[l] = t
-                    }
-                }
-                localType.branches = merged
-
-                return if (states.any { it.value.sentWhileDisabled }) {
+                return if (states.any { it.sentWhileDisabled }) {
                     // Role sent a message without knowing the outcome of the decision
                     // The projection must be the same for all branches
 
-                    val uniqueProjectedBranches = localType.branches.values.toSet()
+                    val uniqueProjectedBranches = localType.branches.toSet()
 
                     if (uniqueProjectedBranches.size > 1) {
                         // The role's behaviour is not the same in all branches.
@@ -197,7 +176,7 @@ internal class GlobalTypeChoice(
         }
     }
 
-    override fun sat(state: SatState): Boolean = branches.all { it.value.sat(state.clone()) }
+    override fun sat(state: SatState): Boolean = branches.all { it.sat(state.clone()) }
 }
 
 internal object GlobalTypeEnd : GlobalType {

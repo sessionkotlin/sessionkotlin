@@ -26,10 +26,10 @@ class EnabledExecTest {
             globalProtocolInternal {
                 send<Int>(a, b)
                 choice(b) {
-                    branch("Case1") {
+                    branch {
                         x()
                     }
-                    branch("Case2") {
+                    branch{
                         send<Int>(b, c)
                         send<Int>(c, b)
                     }
@@ -46,7 +46,7 @@ class EnabledExecTest {
 
         globalProtocolInternal {
             choice(b) {
-                branch("Case1") {
+                branch {
                     aux()
                     // 'c' was enabled inside aux
                     send<Int>(c, a)
@@ -68,11 +68,11 @@ class EnabledExecTest {
         assertFailsWith<RoleNotEnabledException> {
             globalProtocolInternal {
                 choice(a) {
-                    branch("1") {
+                    branch {
                         // b not enabled
                         branch1()
                     }
-                    branch("2") {
+                    branch {
                         branch2()
                     }
                 }

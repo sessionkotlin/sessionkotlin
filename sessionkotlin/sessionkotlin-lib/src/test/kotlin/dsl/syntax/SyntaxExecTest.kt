@@ -72,7 +72,7 @@ class SyntaxExecTest {
         assertFailsWith<SendingToSelfException> {
             fun aux(x: SKRole): GlobalProtocol = {
                 choice(x) {
-                    branch("1") {
+                    branch {
                         send<Int>(x, b)
                     }
                 }
@@ -88,11 +88,11 @@ class SyntaxExecTest {
     fun `reversed roles`() {
         fun subProtocol(x: SKRole, y: SKRole): GlobalProtocol = {
             choice(x) {
-                branch("1") {
+                branch {
                     send<String>(x, y)
                     send<String>(y, x)
                 }
-                branch("2") {
+                branch {
                     send<Unit>(x, y)
                 }
             }
@@ -102,21 +102,20 @@ class SyntaxExecTest {
         }
 
         val lB = LocalTypeInternalChoice(
-            mapOf(
-                "1" to LocalTypeSend(
+            listOf(
+                LocalTypeSend(
                     a,
                     StringClass,
-                    LocalTypeReceive(a, StringClass, LocalTypeEnd),
-                    "1"
+                    LocalTypeReceive(a, StringClass, LocalTypeEnd)
                 ),
-                "2" to LocalTypeSend(a, UnitClass, LocalTypeEnd, "2")
+                LocalTypeSend(a, UnitClass, LocalTypeEnd)
             )
         )
         val lA = LocalTypeExternalChoice(
             b,
-            mapOf(
-                "1" to LocalTypeReceive(b, StringClass, LocalTypeSend(b, StringClass, LocalTypeEnd)),
-                "2" to LocalTypeReceive(b, UnitClass, LocalTypeEnd)
+            listOf(
+                LocalTypeReceive(b, StringClass, LocalTypeSend(b, StringClass, LocalTypeEnd)),
+                LocalTypeReceive(b, UnitClass, LocalTypeEnd)
             )
         )
         assertEquals(lA, g.project(a))

@@ -32,10 +32,10 @@ class RefinementTest {
         globalProtocolInternal {
             send<Int>(b, a, "init")
             choice(a) {
-                branch("1") {
+                branch{
                     send<Int>(a, b, "val1", "val1 > init")
                 }
-                branch("2") {
+                branch{
                     send<Int>(a, b, "val2", "val2 <= init")
                 }
             }
@@ -66,10 +66,10 @@ class RefinementTest {
         assertFailsWith<UnknownMessageLabelException> {
             globalProtocolInternal {
                 choice(a) {
-                    branch("1") {
+                    branch {
                         send<Int>(a, b, "val1")
                     }
-                    branch("2") {
+                    branch {
                         send<Int>(a, b, condition = "val1 > 0")
                     }
                 }
@@ -103,10 +103,10 @@ class RefinementTest {
         assertFailsWith<UnknownMessageLabelException> {
             globalProtocolInternal {
                 choice(a) {
-                    branch("1") {
+                    branch {
                         send<Int>(a, b, "val1")
                     }
-                    branch("2") {
+                    branch {
                         send<Int>(a, b, condition = "val1 >= 0")
                     }
                 }
@@ -194,10 +194,10 @@ class RefinementTest {
         assertFailsWith<UnsatisfiableRefinementsException> {
             globalProtocolInternal {
                 choice(a) {
-                    branch("1") {
+                    branch {
                         send<Int>(a, b, "val1")
                     }
-                    branch("2") {
+                    branch {
                         send<Int>(a, b, "val2", "0 == 1")
                     }
                 }

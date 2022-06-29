@@ -2,7 +2,6 @@ import com.github.d_costa.sessionkotlin.dsl.GlobalProtocol
 import com.github.d_costa.sessionkotlin.dsl.RecursionTag
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.globalProtocol
-import com.github.d_costa.sessionkotlin.dsl.types.asFormattedString
 import messages.*
 
 val client = SKRole("Client")
@@ -10,7 +9,7 @@ val server = SKRole("Server")
 
 fun main() {
     // RFC5321
-    val g = globalProtocol("SMTP") {
+    globalProtocol("SMTP") {
         // TODO 421
         choice(server) {
             branch(Code.C220) {
@@ -24,7 +23,6 @@ fun main() {
             }
         }
     }
-    println(g.project(client).asFormattedString())
 }
 
 

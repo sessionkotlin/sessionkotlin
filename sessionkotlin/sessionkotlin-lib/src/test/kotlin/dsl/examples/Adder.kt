@@ -20,13 +20,13 @@ class Adder {
         val g = globalProtocolInternal {
             t = mu()
             choice(c) {
-                branch("Continue") {
+                branch {
                     send<Int>(c, s, "v1")
                     send<Int>(c, s, "v2")
                     send<Int>(s, c, "sum", "sum == v1 + v2")
                     goto(t)
                 }
-                branch("Quit") {
+                branch {
                     send<Unit>(c, s)
                 }
             }
@@ -34,13 +34,12 @@ class Adder {
         val lC = LocalTypeRecursionDefinition(
             t,
             LocalTypeInternalChoice(
-                mapOf(
-                    "Continue" to LocalTypeSend(
+                listOf(
+                    LocalTypeSend(
                         s, IntClass,
-                        LocalTypeSend(s, IntClass, LocalTypeReceive(s, IntClass, LocalTypeRecursion(t), msgLabel = MsgLabel("sum", true)), msgLabel = MsgLabel("v2", true)),
-                        "Continue", MsgLabel("v1", true)
+                        LocalTypeSend(s, IntClass, LocalTypeReceive(s, IntClass, LocalTypeRecursion(t))),
                     ),
-                    "Quit" to LocalTypeSend(s, UnitClass, LEnd, "Quit")
+                    LocalTypeSend(s, UnitClass, LEnd)
                 )
             )
         )
@@ -48,13 +47,12 @@ class Adder {
             t,
             LocalTypeExternalChoice(
                 c,
-                mapOf(
-                    "Continue" to LocalTypeReceive(
+                listOf(
+                    LocalTypeReceive(
                         c, IntClass,
-                        LocalTypeReceive(c, IntClass, LocalTypeSend(c, IntClass, LocalTypeRecursion(t), msgLabel = MsgLabel("sum", true), condition = "sum == v1 + v2"), MsgLabel("v2", true)),
-                        MsgLabel("v1", true)
+                        LocalTypeReceive(c, IntClass, LocalTypeSend(c, IntClass, LocalTypeRecursion(t))),
                     ),
-                    "Quit" to LocalTypeReceive(c, UnitClass, LEnd)
+                    LocalTypeReceive(c, UnitClass, LEnd)
                 )
             )
         )

@@ -245,7 +245,7 @@ private class APIGenerator(
                                 bindingsVariableName
                             )
                         }
-                        it.addStatement("send(%L, %L, %S)", roleMap[l.to], pName, l.branchLabel)
+                        it.addStatement("send(%L, %L)", roleMap[l.to], pName)
                     }
                     .addStatement("return %T(e)", ret.interfaceClassPair.className)
                     .build()
@@ -303,14 +303,13 @@ private class APIGenerator(
                             .also {
                                 if (parameter == null) {
                                     it.addStatement(
-                                        "sendProtected(%L, %T(%S))",
-                                        roleMap[l.to], SKDummyMessage::class, l.branchLabel
+                                        "sendProtected(%L, %T())",
+                                        roleMap[l.to], SKDummyMessage::class
                                     )
                                 } else {
                                     it.addStatement(
                                         "sendProtected(%L, %T(%L, %S))",
                                         roleMap[l.to], SKMessage::class, msgVariable(l.msgLabel.label),
-                                        l.branchLabel
                                     )
                                 }
                             }
@@ -467,25 +466,25 @@ private class APIGenerator(
                 )
                 callbackCode.beginControlFlow("when(%L.branch)", caseMsgVariable)
 
-                for ((k, v) in l.branches) {
-                    val nextCallbackCode = CodeBlock.builder()
-                    callbackCode.add("%S -> ", k)
-                    callbackCode.beginControlFlow("")
-
-                    val ret = genLocals(
-                        v,
-                        newIndex,
-                        nextCallbackCode,
-                        superInterface = branchInterfaceName,
-                        branch = k
-                    )
-                    callbackCode.add(nextCallbackCode.build())
-                    callbackCode.endControlFlow()
-
-                    whenBlock.addStatement("%S -> %T(e, msg)", k, ret.interfaceClassPair.className)
-                    ret.interfaceClassPair.className
-                    newIndex = ret.counter + 1
-                }
+//                for (b in l.branches) {
+//                    val nextCallbackCode = CodeBlock.builder()
+//                    callbackCode.add("%S -> ", k)
+//                    callbackCode.beginControlFlow("")
+//
+//                    val ret = genLocals(
+//                        v,
+//                        newIndex,
+//                        nextCallbackCode,
+//                        superInterface = branchInterfaceName,
+//                        branch = k
+//                    )
+//                    callbackCode.add(nextCallbackCode.build())
+//                    callbackCode.endControlFlow()
+//
+//                    whenBlock.addStatement("%S -> %T(e, msg)", k, ret.interfaceClassPair.className)
+//                    ret.interfaceClassPair.className
+//                    newIndex = ret.counter + 1
+//                }
                 val elseStatement = "else -> throw %T(\"This should not happen. branch: \${%L.branch}\")"
                 callbackCode.addStatement(elseStatement, RuntimeException::class, caseMsgVariable)
                 callbackCode.endControlFlow()
@@ -533,34 +532,34 @@ private class APIGenerator(
                 )
                 callbackCode.beginControlFlow("when(%L.%L())", callbacksParameterName, choiceFunctionName)
 
-                for ((k, v) in l.branches) {
-                    val nextCallbackCode = CodeBlock.builder()
-                    val enumConstant = "Choice${stateIndex}_$k"
-                    callbackCode.add("%T.%L -> ", choiceEnumClassname, enumConstant)
-                    callbackCode.beginControlFlow("")
-                    choiceEnum.addEnumConstant(enumConstant)
-                    val ret = genLocals(v, counter, nextCallbackCode)
-                    callbackCode.add(nextCallbackCode.build())
-                    callbackCode.endControlFlow()
-
-                    counter = ret.counter + 1
-
-                    val methodName = "branch$k"
-
-                    val abstractFunction = FunSpec.builder(methodName)
-                        .returns(ret.interfaceClassPair.interfaceClassName)
-                        .addModifiers(KModifier.ABSTRACT, KModifier.SUSPEND)
-
-                    val function = FunSpec.builder(methodName)
-                        .returns(ret.interfaceClassPair.interfaceClassName)
-                        .addModifiers(KModifier.OVERRIDE, KModifier.SUSPEND)
-                        .also {
-                            it.addStatement("return %T(e)", ret.interfaceClassPair.className)
-                        }
-
-                    interfaceBuilder.addFunction(abstractFunction.build())
-                    classBuilder.addFunction(function.build())
-                }
+//                for ((k, v) in l.branches) {
+//                    val nextCallbackCode = CodeBlock.builder()
+//                    val enumConstant = "Choice${stateIndex}_$k"
+//                    callbackCode.add("%T.%L -> ", choiceEnumClassname, enumConstant)
+//                    callbackCode.beginControlFlow("")
+//                    choiceEnum.addEnumConstant(enumConstant)
+//                    val ret = genLocals(v, counter, nextCallbackCode)
+//                    callbackCode.add(nextCallbackCode.build())
+//                    callbackCode.endControlFlow()
+//
+//                    counter = ret.counter + 1
+//
+//                    val methodName = "branch$k"
+//
+//                    val abstractFunction = FunSpec.builder(methodName)
+//                        .returns(ret.interfaceClassPair.interfaceClassName)
+//                        .addModifiers(KModifier.ABSTRACT, KModifier.SUSPEND)
+//
+//                    val function = FunSpec.builder(methodName)
+//                        .returns(ret.interfaceClassPair.interfaceClassName)
+//                        .addModifiers(KModifier.OVERRIDE, KModifier.SUSPEND)
+//                        .also {
+//                            it.addStatement("return %T(e)", ret.interfaceClassPair.className)
+//                        }
+//
+//                    interfaceBuilder.addFunction(abstractFunction.build())
+//                    classBuilder.addFunction(function.build())
+//                }
                 callbackCode.endControlFlow()
 
                 callbacksInterfaceFile.addType(choiceEnum.build())

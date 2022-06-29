@@ -3,31 +3,31 @@ import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.globalProtocol
 
 fun main() {
-    val a = SKRole("A")
-    val b = SKRole("B")
-    val c = SKRole("C")
-
-    val subProtocol: GlobalProtocol = {
-        send<Int>(a, b, "val1")
-        send<Int>(b, c, "val2", "val2 > val1")
-    }
-
-    globalProtocol("Simple", true) {
-        send<Unit>(c, b, "dummy")
-        val t1 = mu()
-        choice(a) {
-            branch("1") {
-                subProtocol()
-                goto(t1)
-            }
-            branch("2") {
-                send<Int>(a, b, "val3")
-                send<Int>(b, c, "val4", "val4 < val3")
-            }
-            branch("3") {
-                send<Unit>(a,b, "d1")
-                send<Unit>(b,c, "d2")
-            }
-        }
-    }
+//    val a = SKRole("A")
+//    val b = SKRole("B")
+//    val c = SKRole("C")
+//
+//    val subProtocol: GlobalProtocol = {
+//        send<Int>(a, b, "val1")
+//        send<Int>(b, c, "val2", "val2 > val1")
+//    }
+//
+//    globalProtocol("Simple", true) {
+//        send<Unit>(c, b, "dummy")
+//        val t1 = mu()
+//        choice(a) {
+//            branch() {
+//                subProtocol()
+//                goto(t1)
+//            }
+//            branch() {
+//                send<Int>(a, b, "val3")
+//                send<Int>(b, c, "val4", "val4 < val3")
+//            }
+//            branch() {
+//                send<Unit>(a,b, "d1")
+//                send<Unit>(b,c, "d2")
+//            }
+//        }
+//    }
 }

@@ -26,8 +26,8 @@ public sealed class GlobalEnv(
 ) {
     internal var instructions = mutableListOf<Instruction>()
     internal val roles = roles.toMutableSet()
-    internal val recursionVariables = recursionVariables.toMutableSet()
-    private val msgLabels = mutableSetOf<String>()
+    private val recursionVariables = recursionVariables.toMutableSet()
+    internal val msgLabels = mutableListOf<String>()
 
     /**
      *
@@ -49,7 +49,7 @@ public sealed class GlobalEnv(
     public inline fun <reified T> send(
         from: SKRole,
         to: SKRole,
-        label: String? = null,
+        label: String = "",
         condition: String = "",
     ): Unit = send(from, to, T::class.java, label, condition)
 
@@ -70,17 +70,10 @@ public sealed class GlobalEnv(
         from: SKRole,
         to: SKRole,
         type: Class<*>,
-        label: String? = null,
+        label: String = "",
         condition: String = "",
     ) {
-        if (label != null) {
-            if (label in msgLabels) {
-                throw DuplicateMessageLabelException(label)
-            } else {
-                msgLabels.add(label)
-            }
-        }
-
+        msgLabels.add(label)
         if (condition.isNotBlank()) {
             RefinementParser.parseToEnd(condition)
         }
@@ -109,15 +102,9 @@ public sealed class GlobalEnv(
         val b = Choice(at, bEnv.branchMap)
 
         roles.add(at)
-        for (g in b.branchMap.values) {
+        for (g in b.branches) {
             roles.addAll(g.roles)
-            for (l in g.msgLabels) {
-                if (l in msgLabels) {
-                    throw DuplicateMessageLabelException(l)
-                } else {
-                    msgLabels.add(l)
-                }
-            }
+            msgLabels.addAll(g.msgLabels)
         }
         instructions.add(b)
     }
@@ -143,7 +130,7 @@ public sealed class GlobalEnv(
      *
      * Recursion point.
      *
-     * @param [tag] the tag of the recursion point to go to.
+     * @param [tag] the tag of the recursion point to return to.
      *
      * @sample [com.github.d_costa.sessionkotlin.dsl.Samples.goto]
      *
@@ -159,7 +146,7 @@ public sealed class GlobalEnv(
     /**
      * Prints the protocol to the standard output.
      */
-    public fun dump(indent: Int = 0) {
+    internal fun dump(indent: Int = 0) {
         printlnIndent(indent, "{")
         for (i in instructions) {
             i.dump(indent)
@@ -229,7 +216,7 @@ private fun buildGlobalType(
                 head.condition,
                 buildGlobalType(tail)
             )
-            is Choice -> GlobalTypeChoice(head.at, head.branchMap.mapValues { buildGlobalType(it.value.instructions) })
+            is Choice -> GlobalTypeChoice(head.at, head.branches.map { buildGlobalType(it.instructions) })
             is Recursion -> GlobalTypeRecursion(head.tag)
             is RecursionDefinition -> GlobalTypeRecursionDefinition(head.tag, buildGlobalType(tail))
         }
@@ -264,5 +251,11 @@ internal fun globalProtocolInternal(name: String = "Proto", protocolBuilder: Glo
  * Global protocol builder. Generates local APIs.
  */
 public fun globalProtocol(name: String, callbacks: Boolean = false, protocolBuilder: GlobalEnv.() -> Unit) {
-    generateAPI(globalProtocolInternal(name, protocolBuilder), callbacks)
+    val g = globalProtocolInternal(name, protocolBuilder)
+    if (callbacks) {
+        val repeated = g.msgLabels.groupingBy { it }.eachCount().filter { it.value > 1 }
+        if (repeated.isNotEmpty())
+            throw DuplicateMessageLabelException(repeated.keys)
+    }
+    generateAPI(g, callbacks)
 }

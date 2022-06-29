@@ -22,24 +22,24 @@ class Negotiation {
             t = mu()
 
             choice(seller) {
-                branch("Accept1") {
-                    send<Unit>(seller, buyer)
-                    send<Unit>(buyer, seller)
+                branch {
+                    send<Unit>(seller, buyer, "Accept1")
+                    send<Unit>(buyer, seller, "Accept1")
                 }
-                branch("Reject1") {
-                    send<Unit>(seller, buyer)
+                branch {
+                    send<Unit>(seller, buyer, "Reject1")
                 }
-                branch("Haggle1") {
+                branch {
                     send<Int>(seller, buyer, "counter", "counter > proposal")
                     choice(buyer) {
-                        branch("Accept2") {
-                            send<Unit>(buyer, seller)
-                            send<Unit>(seller, buyer)
+                        branch {
+                            send<Unit>(buyer, seller, "Accept2")
+                            send<Unit>(seller, buyer, "Accept2")
                         }
-                        branch("Reject2") {
-                            send<Unit>(buyer, seller)
+                        branch {
+                            send<Unit>(buyer, seller, "Reject2")
                         }
-                        branch("Haggle2") {
+                        branch {
                             send<Int>(buyer, seller, "proposal2", "proposal2 < counter")
                             goto(t)
                         }
@@ -53,56 +53,50 @@ class Negotiation {
                 t,
                 LocalTypeExternalChoice(
                     seller,
-                    mapOf(
-                        "Accept1" to LocalTypeReceive(seller, UnitClass, LocalTypeSend(seller, UnitClass, LEnd)),
-                        "Reject1" to LocalTypeReceive(seller, UnitClass, LEnd),
-                        "Haggle1" to LocalTypeReceive(
+                    listOf(
+                        LocalTypeReceive(seller, UnitClass, LocalTypeSend(seller, UnitClass, LEnd)),
+                        LocalTypeReceive(seller, UnitClass, LEnd),
+                        LocalTypeReceive(
                             seller, IntClass,
                             LocalTypeInternalChoice(
-                                mapOf(
-                                    "Accept2" to LocalTypeSend(
+                                listOf(
+                                    LocalTypeSend(
                                         seller, UnitClass,
-                                        LocalTypeReceive(seller, UnitClass, LEnd),
-                                        "Accept2"
+                                        LocalTypeReceive(seller, UnitClass, LEnd)
                                     ),
-                                    "Reject2" to LocalTypeSend(seller, UnitClass, LEnd, "Reject2"),
-                                    "Haggle2" to LocalTypeSend(seller, IntClass, LocalTypeRecursion(t), "Haggle2", MsgLabel("proposal2", true), "proposal2 < counter")
+                                    LocalTypeSend(seller, UnitClass, LEnd),
+                                    LocalTypeSend(seller, IntClass, LocalTypeRecursion(t)))
                                 )
                             ),
-                            MsgLabel("counter", true)
                         )
                     )
                 )
-            ),
-            msgLabel = MsgLabel("proposal", true)
         )
         val lSeller = LocalTypeReceive(
             buyer, IntClass,
             LocalTypeRecursionDefinition(
                 t,
                 LocalTypeInternalChoice(
-                    mapOf(
-                        "Accept1" to LocalTypeSend(buyer, UnitClass, LocalTypeReceive(buyer, UnitClass, LEnd), "Accept1"),
-                        "Reject1" to LocalTypeSend(buyer, UnitClass, LEnd, "Reject1"),
-                        "Haggle1" to LocalTypeSend(
+                    listOf(
+                        LocalTypeSend(buyer, UnitClass, LocalTypeReceive(buyer, UnitClass, LEnd)),
+                        LocalTypeSend(buyer, UnitClass, LEnd),
+                        LocalTypeSend(
                             buyer, IntClass,
                             LocalTypeExternalChoice(
                                 buyer,
-                                mapOf(
-                                    "Accept2" to LocalTypeReceive(
+                                listOf(
+                                    LocalTypeReceive(
                                         buyer, UnitClass,
                                         LocalTypeSend(buyer, UnitClass, LEnd)
                                     ),
-                                    "Reject2" to LocalTypeReceive(buyer, UnitClass, LEnd),
-                                    "Haggle2" to LocalTypeReceive(buyer, IntClass, LocalTypeRecursion(t), MsgLabel("proposal2", true))
+                                    LocalTypeReceive(buyer, UnitClass, LEnd),
+                                    LocalTypeReceive(buyer, IntClass, LocalTypeRecursion(t))
                                 )
-                            ),
-                            "Haggle1", MsgLabel("counter", true), "counter > proposal"
+                            )
                         )
                     )
                 )
-            ),
-            MsgLabel("proposal", true)
+            )
         )
         assertEquals(lBuyer, g.project(buyer))
         assertEquals(lSeller, g.project(seller))

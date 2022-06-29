@@ -31,10 +31,10 @@ class UnfinishedExecTest {
         }
         val g = globalProtocolInternal {
             choice(a) {
-                branch("1") {
+                branch {
                     aux()
                 }
-                branch("2") {
+                branch {
                     aux()
                 }
                 // branches mergeable for 'b', even without being activated for the first send
@@ -46,7 +46,6 @@ class UnfinishedExecTest {
                 a, IntClass,
                 LocalTypeSend(c, LongClass, LEnd)
             ),
-            "1"
         )
         assertEquals(lB, g.project(b))
     }
@@ -63,10 +62,10 @@ class UnfinishedExecTest {
                 send<Int>(a, b)
                 send<Int>(a, c)
                 choice(a) {
-                    branch("1") {
+                    branch {
                         subProtocol(b, a)()
                     }
-                    branch("2") {
+                    branch {
                         subProtocol(a, b)()
                     }
                 }
@@ -84,10 +83,10 @@ class UnfinishedExecTest {
         assertFailsWith<UnfinishedRolesException> {
             globalProtocolInternal {
                 choice(a) {
-                    branch("1") {
+                    branch{
                         subProtocol(b)()
                     }
-                    branch("2") {
+                    branch {
                         subProtocol(c)()
                     }
                 }

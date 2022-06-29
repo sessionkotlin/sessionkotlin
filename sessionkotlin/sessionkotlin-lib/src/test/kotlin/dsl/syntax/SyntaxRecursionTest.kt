@@ -75,7 +75,7 @@ class SyntaxRecursionTest {
                 send<Int>(b, a)
                 goto(t)
                 choice(c) {
-                    branch("Case1") {
+                    branch {
                         send<Int>(c, b)
                     }
                 }
@@ -103,11 +103,11 @@ class SyntaxRecursionTest {
             globalProtocolInternal {
                 send<Int>(a, b)
                 choice(b) {
-                    branch("1") {
+                    branch {
                         send<Int>(b, c)
                         goto(t)
                     }
-                    branch("2") {
+                    branch {
                         send<Int>(b, c)
                     }
                 }
@@ -121,7 +121,7 @@ class SyntaxRecursionTest {
             globalProtocolInternal {
                 val t = mu()
                 choice(b) {
-                    branch("1") {
+                    branch {
                         goto(t)
                         send<Int>(b, a)
                     }
@@ -142,12 +142,12 @@ class SyntaxRecursionTest {
             send<Int>(a, b)
             aux()
             choice(b) {
-                branch("1") {
+                branch {
                     send<Int>(b, c)
                     send<Int>(b, a)
                     goto(t)
                 }
-                branch("2") {
+                branch {
                     send<Int>(b, a)
                     send<Int>(b, c)
                 }
@@ -157,9 +157,9 @@ class SyntaxRecursionTest {
             t,
             LocalTypeExternalChoice(
                 b,
-                mapOf(
-                    "1" to LocalTypeReceive(b, IntClass, LocalTypeRecursion(t)),
-                    "2" to LocalTypeReceive(b, IntClass, LEnd)
+                listOf(
+                    LocalTypeReceive(b, IntClass, LocalTypeRecursion(t)),
+                    LocalTypeReceive(b, IntClass, LEnd)
                 )
             )
         )
@@ -203,25 +203,25 @@ class SyntaxRecursionTest {
             t1 = mu()
             send<Unit>(a, b)
             choice(b) {
-                branch("1") {
+                branch {
                     send<Int>(b, a)
                     goto(t1)
                 }
-                branch("2") {
+                branch {
                     send<Int>(b, a)
                     t2 = mu()
                     choice(a) {
-                        branch("2.1") {
+                        branch {
                             send<Int>(a, b)
                             goto(t2)
                         }
-                        branch("2.2") {
+                        branch {
                             send<Unit>(a, b)
                             goto(t1)
                         }
                     }
                 }
-                branch("3") {
+                branch {
                     send<String>(b, a)
                 }
             }
@@ -232,21 +232,21 @@ class SyntaxRecursionTest {
                 b, UnitClass,
                 LocalTypeExternalChoice(
                     b,
-                    mapOf(
-                        "1" to LocalTypeReceive(b, IntClass, LocalTypeRecursion(t1)),
-                        "2" to LocalTypeReceive(
+                    listOf(
+                        LocalTypeReceive(b, IntClass, LocalTypeRecursion(t1)),
+                        LocalTypeReceive(
                             b, IntClass,
                             LocalTypeRecursionDefinition(
                                 t2,
                                 LocalTypeInternalChoice(
-                                    mapOf(
-                                        "2.1" to LocalTypeSend(b, IntClass, LocalTypeRecursion(t2), "2.1"),
-                                        "2.2" to LocalTypeSend(b, UnitClass, LocalTypeRecursion(t1), "2.2")
+                                    listOf(
+                                        LocalTypeSend(b, IntClass, LocalTypeRecursion(t2)),
+                                        LocalTypeSend(b, UnitClass, LocalTypeRecursion(t1))
                                     )
                                 )
                             )
                         ),
-                        "3" to LocalTypeReceive(b, StringClass, LEnd),
+                        LocalTypeReceive(b, StringClass, LEnd),
 
                     )
                 )
@@ -263,7 +263,7 @@ class SyntaxRecursionTest {
             send<Unit>(c, d)
 
             choice(a) {
-                branch("1") {
+                branch {
                     send<Unit>(a, b)
                     // 'c' and 'd' can 'unpack' this choice
                     goto(t)
@@ -300,12 +300,12 @@ class SyntaxRecursionTest {
             x = mu()
             send<Int>(a, b)
             choice(a) {
-                branch("1") {
+                branch {
                     mu()
                     send<Long>(a, b)
                     goto(x)
                 }
-                branch("2") {
+                branch{
                     send<String>(a, b)
                 }
             }
@@ -316,14 +316,13 @@ class SyntaxRecursionTest {
                 b,
                 IntClass,
                 LocalTypeInternalChoice(
-                    mapOf(
-                        "1" to LocalTypeSend(
+                    listOf(
+                         LocalTypeSend(
                             b,
                             LongClass,
-                            LocalTypeRecursion(x),
-                            "1"
+                            LocalTypeRecursion(x)
                         ),
-                        "2" to LocalTypeSend(b, StringClass, LocalTypeEnd, "2")
+                        LocalTypeSend(b, StringClass, LocalTypeEnd)
                     )
                 )
             )
@@ -335,9 +334,9 @@ class SyntaxRecursionTest {
                 IntClass,
                 LocalTypeExternalChoice(
                     a,
-                    mapOf(
-                        "1" to LocalTypeReceive(a, LongClass, LocalTypeRecursion(x)),
-                        "2" to LocalTypeReceive(a, StringClass, LocalTypeEnd)
+                    listOf(
+                        LocalTypeReceive(a, LongClass, LocalTypeRecursion(x)),
+                        LocalTypeReceive(a, StringClass, LocalTypeEnd)
                     )
                 )
             )
@@ -351,7 +350,7 @@ class SyntaxRecursionTest {
         val g = globalProtocolInternal {
             mu()
             choice(a) {
-                branch("1") {
+                branch {
                     send<Long>(a, b)
                     mu()
                     send<Long>(b, a)
@@ -359,14 +358,14 @@ class SyntaxRecursionTest {
             }
         }
         val lA = LocalTypeInternalChoice(
-            mapOf(
-                "1" to LocalTypeSend(b, LongClass, LocalTypeReceive(b, LongClass, LEnd), "1")
+            listOf(
+                LocalTypeSend(b, LongClass, LocalTypeReceive(b, LongClass, LEnd))
             )
         )
         val lB = LocalTypeExternalChoice(
             a,
-            mapOf(
-                "1" to LocalTypeReceive(a, LongClass, LocalTypeSend(a, LongClass, LEnd))
+            listOf(
+                LocalTypeReceive(a, LongClass, LocalTypeSend(a, LongClass, LEnd))
             )
         )
         assertEquals(lA, g.project(a))
@@ -380,11 +379,11 @@ class SyntaxRecursionTest {
             send<Int>(a, b)
             val t2 = mu()
             choice(a) {
-                branch("1") {
+                branch {
                     send<Long>(a, b)
                     goto(t1)
                 }
-                branch("2") {
+                branch {
                     send<String>(a, b)
                     goto(t2)
                 }
@@ -401,10 +400,10 @@ class SyntaxRecursionTest {
             // c can terminate here
             val t1 = mu()
             choice(a) {
-                branch("1") {
+                branch {
                     send<Long>(a, b)
                 }
-                branch("2") {
+                branch {
                     send<String>(a, b)
                     goto(t1)
                 }

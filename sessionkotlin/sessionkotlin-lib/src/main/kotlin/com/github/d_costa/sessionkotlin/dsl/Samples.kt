@@ -34,11 +34,11 @@ public class Samples {
 
         globalProtocol("ProtocolName") {
             choice(b) {
-                branch("Ok") {
-                    send<String>(b, a)
+                branch() {
+                    send<String>(b, a, "ok")
                 }
-                branch("Quit") {
-                    send<Long>(b, a)
+                branch() {
+                    send<Long>(b, a, "quit")
                 }
             }
         }
@@ -49,19 +49,19 @@ public class Samples {
         val b = SKRole("B")
         val c = SKRole("C")
 
-        fun case(z: SKRole): GlobalProtocol = {
-            send<String>(a, b)
+        fun case(z: SKRole, label: String): GlobalProtocol = {
+            send<String>(a, b, label)
             send<String>(a, c)
             send<String>(z, a)
         }
 
         globalProtocol("ProtocolName") {
             choice(a) {
-                branch("Case1") {
-                    case(b)()
+                branch() {
+                    case(b, "Case1")()
                 }
-                branch("Case2") {
-                    case(c)()
+                branch() {
+                    case(c, "Case2")()
                 }
             }
         }
@@ -75,12 +75,12 @@ public class Samples {
             val t = mu()
             choice(client) {
 
-                branch("Add") {
-                    send<Int>(client, server)
+                branch() {
+                    send<Int>(client, server, "Add")
                     goto(t)
                 }
-                branch("Result") {
-                    send<String>(client, server)
+                branch() {
+                    send<String>(client, server, "Result")
                     send<Int>(server, client)
                 }
             }

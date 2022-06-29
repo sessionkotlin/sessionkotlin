@@ -17,16 +17,16 @@ class GuessTheNumber {
             val t = mu()
             send<Int>(guesser, middleman, "guess",)
             choice(middleman) {
-                branch("lower") {
-                    send<Unit>(middleman, guesser, condition = "guess > num")
+                branch {
+                    send<Unit>(middleman, guesser, "lower", "guess > num")
                     goto(t)
                 }
-                branch("higher") {
-                    send<Unit>(middleman, guesser, condition = "guess < num")
+                branch {
+                    send<Unit>(middleman, guesser, "higher", "guess < num")
                     goto(t)
                 }
-                branch("correct") {
-                    send<Unit>(middleman, guesser, condition = "guess == num")
+                branch {
+                    send<Unit>(middleman, guesser, "correct", "guess == num")
                 }
             }
         }
