@@ -8,6 +8,7 @@ class Code {
         const val C250Hyphen = "250-"
         const val C554 = "554"
         const val Ehlo = "ehlo"
+        const val TLS = "starttls"
         const val Quit = "quit"
     }
 }

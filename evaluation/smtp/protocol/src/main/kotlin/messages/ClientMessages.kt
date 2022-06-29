@@ -1,4 +1,5 @@
 package messages
 
-class Quit(body: String): SMTPMessage(Code.Quit, body)
-class Ehlo(body: String): SMTPMessage(Code.Ehlo, body)
+class Quit: SMTPMessage(Code.Quit, "")
+class Ehlo(domain: String): SMTPMessage(Code.Ehlo, domain)
+class TLS: SMTPMessage(Code.TLS, "")

@@ -148,7 +148,7 @@ internal class GlobalTypeChoice(
                     throw InconsistentExternalChoiceException(role, enabledBy)
                 } else if (enabledBy.isNotEmpty()) {
                     // The role was enabled by the same role in all branches
-                    localType.to = enabledBy.first()
+                    localType.of = enabledBy.first()
 
                     if (state.enabledBy == null) {
                         // role is active
@@ -166,6 +166,17 @@ internal class GlobalTypeChoice(
                 if (localType.branches.values.all { it is LocalTypeEnd }) {
                     return LocalTypeEnd
                 }
+
+                // Flatten unguarded external choices
+                val merged = mutableMapOf<String, LocalType>()
+                for ((l, t) in localType.branches) {
+                    if (t is LocalTypeExternalChoice) {
+                        merged.putAll(t.branches)
+                    } else {
+                        merged[l] = t
+                    }
+                }
+                localType.branches = merged
 
                 return if (states.any { it.value.sentWhileDisabled }) {
                     // Role sent a message without knowing the outcome of the decision

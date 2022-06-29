@@ -58,9 +58,9 @@ internal data class LocalTypeInternalChoice(val branches: Map<String, LocalType>
         LocalTypeInternalChoice(branches.mapValues { it.value.removeRecursions(tags) })
 }
 
-internal data class LocalTypeExternalChoice(var to: SKRole, val branches: Map<String, LocalType>) : LocalType() {
+internal data class LocalTypeExternalChoice(var of: SKRole, var branches: Map<String, LocalType>) : LocalType() {
     override fun removeRecursions(tags: Set<RecursionTag>) =
-        LocalTypeExternalChoice(to, branches.mapValues { it.value.removeRecursions(tags) })
+        LocalTypeExternalChoice(of, branches.mapValues { it.value.removeRecursions(tags) })
 }
 
 internal data class LocalTypeRecursionDefinition(val tag: RecursionTag, val cont: LocalType) : LocalType() {
@@ -99,7 +99,7 @@ internal fun LocalType.asString(): String =
     when (this) {
         is LocalTypeSend -> "$to!<${type.simpleName}> . ${cont.asString()}"
         is LocalTypeReceive -> "$from?<${type.simpleName}> . ${cont.asString()}"
-        is LocalTypeExternalChoice -> "&$to ${branches.map { (k, v) -> "$k: ${v.asString()}" }}"
+        is LocalTypeExternalChoice -> "&$of ${branches.map { (k, v) -> "$k: ${v.asString()}" }}"
         is LocalTypeInternalChoice -> "+ ${branches.map { (k, v) -> "$k: ${v.asString()}" }}"
         is LocalTypeRecursion -> "$tag"
         is LocalTypeRecursionDefinition -> "mu_$tag . ${cont.asString()}"
@@ -114,7 +114,7 @@ internal fun LocalType.asFormattedString(i: Int = 0): String =
     when (this) {
         is LocalTypeSend -> "$to!<${type.simpleName}> . ${cont.asFormattedString(i)}"
         is LocalTypeReceive -> "$from?<${type.simpleName}> . ${cont.asFormattedString(i)}"
-        is LocalTypeExternalChoice -> "\n${tabs(i)}&$to \n${tabs(i)}${
+        is LocalTypeExternalChoice -> "\n${tabs(i)}&$of \n${tabs(i)}${
         branches.map { (k, v) -> "$k: ${v.asFormattedString(i + 1)}" }.joinToString("\n${tabs(i)}")
         }"
         is LocalTypeInternalChoice -> "\n${tabs(i)}+\n${tabs(i)}${

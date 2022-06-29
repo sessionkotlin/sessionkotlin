@@ -13,6 +13,7 @@ fun main() {
     }
 
     globalProtocol("Simple", true) {
+        send<Unit>(c, b, "dummy")
         val t1 = mu()
         choice(a) {
             branch("1") {
@@ -22,6 +23,10 @@ fun main() {
             branch("2") {
                 send<Int>(a, b, "val3")
                 send<Int>(b, c, "val4", "val4 < val3")
+            }
+            branch("3") {
+                send<Unit>(a,b, "d1")
+                send<Unit>(b,c, "d2")
             }
         }
     }

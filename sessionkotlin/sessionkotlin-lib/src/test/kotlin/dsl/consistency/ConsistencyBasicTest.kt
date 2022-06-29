@@ -245,4 +245,77 @@ class ConsistencyBasicTest {
         assertEquals(g.project(b), lB)
         assertEquals(g.project(c), lC)
     }
+
+    @Test
+    fun `valid unguarded external choice`() {
+        globalProtocolInternal {
+            choice(b) {
+                branch("1") {
+                    choice(b) {
+                        branch("1.1") {
+                            send<Int>(b, a)
+                        }
+                        branch("1.2") {
+                            send<Long>(b, a)
+                        }
+                    }
+                }
+                branch("2") {
+                    send<String>(b, a)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `valid unguarded external choice 2`() {
+        globalProtocolInternal {
+            choice(b) {
+                branch("1") {
+                    send<Int>(b, c)
+                    choice(c) {
+                        branch("1.1") {
+                            send<String>(c, b)
+                            send<Int>(b, a)
+                        }
+                        branch("1.2") {
+                            send<Long>(c, b)
+                            send<Long>(b, a)
+                        }
+                    }
+                }
+                branch("2") {
+                    send<Int>(b, c)
+                    send<String>(b, a)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `invalid unguarded external choice 2`() {
+        assertFailsWith<InconsistentExternalChoiceException> {
+            globalProtocolInternal {
+                choice(b) {
+                    branch("1") {
+                        send<Int>(b, c)
+                        choice(c) {
+                            branch("1.1") {
+                                send<String>(c, b)
+                                send<Int>(c, a) // A receives from C
+                            }
+                            branch("1.2") {
+                                send<Long>(c, b)
+                                send<Long>(c, a) // A receives from C
+                            }
+                        }
+                    }
+                    branch("2") {
+                        send<Int>(b, c)
+                        send<String>(b, a) // A receives from B
+                    }
+                }
+            }
+        }
+    }
 }

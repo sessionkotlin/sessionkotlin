@@ -1,6 +1,5 @@
 import com.github.d_costa.sessionkotlin.backend.message.SKMessage
 import com.github.d_costa.sessionkotlin.backend.message.SKMessageFormatter
-import com.github.d_costa.sessionkotlin.backend.message.SKPayload
 import messages.*
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
@@ -14,15 +13,15 @@ class SMTPMsgFormatter : SKMessageFormatter {
     }
 
     override fun fromBytes(b: ByteBuffer): Optional<SKMessage> {
-//        println(String(b.customString(), charset))
 
         if (b.remaining() < 4) {
-            Arrays.copyOfRange(b.array(), b.position(), b.limit())
+            // No code: wait for more bytes
             return Optional.empty()
         }
 
-        val head = String(Arrays.copyOfRange(b.array(), b.position(), 4), charset)
-
+        // Extract 4 first bytes
+        val head = String(Arrays.copyOfRange(b.array(), b.position(), b.position() + 4), charset)
+        // Update position
         b.position(b.position() + 4)
 
         if (!validSMTPCode(head))
@@ -38,7 +37,7 @@ class SMTPMsgFormatter : SKMessageFormatter {
             Code.C554 -> C554(body)
             else -> throw NotImplementedSMTPCode(head)
         }
-        return Optional.of(SKPayload(msg, msg.code))
+        return Optional.of(SKMessage(msg, msg.code))
     }
 
     class NotImplementedSMTPCode(code: String) : RuntimeException("Code not implemented: $code")
@@ -81,6 +80,15 @@ class SMTPMsgFormatter : SKMessageFormatter {
         return body.toString()
     }
 
-    override fun toBytes(msg: SKMessage): ByteArray = (msg as SMTPMessage).toBytes(charset)
+    override fun toBytes(msg: SKMessage): ByteArray {
+        return serialize(msg.payload as SMTPMessage)
+    }
 
+    private fun serialize(msg: SMTPMessage): ByteArray {
+        val termination = "${SMTPMessage.CR}${SMTPMessage.LF}"
+        return if (msg.body.isEmpty())
+            ("${msg.code} $termination").toByteArray(charset)
+        else
+            ("${msg.code} ${msg.body} $termination").toByteArray(charset)
+    }
 }

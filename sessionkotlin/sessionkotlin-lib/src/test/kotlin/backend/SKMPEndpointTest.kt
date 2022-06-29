@@ -5,7 +5,6 @@ import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
 import com.github.d_costa.sessionkotlin.backend.message.ObjectFormatter
 import com.github.d_costa.sessionkotlin.backend.message.SKMessage
 import com.github.d_costa.sessionkotlin.backend.message.SKMessageFormatter
-import com.github.d_costa.sessionkotlin.backend.message.SKPayload
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -55,21 +54,21 @@ class SKMPEndpointTest {
 
     private suspend fun bProtocol(endpoint: SKMPEndpoint) {
         for (p in payloads) {
-            val received = endpoint.receive(A) as SKPayload<*>
+            val received = endpoint.receive(A)
             assertEquals(received.payload, p)
         }
         for (p in payloads) {
-            endpoint.send(A, SKPayload(p))
+            endpoint.send(A, SKMessage(p))
         }
     }
 
     private suspend fun aProtocol(endpoint: SKMPEndpoint) {
         for (p in payloads) {
-            endpoint.send(B, SKPayload(p))
+            endpoint.send(B, SKMessage(p))
             delay(10)
         }
         for (p in payloads) {
-            val received = endpoint.receive(B) as SKPayload<*>
+            val received = endpoint.receive(B)
             delay(10)
             assertEquals(received.payload, p)
         }

@@ -12,6 +12,7 @@ import io.ktor.network.sockets.*
 import io.ktor.util.network.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
+import mu.KotlinLogging
 
 /**
  * A Multiparty Endpoint.
@@ -21,11 +22,12 @@ import kotlinx.coroutines.channels.ClosedReceiveChannelException
  *
  * @param msgFormatter (optional) the message formatter. Used to serialize and deserialize messages.
  * @param bufferSize (optional) size of the buffer, when using sockets.
- *
+ * @param logMessages (optional) if true, log sent and received message payloads. Default is false.
  */
 public open class SKMPEndpoint(
     private val msgFormatter: SKMessageFormatter = ObjectFormatter(),
-    private val bufferSize: Int = defaultBufferSize
+    private val bufferSize: Int = defaultBufferSize,
+    private val logMessages: Boolean = false
 ) : AutoCloseable {
     /**
      * Maps generated roles to the individual endpoint that must be used for communication.
@@ -36,6 +38,8 @@ public open class SKMPEndpoint(
      * Map of ports that are bound and the corresponding server socket
      */
     private val serverSockets = mutableMapOf<Int, ServerSocket>()
+
+    private val logger = KotlinLogging.logger(this::class.simpleName!!)
 
     public companion object {
         internal const val defaultBufferSize = 16_384
@@ -90,6 +94,9 @@ public open class SKMPEndpoint(
     protected suspend fun sendProtected(role: SKGenRole, msg: SKMessage) {
         val ch = connections[role] ?: throw NotConnectedException(role)
         ch.writeMsg(msg)
+        if (logMessages) {
+            logger.info { "Sent    : ${msg.payload}" }
+        }
     }
 
     /**
@@ -111,7 +118,11 @@ public open class SKMPEndpoint(
     protected suspend fun receiveProtected(role: SKGenRole): SKMessage {
         try {
             val ch = connections[role] ?: throw NotConnectedException(role)
-            return ch.readMsg()
+            val msg = ch.readMsg()
+            if (logMessages) {
+                logger.info { "Received: ${msg.payload}" }
+            }
+            return msg
         } catch (e: ClosedReceiveChannelException) {
             throw ReadClosedConnectionException(role)
         }

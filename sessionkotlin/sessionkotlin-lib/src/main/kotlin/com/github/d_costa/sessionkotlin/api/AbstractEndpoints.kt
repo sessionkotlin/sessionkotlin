@@ -3,9 +3,8 @@ package com.github.d_costa.sessionkotlin.api
 import com.github.d_costa.sessionkotlin.api.exception.SKLinearException
 import com.github.d_costa.sessionkotlin.backend.SKBuffer
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
-import com.github.d_costa.sessionkotlin.backend.message.SKDummy
+import com.github.d_costa.sessionkotlin.backend.message.SKDummyMessage
 import com.github.d_costa.sessionkotlin.backend.message.SKMessage
-import com.github.d_costa.sessionkotlin.backend.message.SKPayload
 import java.util.*
 
 /**
@@ -30,12 +29,12 @@ public abstract class SKOutputEndpoint(private val e: SKMPEndpoint) : SKLinearEn
      * Sends a message with payload of type [T] to the target [role].
      *
      */
-    protected suspend fun <T> send(role: SKGenRole, payload: T, branch: String?) {
+    protected suspend fun <T : Any> send(role: SKGenRole, payload: T, branch: String?) {
         use()
         if (payload is Unit) {
-            e.send(role, SKDummy(branch))
+            e.send(role, SKDummyMessage(branch))
         } else {
-            e.send(role, SKPayload(payload, branch))
+            e.send(role, SKMessage(payload, branch))
         }
     }
 }
@@ -45,7 +44,7 @@ public abstract class SKOutputEndpoint(private val e: SKMPEndpoint) : SKLinearEn
  */
 public abstract class SKInputEndpoint(private val e: SKMPEndpoint) : SKLinearEndpoint() {
 
-    protected open suspend fun <T : Any> receive(role: SKGenRole): SKMessage {
+    protected open suspend fun receive(role: SKGenRole): SKMessage {
         use()
         return e.receive(role)
     }
@@ -55,16 +54,14 @@ public abstract class SKInputEndpoint(private val e: SKMPEndpoint) : SKLinearEnd
      * and assign its payload to [buf]'s value.
      */
     @Suppress("unchecked_cast")
-    protected suspend fun <T : Any> receivePayload(role: SKGenRole, buf: SKBuffer<T>) {
-        val msg = receive<T>(role)
-        if (msg is SKPayload<*>) {
-            buf.value = (msg as SKPayload<T>).payload
-        }
+    protected suspend fun <T : Any> receive(role: SKGenRole, buf: SKBuffer<T>) {
+        val msg = receive(role)
+        buf.value = msg.payload as T
     }
 }
 
 public abstract class SKCaseEndpoint(e: SKMPEndpoint, private val msg: SKMessage) : SKInputEndpoint(e) {
-    override suspend fun <@Suppress("unused") T : Any> receive(role: SKGenRole): SKMessage {
+    protected override suspend fun receive(role: SKGenRole): SKMessage {
         use()
         return msg
     }

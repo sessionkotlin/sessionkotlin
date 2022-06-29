@@ -242,12 +242,7 @@ class ExtraTest {
         }
         val lC = LocalTypeExternalChoice(
             b,
-            mapOf(
-                "1" to LocalTypeExternalChoice(
-                    b,
-                    mapOf("1.1" to LocalTypeReceive(b, UnitClass, LocalTypeEnd))
-                )
-            )
+            mapOf("1.1" to LocalTypeReceive(b, UnitClass, LocalTypeEnd))
         )
         assertEquals(lC, g.project(c))
     }
