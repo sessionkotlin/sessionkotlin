@@ -29,7 +29,7 @@ class EnabledExecTest {
                     branch {
                         x()
                     }
-                    branch{
+                    branch {
                         send<Int>(b, c)
                         send<Int>(c, b)
                     }

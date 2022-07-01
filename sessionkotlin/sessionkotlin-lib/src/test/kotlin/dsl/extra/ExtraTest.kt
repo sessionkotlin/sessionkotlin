@@ -255,7 +255,7 @@ class ExtraTest {
             send<Unit>(a, b)
 
             choice(a) {
-                branch{
+                branch {
                     goto(t)
                 }
                 branch {

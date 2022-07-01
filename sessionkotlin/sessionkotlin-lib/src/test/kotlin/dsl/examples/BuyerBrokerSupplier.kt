@@ -60,7 +60,7 @@ class BuyerBrokerSupplier {
                                 IntClass,
                                 LocalTypeReceive(finance, IntClass, LocalTypeSend(applicant, IntClass, LEnd)),
                             ),
-                            LocalTypeSend(finance, UnitClass,  MsgLabel("Denied"), LocalTypeSend(applicant, UnitClass, MsgLabel("Denied"), LEnd))
+                            LocalTypeSend(finance, UnitClass, MsgLabel("Denied"), LocalTypeSend(applicant, UnitClass, MsgLabel("Denied"), LEnd))
                         )
                     )
                 )

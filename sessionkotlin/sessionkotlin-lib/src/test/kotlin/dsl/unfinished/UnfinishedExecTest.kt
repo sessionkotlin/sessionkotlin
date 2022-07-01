@@ -83,7 +83,7 @@ class UnfinishedExecTest {
         assertFailsWith<UnfinishedRolesException> {
             globalProtocolInternal {
                 choice(a) {
-                    branch{
+                    branch {
                         subProtocol(b)()
                     }
                     branch {

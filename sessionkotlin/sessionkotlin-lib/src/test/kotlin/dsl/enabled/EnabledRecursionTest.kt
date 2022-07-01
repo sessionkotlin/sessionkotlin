@@ -87,7 +87,7 @@ class EnabledRecursionTest {
                             }
                         }
                     }
-                    branch{
+                    branch {
                         send<Int>(a, b)
                         send<Int>(b, c)
                     }

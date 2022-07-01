@@ -52,9 +52,6 @@ internal class GlobalTypeSend(
 
                 val l = MsgLabel(msgLabel, state.usedNames.contains(msgLabel))
 
-                LocalTypeInternalChoice(
-                    to,
-                )
                 LocalTypeSend(
                     to, type, msgLabel = l, condition = condition, projectedCont
                 )
@@ -112,7 +109,7 @@ internal class GlobalTypeChoice(
                 }
 
                 val states = branches.map { state.copy(activeRoles = mutableSetOf(at)) }
-                return LocalTypeInternalChoice(branches.mapIndexed { i, g ->  g.project(role, states[i])})
+                return LocalTypeInternalChoice(branches.mapIndexed { i, g -> g.project(role, states[i]) })
             }
             else -> {
                 val newState = state.copy(
@@ -122,9 +119,9 @@ internal class GlobalTypeChoice(
 
                 // Generate a new state for each branch, with the choice subject activated
                 val states = branches.map { newState.copy(activeRoles = mutableSetOf(at)) }
-                var localType = LocalTypeExternalChoice(at, branches.mapIndexed { i, g -> g.project(role, states[i])})
+                var localType = LocalTypeExternalChoice(at, branches.mapIndexed { i, g -> g.project(role, states[i]) })
 
-                localType = localType.removeRecursions(newState.emptyRecursions)
+                localType = localType.removeRecursions(newState.emptyRecursions) // TODO check if needed
 
                 /**
                  * The roles that enabled the projected role

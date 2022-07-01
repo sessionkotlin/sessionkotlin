@@ -32,10 +32,10 @@ class RefinementTest {
         globalProtocolInternal {
             send<Int>(b, a, "init")
             choice(a) {
-                branch{
+                branch {
                     send<Int>(a, b, "val1", "val1 > init")
                 }
-                branch{
+                branch {
                     send<Int>(a, b, "val2", "val2 <= init")
                 }
             }

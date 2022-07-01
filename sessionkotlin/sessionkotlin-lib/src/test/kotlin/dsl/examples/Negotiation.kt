@@ -65,12 +65,13 @@ class Negotiation {
                                         LocalTypeReceive(seller, UnitClass, LEnd)
                                     ),
                                     LocalTypeSend(seller, UnitClass, LEnd),
-                                    LocalTypeSend(seller, IntClass, LocalTypeRecursion(t)))
+                                    LocalTypeSend(seller, IntClass, LocalTypeRecursion(t))
                                 )
-                            ),
-                        )
+                            )
+                        ),
                     )
                 )
+            )
         )
         val lSeller = LocalTypeReceive(
             buyer, IntClass,

@@ -3,6 +3,10 @@ package com.github.d_costa.sessionkotlin.dsl
 import com.github.d_costa.sessionkotlin.api.generateAPI
 import com.github.d_costa.sessionkotlin.dsl.exception.*
 import com.github.d_costa.sessionkotlin.dsl.types.*
+import com.github.d_costa.sessionkotlin.fsm.CLT
+import com.github.d_costa.sessionkotlin.fsm.FSM
+import com.github.d_costa.sessionkotlin.fsm.fromLocalType
+import com.github.d_costa.sessionkotlin.fsm.toCLT
 import com.github.d_costa.sessionkotlin.parser.RefinementParser
 import com.github.d_costa.sessionkotlin.util.printlnIndent
 import mu.KotlinLogging
@@ -154,14 +158,17 @@ public sealed class GlobalEnv(
         printlnIndent(indent, "}")
     }
 
-    internal fun project(role: SKRole): LocalType {
+    internal fun project(role: SKRole): CLT {
         if (!roles.contains(role)) {
             throw ProjectionTargetException(role)
         }
         val state = ProjectionState(role)
-        return asGlobalType()
+        val t = asGlobalType()
             .project(role, state)
             .removeRecursions(state.emptyRecursions)
+
+
+        return t.toCLT()  // TODO
     }
 
     internal fun validate() {
@@ -188,7 +195,7 @@ public sealed class GlobalEnv(
         }
     }
 
-    internal fun asGlobalType() = buildGlobalType(instructions)
+    private fun asGlobalType() = buildGlobalType(instructions)
 }
 
 /**

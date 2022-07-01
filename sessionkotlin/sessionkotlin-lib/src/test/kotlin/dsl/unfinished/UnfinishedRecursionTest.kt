@@ -118,7 +118,7 @@ class UnfinishedRecursionTest {
         globalProtocolInternal {
             val x = mu()
             choice(a) {
-                branch{
+                branch {
                     send<Long>(a, b)
                     goto(x)
                 }

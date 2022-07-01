@@ -27,7 +27,7 @@ class ExampleTest {
                     send<Date>(seller, b)
                     send<Date>(b, a)
                 }
-                branch{
+                branch {
                     send<Unit>(b, seller)
                     send<Unit>(b, a)
                 }

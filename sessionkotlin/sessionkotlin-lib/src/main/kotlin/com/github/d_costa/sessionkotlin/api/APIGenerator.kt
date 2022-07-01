@@ -1,6 +1,5 @@
 package com.github.d_costa.sessionkotlin.api
 
-import com.github.d_costa.sessionkotlin.api.exception.NoMessageLabelException
 import com.github.d_costa.sessionkotlin.backend.SKBuffer
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
 import com.github.d_costa.sessionkotlin.backend.message.SKDummyMessage
@@ -9,6 +8,12 @@ import com.github.d_costa.sessionkotlin.dsl.RecursionTag
 import com.github.d_costa.sessionkotlin.dsl.RootEnv
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.types.*
+import com.github.d_costa.sessionkotlin.fsm.*
+import com.github.d_costa.sessionkotlin.fsm.CLT
+import com.github.d_costa.sessionkotlin.fsm.CLTEnd
+import com.github.d_costa.sessionkotlin.fsm.CLTRecursion
+import com.github.d_costa.sessionkotlin.fsm.CLTSend
+import com.github.d_costa.sessionkotlin.fsm.CLTTagged
 import com.github.d_costa.sessionkotlin.parser.RefinementParser
 import com.github.d_costa.sessionkotlin.parser.symbols.values.RefinedValue
 import com.github.d_costa.sessionkotlin.util.asClassname
@@ -40,12 +45,11 @@ internal fun generateAPI(globalEnv: RootEnv, genCallbacksAPI: Boolean) {
     val basePackageName = globalEnv.protocolName.asPackageName()
     val protocolClassName = globalEnv.protocolName.asClassname()
     val outputDirectory = File("build/generated/sessionkotlin/main/kotlin")
-    val globalType = globalEnv.asGlobalType()
     genRoles(globalEnv.roles, protocolClassName, outputDirectory, basePackageName) // populates roleMap
     globalEnv.roles.forEach {
         APIGenerator(
             protocolClassName, basePackageName, it,
-            globalType.project(it, ProjectionState(it)), genCallbacksAPI
+            globalEnv.project(it), genCallbacksAPI
         ).writeTo(outputDirectory)
     }
     genEndClass(outputDirectory, fluent(basePackageName))
@@ -103,7 +107,7 @@ private class APIGenerator(
     private val protocolName: String,
     basePackage: String,
     val role: SKRole,
-    private val localType: LocalType,
+    private val localType: CLT,
     private val genCallbacksAPI: Boolean,
 ) {
 
@@ -153,10 +157,9 @@ private class APIGenerator(
     fun msgVariable(label: String) = "msg$label"
 
     private fun genLocals(
-        l: LocalType,
+        l: CLT,
         stateIndex: Int,
         callbackCode: CodeBlock.Builder,
-        tag: RecursionTag? = null,
         superInterface: ClassName? = null,
         branch: String? = null,
     ): GenRet {
@@ -164,8 +167,8 @@ private class APIGenerator(
         val interfaceSuffix = "_" + (branch ?: "Interface")
         val interfaceName = ClassName(fluentPackage, buildClassName(protocolName, role, stateIndex) + interfaceSuffix)
         val className = ClassName(fluentPackage, buildClassName(protocolName, role, stateIndex))
-        if (tag != null) {
-            recursionMap[tag] = ICNames(interfaceName, className)
+        if (l is CLTTagged && l.recursionTag != null) {
+            recursionMap[l.recursionTag] = ICNames(interfaceName, className)
         }
         val interfaceBuilder = TypeSpec
             .interfaceBuilder(interfaceName)
@@ -198,20 +201,20 @@ private class APIGenerator(
         // End Fluent API
 
         return when (l) {
-            LocalTypeEnd -> GenRet(ICNames(endClassName, endClassName), stateIndex)
-            is LocalTypeRecursion -> {
+            is CLTEnd -> GenRet(ICNames(endClassName, endClassName), stateIndex)
+            is CLTRecursion -> {
                 callbackCode.addStatement("%L = true", recursionVariable(l.tag))
                 GenRet(recursionMap.getValue(l.tag), stateIndex)
             }
-            is LocalTypeRecursionDefinition -> {
-                callbackCode.beginControlFlow("do")
-                callbackCode.addStatement("var %L = %L", recursionVariable(l.tag), false)
-                val ret = genLocals(l.cont, stateIndex, callbackCode, l.tag)
-                callbackCode.endControlFlow()
-                callbackCode.add("while(%L)", recursionVariable(l.tag))
-                ret
-            }
-            is LocalTypeSend -> {
+//            is LocalTypeRecursionDefinition -> {
+//                callbackCode.beginControlFlow("do")
+//                callbackCode.addStatement("var %L = %L", recursionVariable(l.tag), false)
+//                val ret = genLocals(l.cont, stateIndex, callbackCode, l.tag)
+//                callbackCode.endControlFlow()
+//                callbackCode.add("while(%L)", recursionVariable(l.tag))
+//                ret
+//            }
+            is CLTSend -> {
                 classBuilder.superclass(SKOutputEndpoint::class)
                     .addSuperclassConstructorParameter(endpointVariable)
                 val nextCallbackCode = CodeBlock.builder()
@@ -226,7 +229,7 @@ private class APIGenerator(
                 val codeBlock = CodeBlock.builder()
                     .also {
                         val pName = parameter?.name ?: "Unit"
-                        if (l.msgLabel != null && l.msgLabel.mentioned) {
+                        if (l.msgLabel.mentioned) {
                             it.addStatement(
                                 "%L[%S] = %L.%M()",
                                 bindingsVariableName,
@@ -259,11 +262,6 @@ private class APIGenerator(
                 fileSpecBuilder.addType(classBuilder.build())
 
                 if (genCallbacksAPI) {
-                    if (l.msgLabel == null) {
-                        // Msg labels are required for callbacks API
-                        throw NoMessageLabelException()
-                    }
-
                     val callbackFunction =
                         FunSpec.builder("onSend${l.msgLabel.label.capitalized()}To${l.to}")
                             .addModifiers(KModifier.ABSTRACT)
@@ -319,7 +317,7 @@ private class APIGenerator(
                 }
                 GenRet(ICNames(interfaceName, className), ret.counter)
             }
-            is LocalTypeReceive -> {
+            is CLTReceive -> {
                 classBuilder.addSuperclassConstructorParameter(endpointVariable)
                 if (branch != null) {
                     classBuilder.superclass(SKCaseEndpoint::class)
@@ -343,7 +341,7 @@ private class APIGenerator(
                             it.addStatement("receive(%L)", roleMap[l.from])
                         } else {
                             it.addStatement("receive(%L, %L)", roleMap[l.from], bufferParam.name)
-                            if (l.msgLabel != null && l.msgLabel.mentioned) {
+                            if (l.msgLabel.mentioned) {
                                 it.addStatement(
                                     "%L[%S] = %L.value.%M()",
                                     bindingsVariableName,
@@ -369,10 +367,6 @@ private class APIGenerator(
                 fileSpecBuilder.addType(classBuilder.build())
 
                 if (genCallbacksAPI) {
-                    if (l.msgLabel == null) {
-                        // Msg labels are required for callbacks API
-                        throw NoMessageLabelException()
-                    }
                     val callbackFunction = FunSpec.builder("onReceive${l.msgLabel.label.capitalized()}From${l.from}")
                         .addModifiers(KModifier.ABSTRACT)
                         .also {
@@ -441,7 +435,7 @@ private class APIGenerator(
 
                 GenRet(ICNames(interfaceName, className), ret.counter)
             }
-            is LocalTypeExternalChoice -> {
+            is CLTExternalChoice -> {
                 classBuilder.addSuperclassConstructorParameter(endpointVariable)
                 if (branch != null) {
                     classBuilder.superclass(SKCaseEndpoint::class)
@@ -517,9 +511,8 @@ private class APIGenerator(
                 fileSpecBuilder.addType(classBuilder.build())
                 GenRet(ICNames(interfaceName, className), newIndex)
             }
-            is LocalTypeInternalChoice -> {
+            is CLTInternalChoice -> {
                 classBuilder.superclass(SKLinearEndpoint::class)
-//                    .addSuperclassConstructorParameter("e")
                 var counter = stateIndex + 1
                 val choiceEnumClassname = ClassName(callbacksPackage, "Choice$stateIndex")
                 val choiceEnum = TypeSpec.enumBuilder(choiceEnumClassname)

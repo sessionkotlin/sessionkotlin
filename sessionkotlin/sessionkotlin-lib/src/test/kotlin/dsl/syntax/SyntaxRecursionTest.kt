@@ -305,7 +305,7 @@ class SyntaxRecursionTest {
                     send<Long>(a, b)
                     goto(x)
                 }
-                branch{
+                branch {
                     send<String>(a, b)
                 }
             }
@@ -317,7 +317,7 @@ class SyntaxRecursionTest {
                 IntClass,
                 LocalTypeInternalChoice(
                     listOf(
-                         LocalTypeSend(
+                        LocalTypeSend(
                             b,
                             LongClass,
                             LocalTypeRecursion(x)

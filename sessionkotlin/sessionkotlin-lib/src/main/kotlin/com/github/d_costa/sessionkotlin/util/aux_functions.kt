@@ -31,3 +31,20 @@ public fun assertRefinement(refinement: String, evaluation: Boolean) {
 
 internal fun hasWhitespace(label: String) =
     label.any { it.isWhitespace() }
+
+internal fun <K, V> MutableMap<K, MutableList<V>>.merge(key: K, value: V) {
+    if (key !in this) {
+        put(key, mutableListOf())
+    }
+    getValue(key).add(value)
+}
+
+internal fun <K, V> MutableMap<K, MutableList<V>>.merge(key: K, value: MutableList<V>) {
+    if (key !in this) {
+        put(key, mutableListOf())
+    }
+    getValue(key).addAll(value)
+}
+
+internal fun <T, R> Iterable<T>.mapMutable(transform: (T) -> R): MutableList<R> =
+    map(transform).toMutableList()
