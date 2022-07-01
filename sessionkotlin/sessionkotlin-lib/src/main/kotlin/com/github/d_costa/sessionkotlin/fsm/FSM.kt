@@ -1,7 +1,8 @@
 package com.github.d_costa.sessionkotlin.fsm
 
+internal typealias StateTransitions = Map<StateId, List<Transition>>
 
-internal class FSM(val states: Set<State>, val transitions: Map<StateId, List<Transition>>) {
+internal class FSM(val states: Set<State>, val transitions: StateTransitions) {
     companion object {
         const val initialStateIndex = 1
         const val endStateIndex = -1

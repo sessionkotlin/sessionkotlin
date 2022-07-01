@@ -4,24 +4,24 @@ import java.io.Serializable
 import java.util.*
 
 public open class SKMessage(
-    public val payload: Any,
-    public val branch: String? = null
+    public val label: String,
+    public val payload: Any
 ) : Serializable {
     override fun toString(): String {
-        return "SKMessage(payload: $payload, branch: $branch)"
+        return "SKMessage[$label]($payload)"
     }
     override fun equals(other: Any?): Boolean {
         if (other !is SKMessage)
             return false
 
-        return payload == other.payload && branch == other.branch
+        return payload == other.payload && label == other.label
     }
 
     override fun hashCode(): Int {
         var result = payload.hashCode()
-        result = 31 * result + (branch?.hashCode() ?: 0)
+        result = 31 * result + label.hashCode()
         return result
     }
 }
 
-public class SKDummyMessage(branch: String?) : SKMessage("", branch)
+public class SKDummyMessage(label: String) : SKMessage(label, "")

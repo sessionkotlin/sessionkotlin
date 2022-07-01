@@ -10,7 +10,7 @@ internal sealed class LocalType {
      */
     abstract fun removeRecursions(tags: Set<RecursionTag>): LocalType
 }
-internal data class MsgLabel(val label: String = "", val mentioned: Boolean = false)
+internal data class MsgLabel(val name: String = "", val mentioned: Boolean = false)
 
 internal data class LocalTypeSend(
     val to: SKRole,

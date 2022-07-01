@@ -16,7 +16,7 @@ internal typealias LocalTypeId = Int
 /**
  * Creates a Finite State Automata from a LocalType representation.
  */
-internal fun FSM.fromLocalType(localType: LocalType): FSM {
+internal fun fsmFromLocalType(localType: LocalType): FSM {
     /*
      * When a transition is created, it points to a LocalTypeId.
      * After the automata is built, translateIds() translates LocalTypeIds to StateIds.
@@ -127,10 +127,8 @@ internal fun FSM.fromLocalType(localType: LocalType): FSM {
 
     buildStates(localType)
     val naiveFSM = NDFSM(states, translateIds(stateTransitions))
-
     return simplify(naiveFSM)
 }
-
 
 /**
  * Create a simplified graph by removing epsilon transitions and unreachable states
@@ -162,13 +160,12 @@ private fun getTransitions(
         }
     }
 
-
 /**
  * Calculates the transitions available to a State, following epsilon transitions
  */
 private fun reachable(
     reachable: Set<StateId>,
-    transitions: Map<StateId, List<Transition>>,
+    transitions: StateTransitions,
 ): Set<StateId> {
     val newStates = reachable.flatMap { id ->
         transitions.getOrDefault(id, emptyList()).map { it.cont }
@@ -181,37 +178,3 @@ private fun reachable(
         reachable
     }
 }
-
-
-//
-//            transitions.g s.flatMap { t ->
-//                when (t) {
-//                    is Epsilon -> getTransitions(states.find { it.id == t.cont }!!, states)
-//                    is TransitionWithAction -> listOf(t)
-//                }
-//            }
-
-
-/**
- * Create a simplified graph by removing epsilon transitions and unreachable states
- */
-//private fun simplify(states: Set<State>): Set<State> =
-//    states.map {
-//        when (it) {
-//            EndState -> EndState
-//            else -> State(it.id, getTransitions(it, states).toMutableList())
-//        }
-//    }.toSet()
-
-//        private fun successors(s: NaiveState, states: Set<NaiveState>) {
-//            return successors(mutableSetOf(s), states, mutableSetOf())
-//        }
-//
-//        private fun successors(initialStates: MutableSet<NaiveState>, states: Set<NaiveState>, reachable: Set<Int>) {
-//            val newSet = mutableSetOf<NaiveState>()
-//            initialStates.forEach { s ->
-//                newSet.addAll(s.transitions.map { memoit.cont })
-//            }
-//        }
-//
-

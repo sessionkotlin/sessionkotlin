@@ -8,7 +8,7 @@ import com.github.d_costa.sessionkotlin.backend.message.SKMessage
 import java.util.*
 
 /**
- * Linear endpoint. Throws [SKLinearException] when [SKLinearEndpoint.use] is called twice.
+ * Linear endpoint. Throws [SKLinearException] when [SKLinearEndpoint.use] is called more than once.
  */
 public open class SKLinearEndpoint {
     private var used = false
@@ -29,12 +29,12 @@ public abstract class SKOutputEndpoint(private val e: SKMPEndpoint) : SKLinearEn
      * Sends a message with payload of type [T] to the target [role].
      *
      */
-    protected suspend fun <T : Any> send(role: SKGenRole, payload: T, branch: String?) {
+    protected suspend fun <T : Any> send(role: SKGenRole, payload: T, label: String) {
         use()
         if (payload is Unit) {
-            e.send(role, SKDummyMessage(branch))
+            e.send(role, SKDummyMessage(label))
         } else {
-            e.send(role, SKMessage(payload, branch))
+            e.send(role, SKMessage(label, payload))
         }
     }
 }
