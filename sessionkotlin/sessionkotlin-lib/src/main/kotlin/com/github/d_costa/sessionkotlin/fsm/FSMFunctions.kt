@@ -13,7 +13,16 @@ import com.github.d_costa.sessionkotlin.util.*
 
 internal typealias LocalTypeId = Int
 
-internal fun fromLocalType(localType: LocalType): FSM {
+/**
+ * Creates a Finite State Automata from a LocalType representation.
+ */
+internal fun FSM.fromLocalType(localType: LocalType): FSM {
+    /*
+     * When a transition is created, it points to a LocalTypeId.
+     * After the automata is built, translateIds() translates LocalTypeIds to StateIds.
+     *
+     */
+
     fun LocalType.id() = hashCode()
 
     /**
@@ -27,7 +36,7 @@ internal fun fromLocalType(localType: LocalType): FSM {
     val memo = mutableMapOf<LocalTypeId, State>(Pair(LocalTypeEnd.id(), EndState))
 
     val states = mutableSetOf<State>(EndState)
-    val stateTransitions = mutableMapOf<StateId, MutableList<NDTransition>>()
+    val stateTransitions = mutableMapOf<Int, MutableList<NDTransition>>()
     var index = FSM.initialStateIndex
 
     fun buildStates(l: LocalType) {
@@ -104,20 +113,20 @@ internal fun fromLocalType(localType: LocalType): FSM {
     }
 
     /**
-     * Replace LocalType references with NaiveState references
+     * Replace LocalTypeIds with StateIds
      */
-    fun translateIds(transitions: Map<StateId, List<NDTransition>>, mapper: Map<LocalTypeId, State>) =
+    fun translateIds(transitions: Map<Int, List<NDTransition>>) =
         transitions.mapValues { (_, v) ->
             v.map {
                 when (it) {
-                    is Epsilon -> Epsilon(mapper.getValue(it.cont).id)
-                    is TransitionWithAction -> TransitionWithAction(it.action, mapper.getValue(it.cont).id)
+                    is Epsilon -> Epsilon(memo.getValue(it.cont).id)
+                    is TransitionWithAction -> TransitionWithAction(it.action, memo.getValue(it.cont).id)
                 }
             }
         }
 
     buildStates(localType)
-    val naiveFSM = NDFSM(states, translateIds(stateTransitions, memo))
+    val naiveFSM = NDFSM(states, translateIds(stateTransitions))
 
     return simplify(naiveFSM)
 }
