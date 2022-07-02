@@ -18,19 +18,19 @@ class TestAPI {
 
         runBlocking {
             launch {
-                suspend fun handle201(initialState: SimpleClient7) {
+                suspend fun handle201(initialState: SimpleClient7Interface) {
                     var state = initialState
 
                     while (true) {
                         val b = state.receive200FromServer(SKBuffer())
                             .branch()
                         when (b) {
-                            is SimpleClient8_ -> {
+                            is SimpleClient8_Interface -> {
                                 b.receiveFromServer(SKBuffer())
                                 break
                             }
-                            is SimpleClient8_201 -> state = b.receive201FromServer(SKBuffer())
-                            is SimpleClient8_250 -> {
+                            is SimpleClient8_201Interface -> state = b.receive201FromServer(SKBuffer())
+                            is SimpleClient8_250Interface -> {
                                 b.receive250FromServer(SKBuffer())
                                 break
                             }
@@ -46,10 +46,10 @@ class TestAPI {
                         .branch()
                         .let { s ->
                             when (s) {
-                                is SimpleClient2_ -> s.receiveFromServer(SKBuffer())
-                                is SimpleClient2_201 -> handle201(s.receive201FromServer(SKBuffer()))
-                                is SimpleClient2_250 -> s.receive250FromServer(SKBuffer())
-                                is SimpleClient2_250H -> s.receive250HFromServer(SKBuffer())
+                                is SimpleClient2_Interface -> s.receiveFromServer(SKBuffer())
+                                is SimpleClient2_201Interface -> handle201(s.receive201FromServer(SKBuffer()))
+                                is SimpleClient2_250Interface -> s.receive250FromServer(SKBuffer())
+                                is SimpleClient2_250HInterface -> s.receive250HFromServer(SKBuffer())
                             }
                         }
                 }
