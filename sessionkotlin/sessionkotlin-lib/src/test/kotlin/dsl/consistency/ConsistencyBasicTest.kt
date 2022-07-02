@@ -2,6 +2,7 @@ package dsl.consistency
 
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.exception.InconsistentExternalChoiceException
+import com.github.d_costa.sessionkotlin.dsl.exception.NonDeterministicStatesException
 import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
 import com.github.d_costa.sessionkotlin.dsl.types.*
 import dsl.util.BoolClass
@@ -9,6 +10,7 @@ import dsl.util.IntClass
 import dsl.util.LongClass
 import dsl.util.StringClass
 import org.junit.jupiter.api.Test
+import javax.sound.sampled.BooleanControl
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
@@ -131,32 +133,17 @@ class ConsistencyBasicTest {
             choice(b) {
                 // 'a' is not enabled in any branch
                 branch {
-                    send<String>(a, b)
-                    send(a, b, BoolClass)
+                    send<String>(b, a, "b1")
+                    send(c, a, BoolClass)
                 }
                 branch {
-                    send(a, b, StringClass)
-                    send<Boolean>(a, b)
+                    send<String>(b, a, "b2")
+                    send<Boolean>(c, a)
                 }
             }
         }
-        val lA = LocalTypeSend(b, StringClass, LocalTypeSend(b, BoolClass, LocalTypeEnd))
-        val lB = LocalTypeInternalChoice(
-            listOf(
-                LocalTypeReceive(
-                    a,
-                    StringClass,
-                    LocalTypeReceive(a, BoolClass, LocalTypeEnd)
-                ),
-                LocalTypeReceive(
-                    a,
-                    StringClass,
-                    LocalTypeReceive(a, BoolClass, LocalTypeEnd)
-                )
-            )
-        )
-        assertEquals(lA, g.project(a))
-        assertEquals(lB, g.project(b))
+        val lC = LocalTypeSend(a, BoolClass,  LocalTypeEnd)
+        assertEquals(lC, g.project(c))
     }
 
     @Test
@@ -315,6 +302,37 @@ class ConsistencyBasicTest {
                     branch {
                         send<Int>(b, c, "b2")
                         send<String>(b, a, "b2") // A receives from B
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `non deterministic through recursion`() {
+        assertFailsWith<NonDeterministicStatesException> {
+            globalProtocolInternal {
+                send<Int>(a, c)
+
+                choice(a) {
+                    branch {
+                        send<Long>(a, c, "250") // this
+                    }
+                    branch {
+                        val t2 = mu()
+                        choice(a) {
+                            branch {
+                                send<Int>(a, c, "201")
+                                send<Int>(a, c, "200")
+                                goto(t2)
+                            }
+                            branch {
+                                send<Int>(a, c, "250") // and this
+                            }
+                            branch {
+                                send<Int>(a, c)
+                            }
+                        }
                     }
                 }
             }

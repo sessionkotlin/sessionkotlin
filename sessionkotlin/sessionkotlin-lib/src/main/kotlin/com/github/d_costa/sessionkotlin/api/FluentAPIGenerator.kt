@@ -9,9 +9,8 @@ import com.github.d_costa.sessionkotlin.fsm.*
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 
-internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEnv) {
+internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEnv, "fluent") {
 
-    private val packageName = "$basePackageName.fluent"
     private val superInterfacePostFix = "Branch"
     private val endClassName = ClassName(packageName, "End")
     private val endpointParameter = ParameterSpec
@@ -38,12 +37,6 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
             files.add(file)
         }
     }
-
-    private fun buildClassname(r: SKRole, count: Int? = null, postFix: String = ""): String =
-        StringBuilder("${protocolClassName}$r")
-            .append(if (count != null) "$count" else "")
-            .append(postFix)
-            .toString()
 
     private fun getClassName(stateId: StateId, role: SKRole, postFix: String = ""): ClassName =
         if (stateId == FSM.endStateIndex)
@@ -155,7 +148,7 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
 
         for (t in transitions) {
             // Create a new intermediary class
-            val intermediaryClassName = getClassName(stateId, role, "_${t.action.label.name}")
+            val intermediaryClassName = getClassName(stateId, role, "_${t.action.label.frontendName()}")
             val intermediaryClass = createStateClass(intermediaryClassName, true)
                 .addSuperinterface(superInterfaceName)
                 .superclass(SKCaseEndpoint::class)
@@ -235,8 +228,8 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
 
     private fun generateFunctionName(action: Action): String =
         when (action) {
-            is ReceiveAction -> "receive${action.label.name}From${action.from}"
-            is SendAction -> "send${action.label.name}To${action.to}"
+            is ReceiveAction -> "receive${action.label.frontendName()}From${action.from}"
+            is SendAction -> "send${action.label.frontendName()}To${action.to}"
         }
 
     private fun generateFunctionBody(action: Action, nextClassName: ClassName): CodeBlock {
@@ -249,18 +242,16 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
             else
                 codeBlock.addStatement("receive(%L)", roleMap[action.from])
 
-            is SendAction -> codeBlock.addStatement("send(%L, %L, %S)", roleMap[action.to], param?.name ?: "Unit", action.label.name)
+            is SendAction -> codeBlock.addStatement(
+                "send(%L, %L, %S)",
+                roleMap[action.to],
+                param?.name ?: "Unit",
+                action.label.name
+            )
         }
         codeBlock.addStatement("return %T(%N)", nextClassName, endpointParameter)
         return codeBlock.build()
     }
-
-    private fun newFile(filename: String): FileSpec.Builder =
-        FileSpec
-            .builder(
-                packageName = packageName,
-                fileName = filename
-            ).addFileComment(GENERATED_COMMENT)
 
     private fun classifyState(stateId: StateId, transitions: List<Transition>): StateClassification {
         return if (transitions.all { it.action is ReceiveAction }) {

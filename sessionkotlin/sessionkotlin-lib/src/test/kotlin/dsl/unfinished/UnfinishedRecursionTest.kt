@@ -119,11 +119,11 @@ class UnfinishedRecursionTest {
             val x = mu()
             choice(a) {
                 branch {
-                    send<Long>(a, b)
+                    send<Long>(a, b, "b1")
                     goto(x)
                 }
                 branch {
-                    send<Int>(a, b)
+                    send<Int>(a, b, "b2")
                 }
             }
         }

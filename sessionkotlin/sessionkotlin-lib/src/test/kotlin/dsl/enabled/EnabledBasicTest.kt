@@ -52,12 +52,12 @@ class EnabledBasicTest {
             // mergeable for 'a'
             choice(b) {
                 branch {
-                    send<String>(b, c)
+                    send<String>(b, c, "b1")
                     send<String>(a, b)
                 }
                 branch {
                     send<String>(a, b)
-                    send<String>(b, c)
+                    send<String>(b, c, "b2")
                 }
             }
         }
@@ -95,11 +95,11 @@ class EnabledBasicTest {
         val g = globalProtocolInternal {
             choice(b) {
                 branch {
-                    send<String>(b, a)
+                    send<String>(b, a, "b1")
                     send<String>(d, a)
                 }
                 branch {
-                    send<Int>(b, a)
+                    send<Int>(b, a, "b2")
                     send<String>(d, a)
                 }
             }
@@ -113,12 +113,14 @@ class EnabledBasicTest {
         val g = globalProtocolInternal {
             choice(b) {
                 branch {
-                    send<String>(b, a)
+                    send<String>(b, a, "b1")
+
                     send<String>(c, d)
                     send<String>(d, a)
                 }
                 branch {
-                    send<Int>(b, a)
+                    send<Int>(b, a, "b2")
+
                     send<String>(c, d)
                     send<String>(d, a)
                 }
@@ -189,10 +191,10 @@ class EnabledBasicTest {
         globalProtocolInternal {
             choice(b) {
                 branch {
-                    send<String>(b, a)
+                    send<String>(b, a, "1")
                 }
                 branch {
-                    send<Int>(b, a)
+                    send<Int>(b, a, "2")
                     send<Long>(a, b)
                 }
             }
@@ -204,12 +206,12 @@ class EnabledBasicTest {
         globalProtocolInternal {
             choice(b) {
                 branch {
-                    send<String>(b, c)
-                    send<String>(c, a)
+                    send<String>(b, c, "b1")
+                    send<String>(c, a, "b1")
                 }
                 branch {
-                    send<Int>(b, c)
-                    send<Int>(c, a)
+                    send<Int>(b, c, "b2")
+                    send<Int>(c, a, "b2")
                     send<Int>(a, b)
                 }
             }
@@ -221,13 +223,13 @@ class EnabledBasicTest {
         globalProtocolInternal {
             choice(a) {
                 branch {
-                    send<Long>(a, b)
-                    send<Int>(b, c)
+                    send<Long>(a, b, "b1")
+                    send<Int>(b, c, "b1")
                     send<String>(a, b)
                 }
                 branch {
-                    send<String>(a, b)
-                    send<Int>(b, c)
+                    send<String>(a, b, "b2")
+                    send<Int>(b, c, "b2")
                     send<Long>(a, b)
                 }
             }
@@ -239,20 +241,20 @@ class EnabledBasicTest {
         val g = globalProtocolInternal {
             choice(a) {
                 branch {
-                    send<Long>(a, b)
+                    send<Long>(a, b, "1")
 
                     // b does not participate, and can ignore the choice
                     choice(a) {
                         branch {
-                            send<Int>(a, c)
+                            send<Int>(a, c, "11")
                         }
                         branch {
-                            send<String>(a, c)
+                            send<String>(a, c, "12")
                         }
                     }
                 }
                 branch {
-                    send<Int>(a, b)
+                    send<Int>(a, b, "2")
                     send<Boolean>(a, c)
                 }
             }

@@ -24,22 +24,22 @@ class Booking {
             t = mu()
             choice(client) {
                 branch {
-                    send<String>(client, agency)
-                    send<Int>(agency, client)
+                    send<String>(client, agency, "request")
+                    send<Int>(agency, client, "amount")
                     send<Unit>(agency, company) // dummy message
                     goto(t)
                 }
                 branch {
                     choice(client) {
                         branch {
-                            send<Unit>(client, agency)
-                            send<Unit>(agency, company)
+                            send<Unit>(client, agency, "confirm")
+                            send<Unit>(agency, company, "confirm")
                             send<PaymentInfo>(client, company)
                             send<Unit>(company, client)
                         }
                         branch {
-                            send<Unit>(client, agency)
-                            send<Unit>(agency, company)
+                            send<Unit>(client, agency, "cancel")
+                            send<Unit>(agency, company, "cancel")
                         }
                     }
                 }

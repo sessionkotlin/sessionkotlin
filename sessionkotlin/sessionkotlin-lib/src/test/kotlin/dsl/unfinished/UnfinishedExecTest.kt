@@ -24,18 +24,17 @@ class UnfinishedExecTest {
 
     @Test
     fun `choice agnostic`() {
-        val aux: GlobalProtocol = {
-            send<String>(b, c)
-            send<Int>(a, b)
+        fun aux(label: String): GlobalProtocol = {
+            send<String>(a, c, label)
             send<Long>(b, c)
         }
         val g = globalProtocolInternal {
             choice(a) {
                 branch {
-                    aux()
+                    aux("b1")()
                 }
                 branch {
-                    aux()
+                    aux("b2")()
                 }
                 // branches mergeable for 'b', even without being activated for the first send
             }

@@ -5,7 +5,7 @@ import com.github.d_costa.sessionkotlin.dsl.types.MsgLabel
 
 internal typealias StateId = Int
 
-internal open class State(open val id: StateId) {
+public open class State(public open val id: StateId) {
     override fun toString(): String = "State[$id]"
 }
 internal object EndState : State(FSM.endStateIndex)

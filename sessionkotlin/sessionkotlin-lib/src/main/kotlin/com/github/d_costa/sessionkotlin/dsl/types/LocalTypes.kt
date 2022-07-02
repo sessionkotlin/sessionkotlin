@@ -1,5 +1,6 @@
 package com.github.d_costa.sessionkotlin.dsl.types
 
+import com.github.d_costa.sessionkotlin.backend.message.SKMessage
 import com.github.d_costa.sessionkotlin.dsl.RecursionTag
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 
@@ -10,7 +11,9 @@ internal sealed class LocalType {
      */
     abstract fun removeRecursions(tags: Set<RecursionTag>): LocalType
 }
-internal data class MsgLabel(val name: String = "", val mentioned: Boolean = false)
+internal data class MsgLabel(val name: String = SKMessage.DEFAULT_LABEL, val mentioned: Boolean = false) {
+    fun frontendName() = if (name == SKMessage.DEFAULT_LABEL) "" else name
+}
 
 internal data class LocalTypeSend(
     val to: SKRole,
@@ -19,7 +22,7 @@ internal data class LocalTypeSend(
     val condition: String,
     val cont: LocalType
 ) : LocalType() {
-    constructor(to: SKRole, type: Class<*>, cont: LocalType) : this(to, type, MsgLabel(), "", cont)
+    constructor(to: SKRole, type: Class<*>, cont: LocalType) : this(to, type, MsgLabel(), cont)
     constructor(to: SKRole, type: Class<*>, msgLabel: MsgLabel, cont: LocalType) : this(to, type, msgLabel, "", cont)
     constructor(to: SKRole, type: Class<*>, condition: String, cont: LocalType) : this(to, type, MsgLabel(), condition, cont)
 
@@ -57,12 +60,40 @@ internal data class LocalTypeReceive(
         LocalTypeReceive(from, type, msgLabel, cont.removeRecursions(tags))
 }
 
-internal data class LocalTypeInternalChoice(val branches: List<LocalType>) : LocalType() {
+internal data class LocalTypeInternalChoice(val branches: Collection<LocalType>) : LocalType() {
     override fun removeRecursions(tags: Set<RecursionTag>) =
         LocalTypeInternalChoice(branches.map { it.removeRecursions(tags) })
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as LocalTypeInternalChoice
+
+        if (branches != other.branches) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        /**
+         * Consider the following example as an explanation:
+         *
+         * val tSend = LocalTypeSend(A, B, ...)
+         * val tChoice = LocalTypeInternalChoice(listOf(tSend))
+         * val comparison = tSend.hashCode() == tChoice.hashCode()
+         *
+         * Using the default hashCode() implementation, 'comparison' will evaluate to True.
+         *
+         */
+        var result = branches.hashCode()
+        result = 31 * result + branches.size
+        return result
+    }
+
 }
 
-internal data class LocalTypeExternalChoice(var of: SKRole, val branches: List<LocalType>) : LocalType() {
+internal data class LocalTypeExternalChoice(var of: SKRole, val branches: Collection<LocalType>) : LocalType() {
     override fun removeRecursions(tags: Set<RecursionTag>) =
         LocalTypeExternalChoice(of, branches.map { it.removeRecursions(tags) })
 }

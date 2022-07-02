@@ -1,11 +1,9 @@
 package api
 
-import com.github.d_costa.sessionkotlin.api.exception.NoMessageLabelException
 import com.github.d_costa.sessionkotlin.dsl.GlobalProtocol
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.globalProtocol
 import org.junit.jupiter.api.Test
-import kotlin.test.assertFailsWith
 
 class APIGenTest {
     companion object {
@@ -73,15 +71,6 @@ class APIGenTest {
                     send<Long>(A, B, "val2", "val2 <= 0")
                     goto(t)
                 }
-            }
-        }
-    }
-
-    @Test
-    fun `test callbacks require labels`() {
-        assertFailsWith<NoMessageLabelException> {
-            globalProtocol("Test", callbacks = true) {
-                send<Int>(A, B)
             }
         }
     }

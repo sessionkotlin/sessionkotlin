@@ -45,10 +45,10 @@ class UnfinishedBasicTest {
             send<Unit>(c, b)
             choice(a) {
                 branch {
-                    send<String>(a, b)
+                    send<String>(a, b, "b1")
                 }
                 branch {
-                    send<Int>(a, b)
+                    send<Int>(a, b, "b2")
                 }
                 // 'c' not enabled in any branch
             }

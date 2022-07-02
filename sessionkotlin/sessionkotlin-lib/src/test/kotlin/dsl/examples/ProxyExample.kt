@@ -21,12 +21,12 @@ class ProxyExample {
 
             choice(server) {
                 branch {
-                    send<Response>(server, proxy)
-                    send<Response>(proxy, client)
+                    send<Response>(server, proxy, "ok")
+                    send<Response>(proxy, client, "ok")
                 }
                 branch {
-                    send<Error>(server, proxy)
-                    send<Error>(proxy, client)
+                    send<Error>(server, proxy, "error")
+                    send<Error>(proxy, client, "error")
                 }
             }
         }

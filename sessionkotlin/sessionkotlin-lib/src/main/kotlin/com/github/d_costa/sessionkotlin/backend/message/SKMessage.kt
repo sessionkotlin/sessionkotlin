@@ -7,6 +7,11 @@ public open class SKMessage(
     public val label: String,
     public val payload: Any
 ) : Serializable {
+
+    public companion object {
+        public const val DEFAULT_LABEL: String = "EMPTY_LABEL"
+    }
+
     override fun toString(): String {
         return "SKMessage[$label]($payload)"
     }

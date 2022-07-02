@@ -22,13 +22,13 @@ class TwoBuyers {
         val aux: GlobalProtocol = {
             choice(b) {
                 branch {
-                    send<Address>(b, seller)
+                    send<Address>(b, seller, "ok")
                     send<Date>(seller, b)
-                    send<Date>(b, a)
+                    send<Date>(b, a, "ok")
                 }
                 branch {
-                    send<Unit>(b, seller)
-                    send<Unit>(b, a)
+                    send<Unit>(b, seller, "quit")
+                    send<Unit>(b, a, "quit")
                 }
             }
         }

@@ -51,7 +51,7 @@ public class Samples {
 
         fun case(z: SKRole, label: String): GlobalProtocol = {
             send<String>(a, b, label)
-            send<String>(a, c)
+            send<String>(a, c, label)
             send<String>(z, a)
         }
 

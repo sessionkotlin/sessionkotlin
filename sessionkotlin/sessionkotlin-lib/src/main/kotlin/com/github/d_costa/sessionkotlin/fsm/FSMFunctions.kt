@@ -1,6 +1,7 @@
 package com.github.d_costa.sessionkotlin.fsm
 
 import com.github.d_costa.sessionkotlin.dsl.RecursionTag
+import com.github.d_costa.sessionkotlin.dsl.types.*
 import com.github.d_costa.sessionkotlin.dsl.types.LocalType
 import com.github.d_costa.sessionkotlin.dsl.types.LocalTypeEnd
 import com.github.d_costa.sessionkotlin.dsl.types.LocalTypeExternalChoice
@@ -14,7 +15,7 @@ import com.github.d_costa.sessionkotlin.util.*
 internal typealias LocalTypeId = Int
 
 /**
- * Creates a Finite State Automata from a LocalType representation.
+ * Create a Finite State Automata from a LocalType representation.
  */
 internal fun fsmFromLocalType(localType: LocalType): FSM {
     /*
@@ -152,10 +153,21 @@ private fun simplify(fsm: NDFSM): FSM {
 private fun getTransitions(
     stateId: StateId,
     fsm: NDFSM,
+): List<Transition> = getTransitionsRecursive(stateId, stateId, fsm, 0)
+
+
+/**
+ * Saving [stateId] prevents stack overflows; Knowing the index [i] allows us to capture direct loops to self.
+ */
+private fun getTransitionsRecursive(
+    stateId: StateId, // the original
+    currId: StateId,
+    fsm: NDFSM,
+    i: Long = 0
 ): List<Transition> =
-    fsm.transitions.getValue(stateId).flatMap { t ->
+    fsm.transitions.getValue(currId).flatMap { t ->
         when (t) {
-            is Epsilon -> getTransitions(t.cont, fsm)
+            is Epsilon -> if (t.cont == stateId && i > 0) emptyList() else getTransitionsRecursive(stateId, t.cont, fsm, i+1)
             is TransitionWithAction -> listOf(Transition(t.action, t.cont))
         }
     }

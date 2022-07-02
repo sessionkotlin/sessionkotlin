@@ -3,6 +3,7 @@ package dsl.syntax
 import com.github.d_costa.sessionkotlin.dsl.GlobalProtocol
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.exception.*
+import com.github.d_costa.sessionkotlin.dsl.globalProtocol
 import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
 import com.github.d_costa.sessionkotlin.dsl.types.LEnd
 import com.github.d_costa.sessionkotlin.dsl.types.LocalTypeExternalChoice
@@ -12,6 +13,7 @@ import dsl.util.DoubleClass
 import dsl.util.IntClass
 import dsl.util.StringClass
 import org.junit.jupiter.api.Test
+import java.util.DuplicateFormatFlagsException
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
@@ -78,13 +80,13 @@ class SyntaxBasicTest {
         globalProtocolInternal {
             choice(b) {
                 branch {
-                    send<String>(b, a)
+                    send<String>(b, a, "b1")
                     send<String>(b, a)
                 }
                 branch {
                     choice(b) {
                         branch {
-                            send<Long>(b, a)
+                            send<Long>(b, a, "b2")
                         }
                     }
                 }
@@ -103,11 +105,11 @@ class SyntaxBasicTest {
             send<Int>(a, b)
             choice(b) {
                 branch {
-                    send<String>(b, s)
+                    send<String>(b, s, "1")
                     send<String>(s, b)
                 }
                 branch {
-                    send<String>(b, s)
+                    send<String>(b, s, "2")
                 }
             }
         }
@@ -133,7 +135,7 @@ class SyntaxBasicTest {
 
     @Test
     fun `dupe case labels`() {
-        assertFailsWith<DuplicateBranchLabelException> {
+        assertFailsWith<NonDeterministicStatesException> {
             globalProtocolInternal {
                 choice(b) {
                     branch {
@@ -153,14 +155,14 @@ class SyntaxBasicTest {
         globalProtocolInternal {
             choice(b) {
                 branch {
-                    send<String>(b, a)
+                    send<String>(b, a, "b1")
                 }
                 branch {
-                    send<Int>(b, a)
-                    send<Long>(a, b)
+                    send<Int>(b, a, "b2")
+                    send<Long>(a, b, "HERE")
                     choice(a) {
                         branch {
-                            send<Int>(a, b)
+                            send<Int>(a, b, "HERE")
                         }
                         branch {
                             send<Int>(a, b)
@@ -176,12 +178,12 @@ class SyntaxBasicTest {
         globalProtocolInternal {
             choice(b) {
                 branch {
-                    send<Int>(b, c)
-                    send<String>(b, a)
+                    send<Int>(b, c, "1")
+                    send<String>(b, a, "1")
                 }
                 branch {
-                    send<String>(b, a)
-                    send<Int>(b, c)
+                    send<String>(b, a, "2")
+                    send<Int>(b, c, "2")
                 }
             }
         }
@@ -192,12 +194,12 @@ class SyntaxBasicTest {
         val g = globalProtocolInternal {
             choice(b) {
                 branch {
-                    send<String>(b, c)
-                    send<String>(c, a)
+                    send<String>(b, c, "b1")
+                    send<String>(c, a, "b1")
                 }
                 branch {
-                    send<Int>(b, c)
-                    send<Int>(c, a)
+                    send<Int>(b, c, "b2")
+                    send<Int>(c, a, "b2")
                 }
             }
         }
@@ -216,12 +218,12 @@ class SyntaxBasicTest {
         val g = globalProtocolInternal {
             choice(b) {
                 branch {
-                    send<Int>(b, c)
-                    send<Int>(c, a)
+                    send<Int>(b, c, "1")
+                    send<Int>(c, a, "1")
                 }
                 branch {
-                    send<Int>(b, c)
-                    send<Int>(c, a)
+                    send<Int>(b, c, "2")
+                    send<Int>(c, a, "2")
                 }
             }
         }
@@ -273,8 +275,8 @@ class SyntaxBasicTest {
 
     @Test
     fun `dupe msg label`() {
-        assertFailsWith<DuplicateMessageLabelException> {
-            globalProtocolInternal {
+        assertFailsWith<DuplicateMessageLabelsException> {
+            globalProtocol("Proto", callbacks = true) {
                 send<String>(a, b, "my_label")
                 send<String>(b, a, "my_label")
             }
@@ -286,8 +288,8 @@ class SyntaxBasicTest {
         val aux: GlobalProtocol = {
             send<String>(a, b, "my_label")
         }
-        assertFailsWith<DuplicateMessageLabelException> {
-            globalProtocolInternal {
+        assertFailsWith<DuplicateMessageLabelsException> {
+            globalProtocol("Proto", callbacks = true) {
                 send<String>(a, b, "my_label")
                 aux()
             }
@@ -299,8 +301,8 @@ class SyntaxBasicTest {
         val aux: GlobalProtocol = {
             send<String>(a, b, "my_label")
         }
-        assertFailsWith<DuplicateMessageLabelException> {
-            globalProtocolInternal {
+        assertFailsWith<DuplicateMessageLabelsException> {
+            globalProtocol("Proto", callbacks = true) {
                 aux()
                 send<String>(a, b, "my_label")
             }
@@ -309,7 +311,7 @@ class SyntaxBasicTest {
 
     @Test
     fun `dupe msg label choice`() {
-        assertFailsWith<DuplicateMessageLabelException> {
+        assertFailsWith<NonDeterministicStatesException> {
             globalProtocolInternal {
                 choice(b) {
                     branch {

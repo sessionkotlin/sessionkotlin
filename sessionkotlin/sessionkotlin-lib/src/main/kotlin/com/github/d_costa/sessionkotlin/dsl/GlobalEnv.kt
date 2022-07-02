@@ -1,10 +1,12 @@
 package com.github.d_costa.sessionkotlin.dsl
 
 import com.github.d_costa.sessionkotlin.api.FluentAPIGenerator
+import com.github.d_costa.sessionkotlin.backend.message.SKMessage
 import com.github.d_costa.sessionkotlin.dsl.exception.*
 import com.github.d_costa.sessionkotlin.dsl.types.*
-import com.github.d_costa.sessionkotlin.fsm.*
+import com.github.d_costa.sessionkotlin.fsm.fsmFromLocalType
 import com.github.d_costa.sessionkotlin.parser.RefinementParser
+import com.github.d_costa.sessionkotlin.util.hasWhitespace
 import com.github.d_costa.sessionkotlin.util.printlnIndent
 import mu.KotlinLogging
 import org.sosy_lab.common.ShutdownManager
@@ -51,7 +53,7 @@ public sealed class GlobalEnv(
     public inline fun <reified T> send(
         from: SKRole,
         to: SKRole,
-        label: String = "",
+        label: String = SKMessage.DEFAULT_LABEL,
         condition: String = "",
     ): Unit = send(from, to, T::class.java, label, condition)
 
@@ -72,12 +74,16 @@ public sealed class GlobalEnv(
         from: SKRole,
         to: SKRole,
         type: Class<*>,
-        label: String = "",
+        label: String = SKMessage.DEFAULT_LABEL,
         condition: String = "",
     ) {
         msgLabels.add(label)
         if (condition.isNotBlank()) {
             RefinementParser.parseToEnd(condition)
+        }
+
+        if (label.hasWhitespace()) {
+            throw BranchLabelWhitespaceException(label)
         }
 
         val msg = Send(from, to, type, label, condition)
@@ -161,20 +167,28 @@ public sealed class GlobalEnv(
             throw ProjectionTargetException(role)
         }
         val state = ProjectionState(role)
-        val t = asGlobalType()
+        return asGlobalType()
             .project(role, state)
             .removeRecursions(state.emptyRecursions)
-        println(fsmFromLocalType(t))
-        return t
     }
+
+    private fun logError(role: SKRole) = logger.error { "Exception while projecting onto $role" }
 
     internal fun validate() {
         val g = asGlobalType()
-        roles.forEach {
+        val localTypes = roles.map {
             try {
-                g.project(it)
+                Pair(it, g.project(it))
             } catch (e: SessionKotlinDSLException) {
-                logger.error { "Exception while projecting onto $it" }
+                logError(it)
+                throw e
+            }
+        }
+        localTypes.forEach { (role, localType) ->
+            try {
+                fsmFromLocalType(localType)  // check determinism
+            } catch (e: SessionKotlinDSLException) {
+                logError(role)
                 throw e
             }
         }
@@ -257,9 +271,10 @@ internal fun globalProtocolInternal(name: String = "Proto", protocolBuilder: Glo
 public fun globalProtocol(name: String, callbacks: Boolean = false, protocolBuilder: GlobalEnv.() -> Unit) {
     val g = globalProtocolInternal(name, protocolBuilder)
     if (callbacks) {
-        val repeated = g.msgLabels.groupingBy { it }.eachCount().filter { it.value > 1 }
-        if (repeated.isNotEmpty())
-            throw DuplicateMessageLabelException(repeated.keys)
+        val dupeMsgLabels = g.msgLabels.groupingBy { it }.eachCount().filter { it.value > 1 }
+        if (dupeMsgLabels.isNotEmpty()) {
+            throw DuplicateMessageLabelsException(dupeMsgLabels.keys)
+        }
     }
     val outputDirectory = File("build/generated/sessionkotlin/main/kotlin")
     FluentAPIGenerator(g).writeTo(outputDirectory)

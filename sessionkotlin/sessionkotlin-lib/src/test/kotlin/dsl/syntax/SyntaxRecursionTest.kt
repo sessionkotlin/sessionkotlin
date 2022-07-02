@@ -143,13 +143,13 @@ class SyntaxRecursionTest {
             aux()
             choice(b) {
                 branch {
-                    send<Int>(b, c)
-                    send<Int>(b, a)
+                    send<Int>(b, c, "1")
+                    send<Int>(b, a, "1")
                     goto(t)
                 }
                 branch {
-                    send<Int>(b, a)
-                    send<Int>(b, c)
+                    send<Int>(b, a, "2")
+                    send<Int>(b, c, "2")
                 }
             }
         }
@@ -204,19 +204,19 @@ class SyntaxRecursionTest {
             send<Unit>(a, b)
             choice(b) {
                 branch {
-                    send<Int>(b, a)
+                    send<Int>(b, a, "1")
                     goto(t1)
                 }
                 branch {
-                    send<Int>(b, a)
+                    send<Int>(b, a, "2")
                     t2 = mu()
                     choice(a) {
                         branch {
-                            send<Int>(a, b)
+                            send<Int>(a, b, "21")
                             goto(t2)
                         }
                         branch {
-                            send<Unit>(a, b)
+                            send<Unit>(a, b, "22")
                             goto(t1)
                         }
                     }
@@ -302,11 +302,11 @@ class SyntaxRecursionTest {
             choice(a) {
                 branch {
                     mu()
-                    send<Long>(a, b)
+                    send<Long>(a, b, "rec")
                     goto(x)
                 }
                 branch {
-                    send<String>(a, b)
+                    send<String>(a, b, "quit")
                 }
             }
         }
@@ -380,11 +380,11 @@ class SyntaxRecursionTest {
             val t2 = mu()
             choice(a) {
                 branch {
-                    send<Long>(a, b)
+                    send<Long>(a, b, "b1")
                     goto(t1)
                 }
                 branch {
-                    send<String>(a, b)
+                    send<String>(a, b, "b2")
                     goto(t2)
                 }
             }
@@ -401,10 +401,10 @@ class SyntaxRecursionTest {
             val t1 = mu()
             choice(a) {
                 branch {
-                    send<Long>(a, b)
+                    send<Long>(a, b, "b1")
                 }
                 branch {
-                    send<String>(a, b)
+                    send<String>(a, b, "b2")
                     goto(t1)
                 }
             }

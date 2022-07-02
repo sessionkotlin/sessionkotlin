@@ -242,7 +242,7 @@ class ExtraTest {
         }
         val lC = LocalTypeExternalChoice(
             b,
-            listOf(LocalTypeReceive(b, UnitClass, LocalTypeEnd))
+            listOf(LocalTypeExternalChoice(b, listOf(LocalTypeReceive(b, UnitClass, LocalTypeEnd))))
         )
         assertEquals(lC, g.project(c))
     }
@@ -302,5 +302,14 @@ class ExtraTest {
         )
         assertEquals(lA, g.project(a))
         assertEquals(lB, g.project(b))
+    }
+
+    @Test
+    fun `infinite protocol`() {
+        val g = globalProtocolInternal {
+            val t = mu()
+            send<Unit>(a, b)
+            goto(t)
+        }
     }
 }

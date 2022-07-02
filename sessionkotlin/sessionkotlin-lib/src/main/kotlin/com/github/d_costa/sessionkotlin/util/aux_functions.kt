@@ -29,8 +29,7 @@ public fun assertRefinement(refinement: String, evaluation: Boolean) {
         throw RefinementException(refinement)
 }
 
-internal fun hasWhitespace(label: String) =
-    label.any { it.isWhitespace() }
+internal fun String.hasWhitespace() = this.any { it.isWhitespace() }
 
 internal fun <K, V> MutableMap<K, MutableList<V>>.merge(key: K, value: V) {
     if (key !in this) {

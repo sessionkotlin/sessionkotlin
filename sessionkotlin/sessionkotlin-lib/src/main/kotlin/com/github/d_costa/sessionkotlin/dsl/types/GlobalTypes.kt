@@ -109,7 +109,10 @@ internal class GlobalTypeChoice(
                 }
 
                 val states = branches.map { state.copy(activeRoles = mutableSetOf(at)) }
-                return LocalTypeInternalChoice(branches.mapIndexed { i, g -> g.project(role, states[i]) })
+                val mappedBranches = branches.mapIndexed { i, g -> g.project(role, states[i]) }
+                val uniqueProjectedBranches = mappedBranches.toSet()
+
+                return LocalTypeInternalChoice(uniqueProjectedBranches)
             }
             else -> {
                 val newState = state.copy(
@@ -121,7 +124,7 @@ internal class GlobalTypeChoice(
                 val states = branches.map { newState.copy(activeRoles = mutableSetOf(at)) }
                 var localType = LocalTypeExternalChoice(at, branches.mapIndexed { i, g -> g.project(role, states[i]) })
 
-                localType = localType.removeRecursions(newState.emptyRecursions) // TODO check if needed
+                localType = localType.removeRecursions(newState.emptyRecursions) // TODO really needed?
 
                 /**
                  * The roles that enabled the projected role
@@ -154,21 +157,15 @@ internal class GlobalTypeChoice(
                     return LocalTypeEnd
                 }
 
-                return if (states.any { it.sentWhileDisabled }) {
+                // Prune duplicate branches
+                val uniqueProjectedBranches = localType.branches.toSet()
+
+                if (states.any { it.sentWhileDisabled } && uniqueProjectedBranches.size > 1) {
                     // Role sent a message without knowing the outcome of the decision
                     // The projection must be the same for all branches
-
-                    val uniqueProjectedBranches = localType.branches.toSet()
-
-                    if (uniqueProjectedBranches.size > 1) {
-                        // The role's behaviour is not the same in all branches.
-                        throw RoleNotEnabledException(role)
-                    } else {
-                        uniqueProjectedBranches.first()
-                    }
-                } else {
-                    localType
+                    throw RoleNotEnabledException(role)
                 }
+                return LocalTypeExternalChoice(localType.of, uniqueProjectedBranches)
             }
         }
     }

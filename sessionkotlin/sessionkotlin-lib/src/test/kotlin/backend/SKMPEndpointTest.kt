@@ -21,7 +21,13 @@ class SKMPEndpointTest {
         object B : SKGenRole()
         object C : SKGenRole()
 
-        val payloads = listOf<Any>("Hello world", "stuff", 10, 10L, 2.3)
+        val msgs = listOf<SKMessage>(
+            SKMessage("hello label", "Hello world"),
+            SKMessage("label", "stuff"),
+            SKMessage("another", 10),
+            SKMessage("long", 10L),
+            SKMessage("someFloat", 2.3)
+        )
 
         fun getFormatter() = object : SKMessageFormatter {
             val f = ObjectFormatter()
@@ -53,24 +59,24 @@ class SKMPEndpointTest {
     }
 
     private suspend fun bProtocol(endpoint: SKMPEndpoint) {
-        for (p in payloads) {
+        for (p in msgs) {
             val received = endpoint.receive(A)
-            assertEquals(received.payload, p)
+            assertEquals(received, p)
         }
-        for (p in payloads) {
-            endpoint.send(A, SKMessage(p))
+        for (p in msgs) {
+            endpoint.send(A, p)
         }
     }
 
     private suspend fun aProtocol(endpoint: SKMPEndpoint) {
-        for (p in payloads) {
-            endpoint.send(B, SKMessage(p))
+        for (p in msgs) {
+            endpoint.send(B, p)
             delay(10)
         }
-        for (p in payloads) {
+        for (p in msgs) {
             val received = endpoint.receive(B)
             delay(10)
-            assertEquals(received.payload, p)
+            assertEquals(received, p)
         }
     }
 

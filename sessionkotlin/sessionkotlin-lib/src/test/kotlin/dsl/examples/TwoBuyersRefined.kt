@@ -23,13 +23,13 @@ class TwoBuyersRefined {
 
             choice(b) {
                 branch {
-                    send<Address>(b, seller)
-                    send<Date>(seller, b)
-                    send<Date>(b, a)
+                    send<Address>(b, seller, "address")
+                    send<Date>(seller, b, "date")
+                    send<Date>(b, a, "date")
                 }
                 branch {
-                    send<Unit>(b, seller)
-                    send<Unit>(b, a)
+                    send<Unit>(b, seller, "QUIT")
+                    send<Unit>(b, a, "QUIT")
                 }
             }
         }

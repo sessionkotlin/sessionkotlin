@@ -89,11 +89,11 @@ class SyntaxExecTest {
         fun subProtocol(x: SKRole, y: SKRole): GlobalProtocol = {
             choice(x) {
                 branch {
-                    send<String>(x, y)
+                    send<String>(x, y, "1")
                     send<String>(y, x)
                 }
                 branch {
-                    send<Unit>(x, y)
+                    send<Unit>(x, y, "2")
                 }
             }
         }

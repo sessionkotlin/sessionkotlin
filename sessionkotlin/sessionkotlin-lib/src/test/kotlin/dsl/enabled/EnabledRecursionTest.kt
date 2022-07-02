@@ -103,21 +103,21 @@ class EnabledRecursionTest {
             t = mu()
             choice(a) {
                 branch {
-                    send<Unit>(a, b)
+                    send<Unit>(a, b, "b1")
                     choice(b) {
                         // 'a' not enabled, but mergeable
                         branch {
-                            send<Int>(b, c)
+                            send<Int>(b, c, "b12")
                             goto(t)
                         }
                         branch {
-                            send<String>(b, c)
+                            send<String>(b, c, "b13")
                             goto(t)
                         }
                     }
                 }
                 branch {
-                    send<Int>(a, b)
+                    send<Int>(a, b, "b2")
                     send<Int>(b, c)
                 }
             }
