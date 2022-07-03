@@ -1,11 +1,18 @@
 package com.github.d_costa.sessionkotlin.api
 
+import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
 import com.github.d_costa.sessionkotlin.dsl.RootEnv
 import com.github.d_costa.sessionkotlin.dsl.SKRole
+import com.github.d_costa.sessionkotlin.fsm.*
+import com.github.d_costa.sessionkotlin.fsm.Action
+import com.github.d_costa.sessionkotlin.fsm.ReceiveAction
+import com.github.d_costa.sessionkotlin.fsm.SendAction
+import com.github.d_costa.sessionkotlin.fsm.SimpleTransition
 import com.github.d_costa.sessionkotlin.util.asClassname
 import com.github.d_costa.sessionkotlin.util.asPackageName
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.TypeSpec
 import java.io.File
 
@@ -19,6 +26,11 @@ internal open class NewAPIGenerator(val globalEnv: RootEnv, subPackage: String) 
     protected val roleMap = mutableMapOf<SKRole, ClassName>()
     protected val files = mutableListOf<FileSpec>()
     protected val packageName = "$basePackageName.$subPackage"
+    protected val endpointParameter = ParameterSpec
+        .builder("e", SKMPEndpoint::class)
+        .build()
+
+    protected val suppressClassName = ClassName("kotlin", "Suppress")
 
     init {
         genRoles()
@@ -60,4 +72,26 @@ internal open class NewAPIGenerator(val globalEnv: RootEnv, subPackage: String) 
                 packageName = packageName,
                 fileName = filename
             ).addFileComment(GENERATED_COMMENT)
+
+
+    protected fun generateFunctionName(action: Action): String =
+        when (action) {
+            is ReceiveAction -> "receive${action.label.frontendName()}From${action.from}"
+            is SendAction -> "send${action.label.frontendName()}To${action.to}"
+        }
+
+    protected fun classifyState(stateId: StateId, transitions: List<SimpleTransition>): StateClassification {
+        return if (transitions.all { it.action is ReceiveAction }) {
+            if (transitions.size == 1)
+                StateClassification.Input
+            else
+                StateClassification.ExternalChoice
+        } else if (transitions.all { it.action is SendAction })
+            StateClassification.Output
+        else throw RuntimeException("State $stateId is not supported.")
+    }
+}
+
+internal enum class StateClassification {
+    Output, Input, ExternalChoice
 }

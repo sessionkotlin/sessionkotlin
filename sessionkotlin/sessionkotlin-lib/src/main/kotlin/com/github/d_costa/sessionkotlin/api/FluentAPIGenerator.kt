@@ -1,7 +1,6 @@
 package com.github.d_costa.sessionkotlin.api
 
 import com.github.d_costa.sessionkotlin.backend.SKBuffer
-import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
 import com.github.d_costa.sessionkotlin.backend.message.SKMessage
 import com.github.d_costa.sessionkotlin.dsl.RootEnv
 import com.github.d_costa.sessionkotlin.dsl.SKRole
@@ -14,9 +13,7 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
     private val superInterfacePostFix = "Branch"
     private val stateInterfacePostFix = "Interface"
     private val endClassName = ClassName(packageName, "End")
-    private val endpointParameter = ParameterSpec
-        .builder("e", SKMPEndpoint::class)
-        .build()
+
     private val msgParameter = ParameterSpec
         .builder("msg", SKMessage::class)
         .build()
@@ -27,6 +24,11 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
             TypeSpec.classBuilder(endClassName).primaryConstructor(
                 FunSpec.constructorBuilder()
                     .addParameter(endpointParameter)
+                    .build()
+            ).addAnnotation(
+                AnnotationSpec
+                    .builder(suppressClassName)
+                    .addMember("%S", "unused_parameter")
                     .build()
             ).build()
         ).build()
@@ -68,8 +70,8 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
     }
 
     private fun generateStateClasses(
-        state: State,
-        stateTransitions: List<Transition>,
+        state: SimpleState,
+        stateTransitions: List<SimpleTransition>,
         role: SKRole,
     ): MutableList<TypeSpec> {
         val className = getClassName(state.id, role)
@@ -146,7 +148,7 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
     private fun addBranchFunction(
         stateId: StateId,
         role: SKRole,
-        transitions: List<Transition>,
+        transitions: List<SimpleTransition>,
         classBuilder: StateInterfaceClass,
     ): Iterable<TypeSpec> {
 
@@ -213,7 +215,7 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
         return classes
     }
 
-    private fun commonSource(transitions: List<Transition>): SKRole {
+    private fun commonSource(transitions: List<SimpleTransition>): SKRole { // TODO delete
         val sources = transitions.map { (it.action as ReceiveAction).from }.toSet()
         if (sources.size > 1)
             throw RuntimeException("Inconsistent external choice: [${sources.joinToString()}]")
@@ -223,7 +225,7 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
     /**
      * Create functions and add them to [classBuilder].
      */
-    private fun addFunctions(role: SKRole, transitions: List<Transition>, classBuilders: StateInterfaceClass) {
+    private fun addFunctions(role: SKRole, transitions: List<SimpleTransition>, classBuilders: StateInterfaceClass) {
         for (t in transitions) {
             val nextClassName = getClassName(t.cont, role)
             val nextInterfaceName = getInterfaceClassName(t.cont, role)
@@ -231,7 +233,6 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
 
             val function = FunSpec.builder(functionName)
                 .returns(nextInterfaceName)
-
                 .addParameters(generateFunctionParameters(t.action))
                 .addModifiers(KModifier.SUSPEND)
 
@@ -287,12 +288,6 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
                 }
             }
 
-    private fun generateFunctionName(action: Action): String =
-        when (action) {
-            is ReceiveAction -> "receive${action.label.frontendName()}From${action.from}"
-            is SendAction -> "send${action.label.frontendName()}To${action.to}"
-        }
-
     private fun generateFunctionBody(action: Action, nextClassName: ClassName): CodeBlock {
         val param = generateFunctionParameter(action)
         val codeBlock = CodeBlock.builder()
@@ -313,19 +308,4 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
         codeBlock.addStatement("return %T(%N)", nextClassName, endpointParameter)
         return codeBlock.build()
     }
-
-    private fun classifyState(stateId: StateId, transitions: List<Transition>): StateClassification {
-        return if (transitions.all { it.action is ReceiveAction }) {
-            if (transitions.size == 1)
-                StateClassification.Input
-            else
-                StateClassification.ExternalChoice
-        } else if (transitions.all { it.action is SendAction })
-            StateClassification.Output
-        else throw RuntimeException("State $stateId is not supported.")
-    }
-}
-
-internal enum class StateClassification {
-    Output, Input, ExternalChoice
 }

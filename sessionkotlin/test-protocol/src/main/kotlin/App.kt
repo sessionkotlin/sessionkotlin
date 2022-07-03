@@ -6,8 +6,8 @@ fun main() {
     val s = SKRole("Server")
     val c = SKRole("Client")
 
-    globalProtocol("Simple") {
-        send<Int>(s, c)
+    globalProtocol("Simple", true) {
+        send<Int>(s, c, "Initial")
 
         choice(s) {
             branch {

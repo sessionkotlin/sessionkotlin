@@ -1,7 +1,7 @@
 package com.github.d_costa.sessionkotlin.fsm
 
+import com.github.d_costa.sessionkotlin.api.exception.NoInitialStateException
 import com.github.d_costa.sessionkotlin.dsl.RecursionTag
-import com.github.d_costa.sessionkotlin.dsl.types.*
 import com.github.d_costa.sessionkotlin.dsl.types.LocalType
 import com.github.d_costa.sessionkotlin.dsl.types.LocalTypeEnd
 import com.github.d_costa.sessionkotlin.dsl.types.LocalTypeExternalChoice
@@ -32,11 +32,11 @@ internal fun fsmFromLocalType(localType: LocalType): FSM {
     val recursions = mutableMapOf<RecursionTag, LocalTypeId>()
 
     /**
-     * Map [LocalType] ids to a [State] ids
+     * Map [LocalType] ids to a [SimpleState] ids
      */
-    val memo = mutableMapOf<LocalTypeId, State>(Pair(LocalTypeEnd.id(), EndState))
+    val memo = mutableMapOf<LocalTypeId, SimpleState>(Pair(LocalTypeEnd.id(), EndSimpleState))
 
-    val states = mutableSetOf<State>(EndState)
+    val states = mutableSetOf<SimpleState>(EndSimpleState)
     val stateTransitions = mutableMapOf<Int, MutableList<NDTransition>>()
     var index = FSM.initialStateIndex
 
@@ -47,7 +47,7 @@ internal fun fsmFromLocalType(localType: LocalType): FSM {
         }
 
         fun createState(): StateId {
-            val s = State(index++)
+            val s = SimpleState(index++)
             states.add(s)
 
             if (l.id() !in memo) {
@@ -139,7 +139,7 @@ private fun simplify(fsm: NDFSM): FSM {
         getTransitions(k, fsm)
     }
 
-    val initialState = fsm.states.find { it.id == FSM.initialStateIndex } ?: throw RuntimeException("No initial state!")
+    val initialState = fsm.states.find { it.id == FSM.initialStateIndex } ?: throw NoInitialStateException()
     val reachableStateIds: Set<StateId> = reachable(setOf(initialState.id), transitionsWithoutEpsilon)
 
     val states = fsm.states.filter { reachableStateIds.contains(it.id) }.toSet()
@@ -153,7 +153,7 @@ private fun simplify(fsm: NDFSM): FSM {
 private fun getTransitions(
     stateId: StateId,
     fsm: NDFSM,
-): List<Transition> = getTransitionsRecursive(stateId, stateId, fsm, 0)
+): List<SimpleTransition> = getTransitionsRecursive(stateId, stateId, fsm, 0)
 
 
 /**
@@ -164,11 +164,11 @@ private fun getTransitionsRecursive(
     currId: StateId,
     fsm: NDFSM,
     i: Long = 0
-): List<Transition> =
+): List<SimpleTransition> =
     fsm.transitions.getValue(currId).flatMap { t ->
         when (t) {
             is Epsilon -> if (t.cont == stateId && i > 0) emptyList() else getTransitionsRecursive(stateId, t.cont, fsm, i+1)
-            is TransitionWithAction -> listOf(Transition(t.action, t.cont))
+            is TransitionWithAction -> listOf(SimpleTransition(t.action, t.cont))
         }
     }
 

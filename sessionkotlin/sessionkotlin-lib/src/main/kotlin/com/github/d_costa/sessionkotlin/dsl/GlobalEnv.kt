@@ -1,5 +1,6 @@
 package com.github.d_costa.sessionkotlin.dsl
 
+import com.github.d_costa.sessionkotlin.api.CallbacksAPIGenerator
 import com.github.d_costa.sessionkotlin.api.FluentAPIGenerator
 import com.github.d_costa.sessionkotlin.backend.message.SKMessage
 import com.github.d_costa.sessionkotlin.dsl.exception.*
@@ -269,13 +270,15 @@ internal fun globalProtocolInternal(name: String = "Proto", protocolBuilder: Glo
  * Global protocol builder. Generates local APIs.
  */
 public fun globalProtocol(name: String, callbacks: Boolean = false, protocolBuilder: GlobalEnv.() -> Unit) {
+    val outputDirectory = File("build/generated/sessionkotlin/main/kotlin")
+
     val g = globalProtocolInternal(name, protocolBuilder)
     if (callbacks) {
         val dupeMsgLabels = g.msgLabels.groupingBy { it }.eachCount().filter { it.value > 1 }
         if (dupeMsgLabels.isNotEmpty()) {
             throw DuplicateMessageLabelsException(dupeMsgLabels.keys)
         }
+        CallbacksAPIGenerator(g).writeTo(outputDirectory)
     }
-    val outputDirectory = File("build/generated/sessionkotlin/main/kotlin")
     FluentAPIGenerator(g).writeTo(outputDirectory)
 }

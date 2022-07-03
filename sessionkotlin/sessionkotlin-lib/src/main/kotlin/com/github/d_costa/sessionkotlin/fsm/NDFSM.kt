@@ -3,7 +3,7 @@ package com.github.d_costa.sessionkotlin.fsm
 /**
  * Non-deterministic FSM
  */
-internal class NDFSM(val states: Set<State>, val transitions: Map<StateId, List<NDTransition>>) {
+internal class NDFSM(val states: Set<SimpleState>, val transitions: Map<StateId, List<NDTransition>>) {
     override fun toString(): String =
         StringBuilder()
             .appendLine("NDFSM:")
