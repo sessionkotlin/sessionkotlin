@@ -347,7 +347,6 @@ class SocketsTest {
 
     @Test
     fun `test accept`() {
-        val c = Channel<Int>()
         runBlocking {
             launch {
                 SKMPEndpoint().use { endpoint ->

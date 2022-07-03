@@ -303,7 +303,7 @@ class ExtraTest {
 
     @Test
     fun `infinite protocol`() {
-        val g = globalProtocolInternal {
+        globalProtocolInternal {
             val t = mu()
             send<Unit>(a, b)
             goto(t)

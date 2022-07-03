@@ -313,7 +313,7 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
         return codeBlock.build()
     }
 
-    private fun addRefinementAssert(action: SendAction, codeBlockBuilder: CodeBlock.Builder, variableName: String? = null) {
+    private fun addRefinementAssert(action: SendAction, codeBlockBuilder: CodeBlock.Builder) {
         if (action.label.mentioned) {
             codeBlockBuilder.addStatement(
                 "%L[%S] = %L.%M()",
@@ -335,7 +335,7 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
         }
     }
 
-    private fun addRefinementAssert(action: ReceiveAction, codeBlockBuilder: CodeBlock.Builder, variableName: String? = null) {
+    private fun addRefinementAssert(action: ReceiveAction, codeBlockBuilder: CodeBlock.Builder) {
         if (action.label.mentioned) {
             codeBlockBuilder.addStatement(
                 "%L[%S] = %L.value.%M()",

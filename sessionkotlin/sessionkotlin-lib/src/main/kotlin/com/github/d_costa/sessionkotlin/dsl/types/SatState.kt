@@ -98,7 +98,6 @@ internal class SatState(
 
                 declaration.append("(assert (and ${constraints.joinToString(" ")}))")
 
-                println(declaration)
                 prover.addConstraint(formulaManager.parse(declaration.toString()))
 
                 return !prover.isUnsat
