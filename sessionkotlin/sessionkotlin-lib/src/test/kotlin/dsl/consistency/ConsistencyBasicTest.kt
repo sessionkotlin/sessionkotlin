@@ -10,7 +10,6 @@ import dsl.util.IntClass
 import dsl.util.LongClass
 import dsl.util.StringClass
 import org.junit.jupiter.api.Test
-import javax.sound.sampled.BooleanControl
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
@@ -142,7 +141,7 @@ class ConsistencyBasicTest {
                 }
             }
         }
-        val lC = LocalTypeSend(a, BoolClass,  LocalTypeEnd)
+        val lC = LocalTypeSend(a, BoolClass, LocalTypeEnd)
         assertEquals(lC, g.project(c))
     }
 

@@ -13,7 +13,6 @@ import dsl.util.DoubleClass
 import dsl.util.IntClass
 import dsl.util.StringClass
 import org.junit.jupiter.api.Test
-import java.util.DuplicateFormatFlagsException
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 

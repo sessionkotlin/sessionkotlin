@@ -187,7 +187,7 @@ public sealed class GlobalEnv(
         }
         localTypes.forEach { (role, localType) ->
             try {
-                fsmFromLocalType(localType)  // check determinism
+                fsmFromLocalType(localType) // check determinism
             } catch (e: SessionKotlinDSLException) {
                 logError(role)
                 throw e

@@ -14,6 +14,11 @@ import com.github.d_costa.sessionkotlin.util.*
 
 internal typealias LocalTypeId = Int
 
+internal fun statesFromLocalType(localType: LocalType): List<State> {
+    val fsm = fsmFromLocalType(localType)
+    return fsm.asStates()
+}
+
 /**
  * Create a Finite State Automata from a LocalType representation.
  */
@@ -38,7 +43,7 @@ internal fun fsmFromLocalType(localType: LocalType): FSM {
 
     val states = mutableSetOf<SimpleState>(EndSimpleState)
     val stateTransitions = mutableMapOf<Int, MutableList<NDTransition>>()
-    var index = FSM.initialStateIndex
+    var index = State.initialStateIndex
 
     fun buildStates(l: LocalType) {
         if (l.id() in memo) {
@@ -139,7 +144,7 @@ private fun simplify(fsm: NDFSM): FSM {
         getTransitions(k, fsm)
     }
 
-    val initialState = fsm.states.find { it.id == FSM.initialStateIndex } ?: throw NoInitialStateException()
+    val initialState = fsm.states.find { it.id == State.initialStateIndex } ?: throw NoInitialStateException()
     val reachableStateIds: Set<StateId> = reachable(setOf(initialState.id), transitionsWithoutEpsilon)
 
     val states = fsm.states.filter { reachableStateIds.contains(it.id) }.toSet()
@@ -155,7 +160,6 @@ private fun getTransitions(
     fsm: NDFSM,
 ): List<SimpleTransition> = getTransitionsRecursive(stateId, stateId, fsm, 0)
 
-
 /**
  * Saving [stateId] prevents stack overflows; Knowing the index [i] allows us to capture direct loops to self.
  */
@@ -167,7 +171,7 @@ private fun getTransitionsRecursive(
 ): List<SimpleTransition> =
     fsm.transitions.getValue(currId).flatMap { t ->
         when (t) {
-            is Epsilon -> if (t.cont == stateId && i > 0) emptyList() else getTransitionsRecursive(stateId, t.cont, fsm, i+1)
+            is Epsilon -> if (t.cont == stateId && i > 0) emptyList() else getTransitionsRecursive(stateId, t.cont, fsm, i + 1)
             is TransitionWithAction -> listOf(SimpleTransition(t.action, t.cont))
         }
     }

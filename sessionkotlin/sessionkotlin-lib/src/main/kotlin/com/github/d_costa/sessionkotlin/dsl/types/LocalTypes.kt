@@ -90,7 +90,6 @@ internal data class LocalTypeInternalChoice(val branches: Collection<LocalType>)
         result = 31 * result + branches.size
         return result
     }
-
 }
 
 internal data class LocalTypeExternalChoice(var of: SKRole, val branches: Collection<LocalType>) : LocalType() {

@@ -5,6 +5,7 @@ import com.github.d_costa.sessionkotlin.backend.message.SKMessage
 import com.github.d_costa.sessionkotlin.dsl.RootEnv
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.fsm.*
+import com.github.d_costa.sessionkotlin.parser.RefinementParser
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 
@@ -12,6 +13,8 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
 
     private val superInterfacePostFix = "Branch"
     private val stateInterfacePostFix = "Interface"
+    private val bufferParameterName = "buf"
+    private val argParameterName = "arg"
     private val endClassName = ClassName(packageName, "End")
 
     private val msgParameter = ParameterSpec
@@ -35,33 +38,30 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
         files.add(endFile)
 
         roleMap.keys.forEach {
-            val fsm = fsmFromLocalType(globalEnv.project(it))
-            val file = generateFluentAPI(fsm, it)
+            val states = statesFromLocalType(globalEnv.project(it))
+            val file = generateFluentAPI(states, it)
             files.add(file)
         }
     }
 
     private fun getClassName(stateId: StateId, role: SKRole, postFix: String = ""): ClassName =
-        if (stateId == FSM.endStateIndex)
+        if (stateId == State.endStateIndex)
             endClassName
         else
             ClassName(packageName, buildClassname(role, stateId, postFix))
 
     private fun getInterfaceClassName(stateId: StateId, role: SKRole, postFix: String = ""): ClassName =
-        if (stateId == FSM.endStateIndex)
+        if (stateId == State.endStateIndex)
             endClassName
         else
             ClassName(packageName, buildClassname(role, stateId, "$postFix$stateInterfacePostFix"))
 
-
-    private fun generateFluentAPI(fsm: FSM, role: SKRole): FileSpec {
+    private fun generateFluentAPI(states: List<State>, role: SKRole): FileSpec {
         val file = newFile(buildClassname(role))
+        file.addProperty(bindingsMapProperty)
 
-        for (state in fsm.states) {
-            if (state.id == FSM.endStateIndex)
-                continue
-            val stateTransitions = fsm.transitions.getOrDefault(state.id, emptyList())
-            val stateClasses = generateStateClasses(state, stateTransitions, role)
+        for (state in states) {
+            val stateClasses = generateStateClasses(state, role)
 
             for (s in stateClasses)
                 file.addType(s)
@@ -70,8 +70,7 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
     }
 
     private fun generateStateClasses(
-        state: SimpleState,
-        stateTransitions: List<SimpleTransition>,
+        state: State,
         role: SKRole,
     ): MutableList<TypeSpec> {
         val className = getClassName(state.id, role)
@@ -79,31 +78,38 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
         val classBuilder = createStateClass(state.id, className, interfaceClassName)
 
         val classes = mutableListOf<TypeSpec>()
-        when (classifyState(state.id, stateTransitions)) {
-            StateClassification.ExternalChoice -> {
+        when (state) {
+            EndState -> {
+                return mutableListOf()
+            }
+            is ReceiveState -> {
+                classBuilder.stateClass
+                    .superclass(SKInputEndpoint::class)
+                    .addSuperclassConstructorParameter(endpointParameter.name)
+                addFunctions(role, listOf(state.transition), classBuilder)
+            }
+            is SendState -> {
+                classBuilder.stateClass
+                    .superclass(SKOutputEndpoint::class)
+                    .addSuperclassConstructorParameter(endpointParameter.name)
+                addFunctions(role, listOf(state.transition), classBuilder)
+            }
+            is InternalChoiceState -> {
+                classBuilder.stateClass
+                    .superclass(SKOutputEndpoint::class)
+                    .addSuperclassConstructorParameter(endpointParameter.name)
+                addFunctions(role, state.transitions, classBuilder)
+            }
+            is ExternalChoiceState -> {
                 classes.addAll(
                     addBranchFunction(
-                        state.id,
+                        state,
                         role,
-                        stateTransitions,
                         classBuilder
                     )
                 )
             }
-            StateClassification.Output -> {
-                classBuilder.stateClass
-                    .superclass(SKOutputEndpoint::class)
-                    .addSuperclassConstructorParameter(endpointParameter.name)
-                addFunctions(role, stateTransitions, classBuilder)
-            }
-            StateClassification.Input -> {
-                classBuilder.stateClass
-                    .superclass(SKInputEndpoint::class)
-                    .addSuperclassConstructorParameter(endpointParameter.name)
-                addFunctions(role, stateTransitions, classBuilder)
-            }
         }
-
         classes.add(classBuilder.stateClass.build())
         classes.add(classBuilder.stateInterface.build())
 
@@ -119,7 +125,8 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
 
     private fun createStateClass(
         stateId: StateId,
-        className: ClassName, interfaceClassName: ClassName,
+        className: ClassName,
+        interfaceClassName: ClassName,
         passMessage: Boolean = false,
     ): StateInterfaceClass {
         val interfaceBuilder = TypeSpec.interfaceBuilder(interfaceClassName)
@@ -135,7 +142,7 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
                     .addModifiers(KModifier.PRIVATE)
                     .build()
             )
-            .also { if (stateId != FSM.initialStateIndex) it.addModifiers(KModifier.PRIVATE) }
+            .also { if (stateId != State.initialStateIndex) it.addModifiers(KModifier.PRIVATE) }
             .addSuperinterface(interfaceClassName)
 
         return StateInterfaceClass(interfaceBuilder, classBuilder)
@@ -146,9 +153,8 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
      * the next possible states.
      */
     private fun addBranchFunction(
-        stateId: StateId,
+        state: ExternalChoiceState,
         role: SKRole,
-        transitions: List<SimpleTransition>,
         classBuilder: StateInterfaceClass,
     ): Iterable<TypeSpec> {
 
@@ -157,7 +163,7 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
 
         val classes = mutableListOf<TypeSpec>()
 
-        val superInterfaceName = getClassName(stateId, role, superInterfacePostFix)
+        val superInterfaceName = getClassName(state.id, role, superInterfacePostFix)
         val branchSuperInterface = createBranchInterface(superInterfaceName)
         classes.add(branchSuperInterface)
 
@@ -171,15 +177,15 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
          */
         val functionBody = CodeBlock.builder()
 
-        functionBody.addStatement("val %L = receive(${roleMap[commonSource(transitions)]})", msgProp.name)
+        functionBody.addStatement("val %L = receive(${roleMap[state.from]})", msgProp.name)
         functionBody.beginControlFlow("return when(%L.label)", msgProp.name)
 
-        for (t in transitions) {
+        for (t in state.transitions) {
             // Create a new intermediary class
-            val intermediaryClassName = getClassName(stateId, role, "_${t.action.label.frontendName()}")
-            val intermediaryInterfaceName = getInterfaceClassName(stateId, role, "_${t.action.label.frontendName()}")
+            val intermediaryClassName = getClassName(state.id, role, "_${t.action.label.frontendName()}")
+            val intermediaryInterfaceName = getInterfaceClassName(state.id, role, "_${t.action.label.frontendName()}")
             val intermediaryClassInterface =
-                createStateClass(stateId, intermediaryClassName, intermediaryInterfaceName, passMessage = true)
+                createStateClass(state.id, intermediaryClassName, intermediaryInterfaceName, passMessage = true)
 
             intermediaryClassInterface.stateInterface
                 .addSuperinterface(superInterfaceName)
@@ -215,17 +221,10 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
         return classes
     }
 
-    private fun commonSource(transitions: List<SimpleTransition>): SKRole { // TODO delete
-        val sources = transitions.map { (it.action as ReceiveAction).from }.toSet()
-        if (sources.size > 1)
-            throw RuntimeException("Inconsistent external choice: [${sources.joinToString()}]")
-        return sources.first()
-    }
-
     /**
-     * Create functions and add them to [classBuilder].
+     * Create functions and add them to [classBuilders].
      */
-    private fun addFunctions(role: SKRole, transitions: List<SimpleTransition>, classBuilders: StateInterfaceClass) {
+    private fun addFunctions(role: SKRole, transitions: List<Transition>, classBuilders: StateInterfaceClass) {
         for (t in transitions) {
             val nextClassName = getClassName(t.cont, role)
             val nextInterfaceName = getInterfaceClassName(t.cont, role)
@@ -278,12 +277,12 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
             when (action) {
                 is ReceiveAction -> {
                     ParameterSpec
-                        .builder("buf", SKBuffer::class.parameterizedBy(action.type.kotlin))
+                        .builder(bufferParameterName, SKBuffer::class.parameterizedBy(action.type.kotlin))
                         .build()
                 }
                 is SendAction -> {
                     ParameterSpec
-                        .builder("arg", action.type.kotlin)
+                        .builder(argParameterName, action.type.kotlin)
                         .build()
                 }
             }
@@ -293,19 +292,58 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
         val codeBlock = CodeBlock.builder()
 
         when (action) {
-            is ReceiveAction -> if (param != null)
-                codeBlock.addStatement("receive(%L, %L)", roleMap[action.from], param.name)
-            else
-                codeBlock.addStatement("receive(%L)", roleMap[action.from])
+            is ReceiveAction -> {
+                if (param != null)
+                    codeBlock.addStatement("receive(%L, %L)", roleMap[action.from], param.name)
+                else
+                    codeBlock.addStatement("receive(%L)", roleMap[action.from])
 
-            is SendAction -> codeBlock.addStatement(
-                "send(%L, %L, %S)",
-                roleMap[action.to],
-                param?.name ?: "Unit",
-                action.label.name
-            )
+                addRefinementAssert(action, codeBlock)
+            }
+
+            is SendAction -> {
+                addRefinementAssert(action, codeBlock)
+                codeBlock.addStatement(
+                    "send(%L, %L, %S)",
+                    roleMap[action.to], param?.name ?: "Unit", action.label.name
+                )
+            }
         }
         codeBlock.addStatement("return %T(%N)", nextClassName, endpointParameter)
         return codeBlock.build()
+    }
+
+    private fun addRefinementAssert(action: SendAction, codeBlockBuilder: CodeBlock.Builder, variableName: String? = null) {
+        if (action.label.mentioned) {
+            codeBlockBuilder.addStatement(
+                "%L[%S] = %L.%M()",
+                bindingsMapProperty.name,
+                action.label.name,
+                argParameterName,
+                toValFunction
+            )
+        }
+        if (action.condition.isNotBlank()) {
+            codeBlockBuilder.addStatement(
+                "%M(%S, %T.parseToEnd(%S).value(%L))",
+                assertFunction,
+                action.condition,
+                RefinementParser::class,
+                action.condition,
+                bindingsMapProperty.name
+            )
+        }
+    }
+
+    private fun addRefinementAssert(action: ReceiveAction, codeBlockBuilder: CodeBlock.Builder, variableName: String? = null) {
+        if (action.label.mentioned) {
+            codeBlockBuilder.addStatement(
+                "%L[%S] = %L.value.%M()",
+                bindingsMapProperty.name,
+                action.label.name,
+                bufferParameterName,
+                toValFunction
+            )
+        }
     }
 }

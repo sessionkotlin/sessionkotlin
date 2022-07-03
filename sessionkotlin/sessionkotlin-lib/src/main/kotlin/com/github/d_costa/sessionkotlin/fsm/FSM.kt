@@ -6,18 +6,13 @@ import com.github.d_costa.sessionkotlin.dsl.exception.NonDeterministicStatesExce
 internal typealias StateTransitions = Map<StateId, List<SimpleTransition>>
 
 internal class FSM(val states: Set<SimpleState>, val transitions: StateTransitions) {
-    companion object {
-        const val initialStateIndex = 1
-        const val endStateIndex = -1
-    }
-
     init {
         for (s in states) {
             val ts = transitions.getOrElse(s.id, ::emptyList)
             val dupeLabels = ts
                 .groupingBy { it.action.label.name }.eachCount().filter { it.value > 1 }
 
-            if (dupeLabels.isNotEmpty() && ts.any {it.action is ReceiveAction}) {
+            if (dupeLabels.isNotEmpty() && ts.any { it.action is ReceiveAction }) {
                 throw NonDeterministicStatesException(ts.filter { it.action.label.name in dupeLabels })
             }
         }
@@ -45,14 +40,14 @@ internal class FSM(val states: Set<SimpleState>, val transitions: StateTransitio
                     val t = ts.first()
                     SendState(s.id, SendTransition(t.action as SendAction, t.cont))
                 } else {
-                    InternalChoiceState(s.id, ts.map { SendTransition(it.action as SendAction, it.cont)})
+                    InternalChoiceState(s.id, ts.map { SendTransition(it.action as SendAction, it.cont) })
                 }
             } else if (ts.all { it.action is ReceiveAction }) {
                 if (ts.size == 1) {
                     val t = ts.first()
                     ReceiveState(s.id, ReceiveTransition(t.action as ReceiveAction, t.cont))
                 } else {
-                    ExternalChoiceState(s.id, commonSource(ts), ts.map { ReceiveTransition(it.action as ReceiveAction, it.cont)})
+                    ExternalChoiceState(s.id, commonSource(ts), ts.map { ReceiveTransition(it.action as ReceiveAction, it.cont) })
                 }
             } else throw RuntimeException("This should not have happened")
         }
