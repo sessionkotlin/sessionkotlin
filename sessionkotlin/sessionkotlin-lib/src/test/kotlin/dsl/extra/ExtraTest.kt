@@ -240,10 +240,7 @@ class ExtraTest {
                 }
             }
         }
-        val lC = LocalTypeExternalChoice(
-            b,
-            listOf(LocalTypeExternalChoice(b, listOf(LocalTypeReceive(b, UnitClass, LocalTypeEnd))))
-        )
+        val lC = LocalTypeReceive(b, UnitClass, LocalTypeEnd)
         assertEquals(lC, g.project(c))
     }
 

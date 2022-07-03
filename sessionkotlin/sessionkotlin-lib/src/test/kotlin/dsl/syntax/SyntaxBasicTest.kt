@@ -5,10 +5,7 @@ import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.exception.*
 import com.github.d_costa.sessionkotlin.dsl.globalProtocol
 import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
-import com.github.d_costa.sessionkotlin.dsl.types.LEnd
-import com.github.d_costa.sessionkotlin.dsl.types.LocalTypeExternalChoice
-import com.github.d_costa.sessionkotlin.dsl.types.LocalTypeReceive
-import com.github.d_costa.sessionkotlin.dsl.types.LocalTypeSend
+import com.github.d_costa.sessionkotlin.dsl.types.*
 import dsl.util.DoubleClass
 import dsl.util.IntClass
 import dsl.util.StringClass
@@ -205,8 +202,8 @@ class SyntaxBasicTest {
         val lA = LocalTypeExternalChoice(
             c,
             listOf(
-                LocalTypeReceive(c, StringClass, LEnd),
-                LocalTypeReceive(c, IntClass, LEnd)
+                LocalTypeReceive(c, StringClass, MsgLabel("b1"), LEnd),
+                LocalTypeReceive(c, IntClass, MsgLabel("b2"), LEnd)
             )
         )
         assertEquals(g.project(a), lA)
@@ -229,8 +226,8 @@ class SyntaxBasicTest {
         val lA = LocalTypeExternalChoice(
             c,
             listOf(
-                LocalTypeReceive(c, IntClass, LEnd),
-                LocalTypeReceive(c, IntClass, LEnd)
+                LocalTypeReceive(c, IntClass, MsgLabel("1"), LEnd),
+                LocalTypeReceive(c, IntClass, MsgLabel("2"), LEnd)
             )
         )
         assertEquals(g.project(a), lA)

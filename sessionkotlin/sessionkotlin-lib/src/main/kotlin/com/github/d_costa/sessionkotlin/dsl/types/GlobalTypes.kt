@@ -165,7 +165,11 @@ internal class GlobalTypeChoice(
                     // The projection must be the same for all branches
                     throw RoleNotEnabledException(role)
                 }
-                return LocalTypeExternalChoice(localType.of, uniqueProjectedBranches)
+
+                return if (uniqueProjectedBranches.size == 1)
+                    uniqueProjectedBranches.first()
+                else
+                    LocalTypeExternalChoice(localType.of, uniqueProjectedBranches)
             }
         }
     }

@@ -28,7 +28,7 @@ class BuyerBrokerSupplier {
                 branch {
                     send<Int>(portal, finance, "askedAmount")
                     send<Int>(finance, portal, "approvedAmount", "approvedAmount <= askedAmount")
-                    send<Int>(portal, applicant, "x", "x == approvedAmount")
+                    send<Int>(portal, applicant, "OK")
                 }
                 branch {
                     send<Unit>(portal, finance)
@@ -42,7 +42,7 @@ class BuyerBrokerSupplier {
             LocalTypeExternalChoice(
                 portal,
                 listOf(
-                    LocalTypeReceive(portal, IntClass, LEnd),
+                    LocalTypeReceive(portal, IntClass, MsgLabel("OK"), LEnd),
                     LocalTypeReceive(portal, UnitClass, LEnd)
                 )
             )
@@ -57,10 +57,13 @@ class BuyerBrokerSupplier {
                         listOf(
                             LocalTypeSend(
                                 finance,
-                                IntClass,
-                                LocalTypeReceive(finance, IntClass, LocalTypeSend(applicant, IntClass, LEnd)),
+                                IntClass, MsgLabel("askedAmount", true),
+                                LocalTypeReceive(
+                                    finance, IntClass, MsgLabel("approvedAmount", true),
+                                    LocalTypeSend(applicant, IntClass, MsgLabel("OK"), LEnd)
+                                ),
                             ),
-                            LocalTypeSend(finance, UnitClass, MsgLabel("Denied"), LocalTypeSend(applicant, UnitClass, MsgLabel("Denied"), LEnd))
+                            LocalTypeSend(finance, UnitClass, LocalTypeSend(applicant, UnitClass, LEnd))
                         )
                     )
                 )
@@ -72,8 +75,8 @@ class BuyerBrokerSupplier {
             listOf(
                 LocalTypeReceive(
                     portal,
-                    IntClass,
-                    LocalTypeSend(portal, IntClass, LEnd),
+                    IntClass, MsgLabel("askedAmount", true),
+                    LocalTypeSend(portal, IntClass, MsgLabel("approvedAmount", true), "approvedAmount <= askedAmount", LEnd),
                 ),
                 LocalTypeReceive(portal, UnitClass, LEnd)
             )

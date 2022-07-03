@@ -65,12 +65,12 @@ class ConsistencyBasicTest {
         assertFailsWith<InconsistentExternalChoiceException> {
             globalProtocolInternal {
                 choice(b) {
-                    branch() {
+                    branch {
                         send<String>(b, c, "Case1")
                         send<String>(b, c)
                         // 'a' not enabled
                     }
-                    branch() {
+                    branch {
                         // 'a' enabled by b
                         send<String>(b, a, "Case2")
                         send<String>(a, c, "Case2")
@@ -130,7 +130,7 @@ class ConsistencyBasicTest {
     fun `merge inlined and non inlined`() {
         val g = globalProtocolInternal {
             choice(b) {
-                // 'a' is not enabled in any branch
+                // 'c' is not enabled in any branch
                 branch {
                     send<String>(b, a, "b1")
                     send(c, a, BoolClass)
@@ -182,9 +182,9 @@ class ConsistencyBasicTest {
                 LocalTypeSend(
                     b,
                     IntClass,
-                    MsgLabel("1"),
+                    MsgLabel("2"),
                     LocalTypeSend(
-                        c, BoolClass, MsgLabel("1"), LEnd
+                        c, BoolClass, MsgLabel("2"), LEnd
                     ),
                 ),
             )
@@ -195,6 +195,7 @@ class ConsistencyBasicTest {
                 LocalTypeReceive(
                     a,
                     LongClass,
+                    MsgLabel("1"),
                     LocalTypeExternalChoice(
                         c,
                         listOf(
@@ -205,7 +206,7 @@ class ConsistencyBasicTest {
                 ),
                 LocalTypeReceive(
                     a,
-                    IntClass, LEnd
+                    IntClass, MsgLabel("2"), LEnd
                 )
             )
         )

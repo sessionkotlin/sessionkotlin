@@ -344,4 +344,37 @@ class SocketsTest {
             }
         }
     }
+
+    @Test
+    fun `test accept`() {
+        val c = Channel<Int>()
+        runBlocking {
+            launch {
+                SKMPEndpoint().use { endpoint ->
+                    endpoint.accept(B, 9999)
+
+                    for (p in msgs) {
+                        endpoint.send(B, p)
+                    }
+                    for (p in msgs) {
+                        val received = endpoint.receive(B)
+                        assertEquals(received, p)
+                    }
+                }
+            }
+            launch {
+                SKMPEndpoint().use { endpoint ->
+                    endpoint.request(A, "localhost", 9999)
+
+                    for (p in msgs) {
+                        val received = endpoint.receive(A)
+                        assertEquals(received, p)
+                    }
+                    for (p in msgs) {
+                        endpoint.send(A, p)
+                    }
+                }
+            }
+        }
+    }
 }

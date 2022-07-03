@@ -158,8 +158,8 @@ class SyntaxRecursionTest {
             LocalTypeExternalChoice(
                 b,
                 listOf(
-                    LocalTypeReceive(b, IntClass, LocalTypeRecursion(t)),
-                    LocalTypeReceive(b, IntClass, LEnd)
+                    LocalTypeReceive(b, IntClass, MsgLabel("1"), LocalTypeRecursion(t)),
+                    LocalTypeReceive(b, IntClass, MsgLabel("2"), LEnd)
                 )
             )
         )
@@ -233,15 +233,15 @@ class SyntaxRecursionTest {
                 LocalTypeExternalChoice(
                     b,
                     listOf(
-                        LocalTypeReceive(b, IntClass, LocalTypeRecursion(t1)),
+                        LocalTypeReceive(b, IntClass, MsgLabel("1"), LocalTypeRecursion(t1)),
                         LocalTypeReceive(
-                            b, IntClass,
+                            b, IntClass, MsgLabel("2"),
                             LocalTypeRecursionDefinition(
                                 t2,
                                 LocalTypeInternalChoice(
                                     listOf(
-                                        LocalTypeSend(b, IntClass, LocalTypeRecursion(t2)),
-                                        LocalTypeSend(b, UnitClass, LocalTypeRecursion(t1))
+                                        LocalTypeSend(b, IntClass, MsgLabel("21"), LocalTypeRecursion(t2)),
+                                        LocalTypeSend(b, UnitClass, MsgLabel("22"), LocalTypeRecursion(t1))
                                     )
                                 )
                             )
@@ -320,9 +320,13 @@ class SyntaxRecursionTest {
                         LocalTypeSend(
                             b,
                             LongClass,
+                            MsgLabel("rec"),
                             LocalTypeRecursion(x)
                         ),
-                        LocalTypeSend(b, StringClass, LocalTypeEnd)
+                        LocalTypeSend(
+                            b, StringClass, MsgLabel("quit"),
+                            LocalTypeEnd
+                        )
                     )
                 )
             )
@@ -335,8 +339,8 @@ class SyntaxRecursionTest {
                 LocalTypeExternalChoice(
                     a,
                     listOf(
-                        LocalTypeReceive(a, LongClass, LocalTypeRecursion(x)),
-                        LocalTypeReceive(a, StringClass, LocalTypeEnd)
+                        LocalTypeReceive(a, LongClass, MsgLabel("rec"), LocalTypeRecursion(x)),
+                        LocalTypeReceive(a, StringClass, MsgLabel("quit"), LocalTypeEnd)
                     )
                 )
             )
@@ -362,12 +366,8 @@ class SyntaxRecursionTest {
                 LocalTypeSend(b, LongClass, LocalTypeReceive(b, LongClass, LEnd))
             )
         )
-        val lB = LocalTypeExternalChoice(
-            a,
-            listOf(
-                LocalTypeReceive(a, LongClass, LocalTypeSend(a, LongClass, LEnd))
-            )
-        )
+        val lB = LocalTypeReceive(a, LongClass, LocalTypeSend(a, LongClass, LEnd))
+
         assertEquals(lA, g.project(a))
         assertEquals(lB, g.project(b))
     }

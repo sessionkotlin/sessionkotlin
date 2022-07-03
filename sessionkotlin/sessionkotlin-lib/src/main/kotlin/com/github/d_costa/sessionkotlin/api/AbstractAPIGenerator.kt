@@ -35,7 +35,6 @@ internal open class NewAPIGenerator(val globalEnv: RootEnv, subPackage: String) 
         .builder("e", SKMPEndpoint::class)
         .build()
 
-
     protected val bindingsMapProperty = PropertySpec.builder(
         "bindings",
         bindingsMapPropertyType

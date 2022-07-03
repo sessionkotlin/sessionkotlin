@@ -5,11 +5,8 @@ import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.exception.UnfinishedRolesException
 import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
 import com.github.d_costa.sessionkotlin.dsl.types.LEnd
-import com.github.d_costa.sessionkotlin.dsl.types.LocalTypeReceive
 import com.github.d_costa.sessionkotlin.dsl.types.LocalTypeSend
-import dsl.util.IntClass
 import dsl.util.LongClass
-import dsl.util.StringClass
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -40,11 +37,8 @@ class UnfinishedExecTest {
             }
         }
         val lB = LocalTypeSend(
-            c, StringClass,
-            LocalTypeReceive(
-                a, IntClass,
-                LocalTypeSend(c, LongClass, LEnd)
-            ),
+            c, LongClass,
+            LEnd
         )
         assertEquals(lB, g.project(b))
     }

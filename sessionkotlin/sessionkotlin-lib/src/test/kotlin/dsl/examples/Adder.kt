@@ -36,8 +36,11 @@ class Adder {
             LocalTypeInternalChoice(
                 listOf(
                     LocalTypeSend(
-                        s, IntClass,
-                        LocalTypeSend(s, IntClass, LocalTypeReceive(s, IntClass, LocalTypeRecursion(t))),
+                        s, IntClass, MsgLabel("v1", true),
+                        LocalTypeSend(
+                            s, IntClass, MsgLabel("v2", true),
+                            LocalTypeReceive(s, IntClass, MsgLabel("sum", true), LocalTypeRecursion(t))
+                        ),
                     ),
                     LocalTypeSend(s, UnitClass, LEnd)
                 )
@@ -49,8 +52,11 @@ class Adder {
                 c,
                 listOf(
                     LocalTypeReceive(
-                        c, IntClass,
-                        LocalTypeReceive(c, IntClass, LocalTypeSend(c, IntClass, LocalTypeRecursion(t))),
+                        c, IntClass, MsgLabel("v1", true),
+                        LocalTypeReceive(
+                            c, IntClass, MsgLabel("v2", true),
+                            LocalTypeSend(c, IntClass, MsgLabel("sum", true), "sum == v1 + v2", LocalTypeRecursion(t))
+                        ),
                     ),
                     LocalTypeReceive(c, UnitClass, LEnd)
                 )

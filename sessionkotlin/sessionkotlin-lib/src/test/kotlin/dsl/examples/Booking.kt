@@ -52,21 +52,21 @@ class Booking {
                 listOf(
                     LocalTypeSend(
                         agency,
-                        StringClass,
-                        LocalTypeReceive(agency, IntClass, LocalTypeRecursion(t)),
+                        StringClass, MsgLabel("request"),
+                        LocalTypeReceive(agency, IntClass, MsgLabel("amount"), LocalTypeRecursion(t)),
                     ),
                     LocalTypeInternalChoice(
                         listOf(
                             LocalTypeSend(
                                 agency,
-                                UnitClass,
+                                UnitClass, MsgLabel("confirm"),
                                 LocalTypeSend(
                                     company,
                                     PaymentInfo::class.java,
                                     LocalTypeReceive(company, UnitClass, LEnd)
                                 ),
                             ),
-                            LocalTypeSend(agency, UnitClass, LEnd)
+                            LocalTypeSend(agency, UnitClass, MsgLabel("cancel"), LEnd)
                         )
                     )
 
@@ -80,22 +80,32 @@ class Booking {
                 listOf(
                     LocalTypeReceive(
                         client,
-                        StringClass,
-                        LocalTypeSend(client, IntClass, LocalTypeSend(company, UnitClass, LocalTypeRecursion(t)))
-                    ),
-                    LocalTypeReceive(
-                        client,
-                        UnitClass,
+                        StringClass, MsgLabel("request"),
                         LocalTypeSend(
-                            company,
-                            UnitClass,
-                            LEnd,
+                            client,
+                            IntClass,
+                            MsgLabel("amount"),
+                            LocalTypeSend(company, UnitClass, LocalTypeRecursion(t))
                         )
                     ),
-                    LocalTypeReceive(
+                    LocalTypeExternalChoice(
                         client,
-                        UnitClass,
-                        LocalTypeSend(company, UnitClass, LEnd)
+                        listOf(
+                            LocalTypeReceive(
+                                client,
+                                UnitClass, MsgLabel("confirm"),
+                                LocalTypeSend(
+                                    company,
+                                    UnitClass, MsgLabel("confirm"),
+                                    LEnd,
+                                )
+                            ),
+                            LocalTypeReceive(
+                                client,
+                                UnitClass, MsgLabel("cancel"),
+                                LocalTypeSend(company, UnitClass, MsgLabel("cancel"), LEnd)
+                            )
+                        )
                     )
                 )
             )
@@ -110,19 +120,24 @@ class Booking {
                         UnitClass,
                         LocalTypeRecursion(t)
                     ),
-                    LocalTypeReceive(
+                    LocalTypeExternalChoice(
                         agency,
-                        UnitClass,
-                        LocalTypeReceive(
-                            client, PaymentInfo::class.java,
-                            LocalTypeSend(
-                                client,
-                                UnitClass,
-                                LEnd
-                            )
+                        listOf(
+                            LocalTypeReceive(
+                                agency,
+                                UnitClass, MsgLabel("confirm"),
+                                LocalTypeReceive(
+                                    client, PaymentInfo::class.java,
+                                    LocalTypeSend(
+                                        client,
+                                        UnitClass,
+                                        LEnd
+                                    )
+                                )
+                            ),
+                            LocalTypeReceive(agency, UnitClass, MsgLabel("cancel"), LEnd)
                         )
-                    ),
-                    LocalTypeReceive(agency, UnitClass, LEnd)
+                    )
                 )
             )
         )

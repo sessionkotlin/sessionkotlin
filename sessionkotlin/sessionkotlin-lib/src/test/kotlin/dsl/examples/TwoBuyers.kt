@@ -53,8 +53,8 @@ class TwoBuyers {
                     LocalTypeExternalChoice(
                         b,
                         listOf(
-                            LocalTypeReceive(b, Date::class.java, LEnd),
-                            LocalTypeReceive(b, UnitClass, LEnd),
+                            LocalTypeReceive(b, Date::class.java, MsgLabel("ok"), LEnd),
+                            LocalTypeReceive(b, UnitClass, MsgLabel("quit"), LEnd),
                         )
                     )
                 )
@@ -69,8 +69,8 @@ class TwoBuyers {
                     LocalTypeExternalChoice(
                         b,
                         listOf(
-                            LocalTypeReceive(b, Address::class.java, LocalTypeSend(b, Date::class.java, LEnd)),
-                            LocalTypeReceive(b, UnitClass, LEnd),
+                            LocalTypeReceive(b, Address::class.java, MsgLabel("ok"), LocalTypeSend(b, Date::class.java, LEnd)),
+                            LocalTypeReceive(b, UnitClass, MsgLabel("quit"), LEnd),
                         )
                     )
                 )
@@ -84,12 +84,12 @@ class TwoBuyers {
                     listOf(
                         LocalTypeSend(
                             seller,
-                            Address::class.java,
-                            LocalTypeReceive(seller, Date::class.java, LocalTypeSend(a, Date::class.java, LEnd))
+                            Address::class.java, MsgLabel("ok"),
+                            LocalTypeReceive(seller, Date::class.java, LocalTypeSend(a, Date::class.java, MsgLabel("ok"), LEnd))
                         ),
                         LocalTypeSend(
-                            seller, UnitClass,
-                            LocalTypeSend(a, UnitClass, LEnd)
+                            seller, UnitClass, MsgLabel("quit"),
+                            LocalTypeSend(a, UnitClass, MsgLabel("quit"), LEnd)
                         ),
                     )
                 )

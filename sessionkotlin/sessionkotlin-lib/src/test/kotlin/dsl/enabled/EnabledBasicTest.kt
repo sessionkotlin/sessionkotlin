@@ -262,8 +262,8 @@ class EnabledBasicTest {
         val lB = LocalTypeExternalChoice(
             a,
             listOf(
-                LocalTypeReceive(a, LongClass, LEnd),
-                LocalTypeReceive(a, IntClass, LEnd)
+                LocalTypeReceive(a, LongClass, MsgLabel("1"), LEnd),
+                LocalTypeReceive(a, IntClass, MsgLabel("2"), LEnd)
             )
         )
         assertEquals(g.project(b), lB)

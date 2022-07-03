@@ -36,8 +36,8 @@ class ProxyExample {
             LocalTypeExternalChoice(
                 proxy,
                 listOf(
-                    LocalTypeReceive(proxy, Response::class.java, LEnd),
-                    LocalTypeReceive(proxy, Error::class.java, LEnd)
+                    LocalTypeReceive(proxy, Response::class.java, MsgLabel("ok"), LEnd),
+                    LocalTypeReceive(proxy, Error::class.java, MsgLabel("error"), LEnd)
                 )
             )
         )
@@ -50,13 +50,13 @@ class ProxyExample {
                     listOf(
                         LocalTypeReceive(
                             server,
-                            Response::class.java,
-                            LocalTypeSend(client, Response::class.java, LEnd)
+                            Response::class.java, MsgLabel("ok"),
+                            LocalTypeSend(client, Response::class.java, MsgLabel("ok"), LEnd)
                         ),
                         LocalTypeReceive(
                             server,
-                            Error::class.java,
-                            LocalTypeSend(client, Error::class.java, LEnd)
+                            Error::class.java, MsgLabel("error"),
+                            LocalTypeSend(client, Error::class.java, MsgLabel("error"), LEnd)
                         )
                     )
                 )
@@ -66,8 +66,8 @@ class ProxyExample {
             proxy, Request::class.java,
             LocalTypeInternalChoice(
                 listOf(
-                    LocalTypeSend(proxy, Response::class.java, LEnd),
-                    LocalTypeSend(proxy, Error::class.java, LEnd)
+                    LocalTypeSend(proxy, Response::class.java, MsgLabel("ok"), LEnd),
+                    LocalTypeSend(proxy, Error::class.java, MsgLabel("error"), LEnd)
                 )
             )
         )

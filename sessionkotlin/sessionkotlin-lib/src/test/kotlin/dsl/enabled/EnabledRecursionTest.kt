@@ -126,8 +126,8 @@ class EnabledRecursionTest {
             t,
             LocalTypeInternalChoice(
                 listOf(
-                    LocalTypeSend(b, UnitClass, LocalTypeRecursion(t)),
-                    LocalTypeSend(b, IntClass, LEnd)
+                    LocalTypeSend(b, UnitClass, MsgLabel("b1"), LocalTypeRecursion(t)),
+                    LocalTypeSend(b, IntClass, MsgLabel("b2"), LEnd)
                 )
             )
         )

@@ -106,16 +106,17 @@ class SyntaxExecTest {
                 LocalTypeSend(
                     a,
                     StringClass,
+                    MsgLabel("1"),
                     LocalTypeReceive(a, StringClass, LocalTypeEnd)
                 ),
-                LocalTypeSend(a, UnitClass, LocalTypeEnd)
+                LocalTypeSend(a, UnitClass, MsgLabel("2"), LocalTypeEnd)
             )
         )
         val lA = LocalTypeExternalChoice(
             b,
             listOf(
-                LocalTypeReceive(b, StringClass, LocalTypeSend(b, StringClass, LocalTypeEnd)),
-                LocalTypeReceive(b, UnitClass, LocalTypeEnd)
+                LocalTypeReceive(b, StringClass, MsgLabel("1"), LocalTypeSend(b, StringClass, LocalTypeEnd)),
+                LocalTypeReceive(b, UnitClass, MsgLabel("2"), LocalTypeEnd)
             )
         )
         assertEquals(lA, g.project(a))
