@@ -12,26 +12,26 @@ fun main() {
     globalProtocol("SMTP") {
         // TODO 421
         choice(server) {
-            branch(Code.C220) {
+            branch {
                 // Service ready
-                send<C220>(server, client)
+                send<C220>(server, client, Code.C220)
                 ehlo()
             }
-            branch(Code.C554) {
+            branch {
                 // Transaction failed
-                send<C554>(server, client)
+                send<C554>(server, client, Code.C554)
             }
         }
     }
 }
 
 
-val ehlo: GlobalProtocol = {
+private val ehlo: GlobalProtocol = {
     lateinit var tEhlo: RecursionTag
 
     choice(client) {
-        branch(Code.Ehlo) {
-            send<Ehlo>(client, server)
+        branch {
+            send<SMTPMessage>(client, server, Code.Ehlo)
             tEhlo = mu()
 
             /*
@@ -39,81 +39,114 @@ val ehlo: GlobalProtocol = {
              * The last line does not have a hyphen.
              */
             choice(server) {
-                branch(Code.C250Hyphen) {
-                    send<C250Hyphen>(server, client)
+                branch {
+                    send<C250Hyphen>(server, client, Code.C250Hyphen)
                     goto(tEhlo)
                 }
-                branch(Code.C250) {
-                    send<C250>(server, client)
-                    tls()
+                branch {
+                    send<C250>(server, client, Code.C250)
+                    mail()
                 }
             }
         }
-        branch(Code.Quit) {
+        branch {
             clientQuit()
         }
     }
 }
 
-val tls: GlobalProtocol = {
-    // https://datatracker.ietf.org/doc/html/rfc2487#section-3
-    send<TLS>(client, server)
-    send<C220>(server, client)
+private val mail: GlobalProtocol = {
+    send<Mail>(client, server, Code.Mail)
 
-    // do TLS negotiation here
-
-    choice(client) {
-        branch(Code.Ehlo) {
-            secureEhlo()
+    choice(server) {
+        branch {
+            // OK
+            send<C250>(server, client, Code.C250)
+            recipients()
         }
-        branch(Code.Quit) {
-            // If the SMTP client decides that the level of authentication or
-            // privacy is not high enough for it to continue, it SHOULD issue an
-            // SMTP QUIT command immediately after the TLS negotiation is complete.
-            send<Quit>(client, server)
+        branch {
+            // Requested action not taken: mailbox name not allowed (e.g.,
+            // mailbox syntax incorrect)
+            send<C553>(server, client, Code.C553)
         }
     }
 }
 
-val secureEhlo: GlobalProtocol = {
-    lateinit var tSecureEhlo: RecursionTag
+private val recipients: GlobalProtocol = {
+    val tRecipient = mu()
 
-    send<Ehlo>(client, server)
+    choice(client) {
+        branch {
+            send<RCPT>(client, server, Code.RCPT)
 
-    choice(server) {
-        branch(Code.C220) {
-
-            tSecureEhlo = mu()
-            /*
-             * EHLO has a multiline response.
-             * The last line does not have a hyphen.
-             */
             choice(server) {
-                branch(Code.C250Hyphen) {
-                    send<C250Hyphen>(server, client)
-                    goto(tSecureEhlo)
+                branch {
+                    // OK
+                    send<C250>(server, client, Code.C250)
+                    goto(tRecipient)
                 }
-                branch(Code.C250) {
-                    send<C250>(server, client)
-                    mail()
+                branch {
+                    branch550()
                 }
             }
         }
-        branch(Code.Quit) {
-            // If the SMTP server decides that the level of authentication or
-            // privacy is not high enough for it to continue, it SHOULD reply to
-            // every SMTP command from the client (other than a QUIT command) with
-            // the 554 reply code
-            send<C554>(server, client)
+        branch {
+            data()
         }
     }
 }
 
-val mail: GlobalProtocol = {
+private val branch550: GlobalProtocol = {
+    // Requested action not taken: mailbox unavailable (e.g., mailbox
+    // not found, no access, or command rejected for policy reasons)
+    val t550 = mu()
+    choice(server) {
+        branch {
+            send<C550>(server, client, Code.C550)
+        }
+        branch {
+            send<C550Hyphen>(server, client, Code.C550Hyphen)
+            goto(t550)
+        }
+    }
+}
+private val data: GlobalProtocol = {
+    send<Data>(client, server, Code.Data)
+    send<C354>(server, client, Code.C354)
 
+    bodyHeaders()
+
+    val tMailBody = mu()
+
+    choice(client) {
+        branch {
+            // Add a line
+            send<DataLine>(client, server, Code.DataLine)
+            goto(tMailBody)
+        }
+        branch {
+            send<DataOver>(client, server, Code.DataOver)
+
+            choice(server) {
+                branch {
+                    // Ok
+                    send<C250>(server, client, Code.C250)
+                }
+                branch {
+                    branch550()
+                }
+            }
+        }
+    }
 }
 
-val clientQuit: GlobalProtocol = {
-    send<Quit>(client, server)
-    send<C221>(server, client)  // Service closing transmission channel
+private val bodyHeaders: GlobalProtocol = {
+    send<MessageIdHeader>(client, server)
+    send<FromHeader>(client, server)
+    send<ToHeader>(client, server)
+}
+
+private val clientQuit: GlobalProtocol = {
+    send<Quit>(client, server, Code.Quit)
+    send<C221>(server, client, Code.C221)  // Service closing transmission channel
 }

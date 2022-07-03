@@ -16,6 +16,7 @@ internal typealias LocalTypeId = Int
 
 internal fun statesFromLocalType(localType: LocalType): List<State> {
     val fsm = fsmFromLocalType(localType)
+    println(fsm)
     return fsm.asStates()
 }
 

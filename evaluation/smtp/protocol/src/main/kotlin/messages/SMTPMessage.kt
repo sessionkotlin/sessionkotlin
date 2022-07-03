@@ -1,7 +1,6 @@
 package messages
 
 import com.github.d_costa.sessionkotlin.backend.message.SKMessage
-import java.nio.charset.Charset
 
 abstract class SMTPMessage(val code: String, open val body: String): SKMessage(body, code) {
 
@@ -10,12 +9,9 @@ abstract class SMTPMessage(val code: String, open val body: String): SKMessage(b
         const val LF: Char = (0x0A).toChar()
     }
 
-    override fun toString(): String  {
-        return if (body.isEmpty())
-            "<$code>"
-        else if (code.length > 3 && code[code.length - 1] == '-')
-            "<$code$body>"
-        else
-            "<$code $body>"
+    override fun toString(): String {
+        val separator = if (code.length > 3 && code[code.length - 1] == '-')
+            "" else " "
+        return listOf(code, body).joinToString(separator).trim()
     }
 }

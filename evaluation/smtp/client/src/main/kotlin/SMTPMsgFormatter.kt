@@ -4,9 +4,7 @@ import messages.*
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
 import java.util.*
-
-fun ByteBuffer.customString(): ByteArray = Arrays.copyOfRange(array(), position(), limit())
-
+fun ByteArray.toHex(): String = joinToString(separator = "") { eachByte -> "%02x".format(eachByte) }
 class SMTPMsgFormatter : SKMessageFormatter {
     companion object {
         val charset = Charsets.UTF_8
@@ -24,8 +22,11 @@ class SMTPMsgFormatter : SKMessageFormatter {
         // Update position
         b.position(b.position() + 4)
 
-        if (!validSMTPCode(head))
+        if (!validSMTPCode(head)) {
+            println(b.position())
+            println(b.array().toHex())
             throw InvalidSMTPCode(head)
+        }
 
         val body = readOneLine(b)
 
@@ -34,10 +35,13 @@ class SMTPMsgFormatter : SKMessageFormatter {
             Code.C221 -> C221(body)
             Code.C250 -> C250(body)
             Code.C250Hyphen -> C250Hyphen(body)
+            Code.C354 -> C354(body)
+            Code.C550 -> C550(body)
+            Code.C550Hyphen -> C550Hyphen(body)
             Code.C554 -> C554(body)
             else -> throw NotImplementedSMTPCode(head)
         }
-        return Optional.of(SKMessage(msg, msg.code))
+        return Optional.of(SKMessage(msg.code, msg))
     }
 
     class NotImplementedSMTPCode(code: String) : RuntimeException("Code not implemented: $code")
@@ -86,9 +90,7 @@ class SMTPMsgFormatter : SKMessageFormatter {
 
     private fun serialize(msg: SMTPMessage): ByteArray {
         val termination = "${SMTPMessage.CR}${SMTPMessage.LF}"
-        return if (msg.body.isEmpty())
-            ("${msg.code} $termination").toByteArray(charset)
-        else
-            ("${msg.code} ${msg.body} $termination").toByteArray(charset)
+        val content = listOf(msg.code, msg.body).joinToString(" ").trim()
+        return ("$content$termination").toByteArray(charset)
     }
 }
