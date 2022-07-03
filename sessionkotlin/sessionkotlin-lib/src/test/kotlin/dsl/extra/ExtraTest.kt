@@ -26,12 +26,12 @@ class ExtraTest {
         assertFailsWith<UnfinishedRolesException> {
             globalProtocolInternal {
                 choice(a) {
-                    branch("1") {
+                    branch {
                         val t = mu()
                         send<Unit>(a, b)
                         goto(t)
                     }
-                    branch("2") {
+                    branch {
                         send<Unit>(a, b)
                         send<Unit>(a, c)
                     }
@@ -46,16 +46,16 @@ class ExtraTest {
         assertFailsWith<UnfinishedRolesException> {
             globalProtocolInternal {
                 choice(a) {
-                    branch("1") {
+                    branch {
                         val t = mu()
                         choice(a) {
-                            branch("1.1") {
+                            branch {
                                 send<Unit>(a, b)
                                 goto(t)
                             }
                         }
                     }
-                    branch("2") {
+                    branch {
                         send<Unit>(a, b)
                         send<Unit>(b, c)
                     }
@@ -71,11 +71,11 @@ class ExtraTest {
             globalProtocolInternal {
                 val t = mu()
                 choice(a) {
-                    branch("1") {
+                    branch {
                         send<Unit>(a, b)
                         goto(t)
                     }
-                    branch("2") {
+                    branch {
                         send<Unit>(a, c)
                     }
                 }
@@ -90,19 +90,19 @@ class ExtraTest {
             globalProtocolInternal {
                 val t = mu()
                 choice(a) {
-                    branch("1") {
+                    branch {
                         send<Unit>(a, b)
                         choice(a) {
-                            branch("1.1") {
+                            branch {
                                 send<Unit>(a, c)
                                 goto(t)
                             }
-                            branch("1.2") {
+                            branch {
                                 send<Unit>(a, c)
                             }
                         }
                     }
-                    branch("2") {
+                    branch {
                         send<Unit>(a, c)
                         send<Unit>(a, b)
                     }
@@ -118,12 +118,12 @@ class ExtraTest {
             globalProtocolInternal {
                 val t = mu()
                 choice(a) {
-                    branch("1") {
+                    branch {
                         send<Unit>(a, b)
                         send<Unit>(b, c)
                         goto(t)
                     }
-                    branch("2") {
+                    branch {
                         send<Unit>(a, b)
                         send<Unit>(a, c)
                         goto(t)
@@ -139,13 +139,13 @@ class ExtraTest {
         assertFailsWith<InconsistentExternalChoiceException> {
             globalProtocolInternal {
                 choice(a) {
-                    branch("1") {
+                    branch {
                         send<Unit>(a, b)
                         send<Unit>(a, c)
                         send<Unit>(b, c)
                         send<Unit>(c, b)
                     }
-                    branch("2") {
+                    branch {
                         send<Unit>(a, b)
                         send<Unit>(b, c)
                         send<Unit>(c, b)
@@ -162,14 +162,14 @@ class ExtraTest {
             globalProtocolInternal {
                 val t = mu()
                 choice(a) {
-                    branch("1") {
+                    branch {
                         send<Unit>(a, b)
                         send<Unit>(a, c)
                         send<Unit>(b, c)
                         send<Unit>(c, b)
                         goto(t)
                     }
-                    branch("2") {
+                    branch {
                         send<Unit>(a, b)
                         send<Unit>(b, c)
                         send<Unit>(c, b)
@@ -186,12 +186,12 @@ class ExtraTest {
         assertFailsWith<InconsistentExternalChoiceException> {
             globalProtocolInternal {
                 choice(a) {
-                    branch("1") {
+                    branch {
                         send<Unit>(a, b)
                         send<Unit>(b, c)
                         send<Unit>(c, b)
                     }
-                    branch("2") {
+                    branch {
                         send<Unit>(a, c)
                         send<Unit>(c, b)
                     }
@@ -207,13 +207,13 @@ class ExtraTest {
             globalProtocolInternal {
                 val t = mu()
                 choice(a) {
-                    branch("1") {
+                    branch {
                         send<Unit>(a, b)
                         send<Unit>(a, c)
                         send<Unit>(c, a)
                         goto(t)
                     }
-                    branch("2") {
+                    branch {
                         send<Unit>(a, b)
                         send<Unit>(b, c)
                         send<Unit>(c, a)
@@ -229,21 +229,18 @@ class ExtraTest {
         // scribble-java good.efsm.gchoice.Test11
         val g = globalProtocolInternal {
             choice(a) {
-                branch("1") {
+                branch {
                     send<Unit>(a, b)
 
                     choice(b) {
-                        branch("1.1") {
+                        branch {
                             send<Unit>(b, c)
                         }
                     }
                 }
             }
         }
-        val lC = LocalTypeExternalChoice(
-            b,
-            mapOf("1.1" to LocalTypeReceive(b, UnitClass, LocalTypeEnd))
-        )
+        val lC = LocalTypeReceive(b, UnitClass, LocalTypeEnd)
         assertEquals(lC, g.project(c))
     }
 
@@ -255,10 +252,10 @@ class ExtraTest {
             send<Unit>(a, b)
 
             choice(a) {
-                branch("1") {
+                branch {
                     goto(t)
                 }
-                branch("2") {
+                branch {
                     goto(t)
                 }
             }
@@ -282,7 +279,7 @@ class ExtraTest {
             send<Unit>(a, b)
 
             choice(a) {
-                branch("1") {
+                branch {
                     goto(t)
                 }
             }
@@ -292,7 +289,7 @@ class ExtraTest {
             LocalTypeSend(
                 b, UnitClass,
                 LocalTypeInternalChoice(
-                    mapOf("1" to LocalTypeRecursion(t))
+                    listOf(LocalTypeRecursion(t))
                 )
             )
         )
@@ -302,5 +299,14 @@ class ExtraTest {
         )
         assertEquals(lA, g.project(a))
         assertEquals(lB, g.project(b))
+    }
+
+    @Test
+    fun `infinite protocol`() {
+        val g = globalProtocolInternal {
+            val t = mu()
+            send<Unit>(a, b)
+            goto(t)
+        }
     }
 }

@@ -22,14 +22,14 @@ class ExampleTest {
             send<Int>(a, b, "proposal", "proposal <= valA")
 
             choice(b) {
-                branch("Ok") {
-                    send<Address>(b, seller)
+                branch {
+                    send<Address>(b, seller, "OK")
                     send<Date>(seller, b)
-                    send<Date>(b, a)
+                    send<Date>(b, a, "OK")
                 }
-                branch("Quit") {
-                    send<Unit>(b, seller)
-                    send<Unit>(b, a)
+                branch {
+                    send<Unit>(b, seller, "QUIT")
+                    send<Unit>(b, a, "QUIT")
                 }
             }
         }
@@ -47,12 +47,12 @@ class ExampleTest {
 
         globalProtocol("Protocol 2") {
             choice(a) {
-                branch("Branch1") {
-                    send<Int>(a, b)
+                branch {
+                    send<Int>(a, b, "1")
                     subProtocol(a, b)() // Proceed with subProtocol
                 }
-                branch("Branch2") {
-                    send<Int>(a, b)
+                branch {
+                    send<Int>(a, b, "2")
                     subProtocol(b, a)() // Proceed with subProtocol, but with reversed roles
                 }
             }

@@ -248,7 +248,6 @@ class ArithmeticTest {
     fun `test unary minus precedence 2`() {
         val ast = grammar.parseToEnd("-a-2 == -3")
         assertEquals(Eq(Minus(Neg(Name("a")), cLong(2)), Neg(cLong(3))), ast)
-        println(ast)
         assert(ast.value(mapOf("a" to (1).toVal())))
     }
 
@@ -256,7 +255,6 @@ class ArithmeticTest {
     fun `test unary minus precedence 3`() {
         val ast = grammar.parseToEnd("-(a-2) == -3")
         assertEquals(Eq(Neg(Minus(Name("a"), cLong(2))), Neg(cLong(3))), ast)
-        println(ast)
         assert(ast.value(mapOf("a" to (5).toVal())))
     }
 }

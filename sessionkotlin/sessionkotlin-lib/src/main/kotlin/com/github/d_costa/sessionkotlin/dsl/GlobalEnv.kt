@@ -1,9 +1,13 @@
 package com.github.d_costa.sessionkotlin.dsl
 
-import com.github.d_costa.sessionkotlin.api.generateAPI
+import com.github.d_costa.sessionkotlin.api.CallbacksAPIGenerator
+import com.github.d_costa.sessionkotlin.api.FluentAPIGenerator
+import com.github.d_costa.sessionkotlin.backend.message.SKMessage
 import com.github.d_costa.sessionkotlin.dsl.exception.*
 import com.github.d_costa.sessionkotlin.dsl.types.*
+import com.github.d_costa.sessionkotlin.fsm.fsmFromLocalType
 import com.github.d_costa.sessionkotlin.parser.RefinementParser
+import com.github.d_costa.sessionkotlin.util.hasWhitespace
 import com.github.d_costa.sessionkotlin.util.printlnIndent
 import mu.KotlinLogging
 import org.sosy_lab.common.ShutdownManager
@@ -12,6 +16,7 @@ import org.sosy_lab.common.log.BasicLogManager
 import org.sosy_lab.common.log.LogManager
 import org.sosy_lab.java_smt.SolverContextFactory
 import org.sosy_lab.java_smt.SolverContextFactory.Solvers
+import java.io.File
 
 /**
  * Alias of a function type with [GlobalEnv] as receiver.
@@ -26,8 +31,8 @@ public sealed class GlobalEnv(
 ) {
     internal var instructions = mutableListOf<Instruction>()
     internal val roles = roles.toMutableSet()
-    internal val recursionVariables = recursionVariables.toMutableSet()
-    private val msgLabels = mutableSetOf<String>()
+    private val recursionVariables = recursionVariables.toMutableSet()
+    internal val msgLabels = mutableListOf<String>()
 
     /**
      *
@@ -49,7 +54,7 @@ public sealed class GlobalEnv(
     public inline fun <reified T> send(
         from: SKRole,
         to: SKRole,
-        label: String? = null,
+        label: String = SKMessage.DEFAULT_LABEL,
         condition: String = "",
     ): Unit = send(from, to, T::class.java, label, condition)
 
@@ -70,19 +75,16 @@ public sealed class GlobalEnv(
         from: SKRole,
         to: SKRole,
         type: Class<*>,
-        label: String? = null,
+        label: String = SKMessage.DEFAULT_LABEL,
         condition: String = "",
     ) {
-        if (label != null) {
-            if (label in msgLabels) {
-                throw DuplicateMessageLabelException(label)
-            } else {
-                msgLabels.add(label)
-            }
-        }
-
+        msgLabels.add(label)
         if (condition.isNotBlank()) {
             RefinementParser.parseToEnd(condition)
+        }
+
+        if (label.hasWhitespace()) {
+            throw BranchLabelWhitespaceException(label)
         }
 
         val msg = Send(from, to, type, label, condition)
@@ -109,15 +111,9 @@ public sealed class GlobalEnv(
         val b = Choice(at, bEnv.branchMap)
 
         roles.add(at)
-        for (g in b.branchMap.values) {
+        for (g in b.branches) {
             roles.addAll(g.roles)
-            for (l in g.msgLabels) {
-                if (l in msgLabels) {
-                    throw DuplicateMessageLabelException(l)
-                } else {
-                    msgLabels.add(l)
-                }
-            }
+            msgLabels.addAll(g.msgLabels)
         }
         instructions.add(b)
     }
@@ -143,7 +139,7 @@ public sealed class GlobalEnv(
      *
      * Recursion point.
      *
-     * @param [tag] the tag of the recursion point to go to.
+     * @param [tag] the tag of the recursion point to return to.
      *
      * @sample [com.github.d_costa.sessionkotlin.dsl.Samples.goto]
      *
@@ -159,7 +155,7 @@ public sealed class GlobalEnv(
     /**
      * Prints the protocol to the standard output.
      */
-    public fun dump(indent: Int = 0) {
+    internal fun dump(indent: Int = 0) {
         printlnIndent(indent, "{")
         for (i in instructions) {
             i.dump(indent)
@@ -177,13 +173,23 @@ public sealed class GlobalEnv(
             .removeRecursions(state.emptyRecursions)
     }
 
+    private fun logError(role: SKRole) = logger.error { "Exception while projecting onto $role" }
+
     internal fun validate() {
         val g = asGlobalType()
-        roles.forEach {
+        val localTypes = roles.map {
             try {
-                g.project(it)
+                Pair(it, g.project(it))
             } catch (e: SessionKotlinDSLException) {
-                logger.error { "Exception while projecting onto $it" }
+                logError(it)
+                throw e
+            }
+        }
+        localTypes.forEach { (role, localType) ->
+            try {
+                fsmFromLocalType(localType) // check determinism
+            } catch (e: SessionKotlinDSLException) {
+                logError(role)
                 throw e
             }
         }
@@ -201,7 +207,7 @@ public sealed class GlobalEnv(
         }
     }
 
-    internal fun asGlobalType() = buildGlobalType(instructions)
+    private fun asGlobalType() = buildGlobalType(instructions)
 }
 
 /**
@@ -229,7 +235,7 @@ private fun buildGlobalType(
                 head.condition,
                 buildGlobalType(tail)
             )
-            is Choice -> GlobalTypeChoice(head.at, head.branchMap.mapValues { buildGlobalType(it.value.instructions) })
+            is Choice -> GlobalTypeChoice(head.at, head.branches.map { buildGlobalType(it.instructions) })
             is Recursion -> GlobalTypeRecursion(head.tag)
             is RecursionDefinition -> GlobalTypeRecursionDefinition(head.tag, buildGlobalType(tail))
         }
@@ -264,5 +270,15 @@ internal fun globalProtocolInternal(name: String = "Proto", protocolBuilder: Glo
  * Global protocol builder. Generates local APIs.
  */
 public fun globalProtocol(name: String, callbacks: Boolean = false, protocolBuilder: GlobalEnv.() -> Unit) {
-    generateAPI(globalProtocolInternal(name, protocolBuilder), callbacks)
+    val outputDirectory = File("build/generated/sessionkotlin/main/kotlin")
+
+    val g = globalProtocolInternal(name, protocolBuilder)
+    if (callbacks) {
+        val dupeMsgLabels = g.msgLabels.groupingBy { it }.eachCount().filter { it.value > 1 }
+        if (dupeMsgLabels.isNotEmpty()) {
+            throw DuplicateMessageLabelsException(dupeMsgLabels.keys)
+        }
+        CallbacksAPIGenerator(g).writeTo(outputDirectory)
+    }
+    FluentAPIGenerator(g).writeTo(outputDirectory)
 }

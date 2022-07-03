@@ -25,12 +25,12 @@ class BuyerBrokerSupplier {
             send<Boolean>(proc, portal)
 
             choice(portal) {
-                branch("Approved") {
+                branch {
                     send<Int>(portal, finance, "askedAmount")
                     send<Int>(finance, portal, "approvedAmount", "approvedAmount <= askedAmount")
-                    send<Int>(portal, applicant, "x", "x == approvedAmount")
+                    send<Int>(portal, applicant, "OK")
                 }
-                branch("Denied") {
+                branch {
                     send<Unit>(portal, finance)
                     send<Unit>(portal, applicant)
                 }
@@ -41,9 +41,9 @@ class BuyerBrokerSupplier {
             portal, Application::class.java,
             LocalTypeExternalChoice(
                 portal,
-                mapOf(
-                    "Approved" to LocalTypeReceive(portal, IntClass, LEnd, MsgLabel("x", true)),
-                    "Denied" to LocalTypeReceive(portal, UnitClass, LEnd)
+                listOf(
+                    LocalTypeReceive(portal, IntClass, MsgLabel("OK"), LEnd),
+                    LocalTypeReceive(portal, UnitClass, LEnd)
                 )
             )
         )
@@ -54,14 +54,16 @@ class BuyerBrokerSupplier {
                 LocalTypeReceive(
                     proc, BoolClass,
                     LocalTypeInternalChoice(
-                        mapOf(
-                            "Approved" to LocalTypeSend(
+                        listOf(
+                            LocalTypeSend(
                                 finance,
-                                IntClass,
-                                LocalTypeReceive(finance, IntClass, LocalTypeSend(applicant, IntClass, LEnd, "Approved", MsgLabel("x", true), "x == approvedAmount"), MsgLabel("approvedAmount", true)),
-                                "Approved", MsgLabel("askedAmount", true)
+                                IntClass, MsgLabel("askedAmount", true),
+                                LocalTypeReceive(
+                                    finance, IntClass, MsgLabel("approvedAmount", true),
+                                    LocalTypeSend(applicant, IntClass, MsgLabel("OK"), LEnd)
+                                ),
                             ),
-                            "Denied" to LocalTypeSend(finance, UnitClass, LocalTypeSend(applicant, UnitClass, LEnd, "Denied"), "Denied")
+                            LocalTypeSend(finance, UnitClass, LocalTypeSend(applicant, UnitClass, LEnd))
                         )
                     )
                 )
@@ -70,14 +72,13 @@ class BuyerBrokerSupplier {
         val lProc = LocalTypeReceive(portal, Application::class.java, LocalTypeSend(portal, BoolClass, LEnd))
         val lFinance = LocalTypeExternalChoice(
             portal,
-            mapOf(
-                "Approved" to LocalTypeReceive(
+            listOf(
+                LocalTypeReceive(
                     portal,
-                    IntClass,
-                    LocalTypeSend(portal, IntClass, LEnd, msgLabel = MsgLabel("approvedAmount", true), condition = "approvedAmount <= askedAmount"),
-                    MsgLabel("askedAmount", true)
+                    IntClass, MsgLabel("askedAmount", true),
+                    LocalTypeSend(portal, IntClass, MsgLabel("approvedAmount", true), "approvedAmount <= askedAmount", LEnd),
                 ),
-                "Denied" to LocalTypeReceive(portal, UnitClass, LEnd)
+                LocalTypeReceive(portal, UnitClass, LEnd)
             )
         )
 

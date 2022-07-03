@@ -11,11 +11,9 @@ class ObjectFormatterTest {
     @Test
     fun `test one msg`() {
         val f = ObjectFormatter()
-        val data = SKMessage(10)
+        val data = SKMessage("label", 10)
 
         val bytes = ByteBuffer.wrap(f.toBytes(data))
-        println(bytes)
-        println(bytes.remaining())
 
         val processed = f.fromBytes(bytes)
         assert(processed.isPresent)

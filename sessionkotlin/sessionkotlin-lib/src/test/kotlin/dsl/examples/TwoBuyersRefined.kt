@@ -22,14 +22,14 @@ class TwoBuyersRefined {
             send<Int>(a, b, "proposal", "proposal <= valA")
 
             choice(b) {
-                branch("Ok") {
-                    send<Address>(b, seller)
-                    send<Date>(seller, b)
-                    send<Date>(b, a)
+                branch {
+                    send<Address>(b, seller, "address")
+                    send<Date>(seller, b, "date")
+                    send<Date>(b, a, "date")
                 }
-                branch("Quit") {
-                    send<Unit>(b, seller)
-                    send<Unit>(b, a)
+                branch {
+                    send<Unit>(b, seller, "QUIT")
+                    send<Unit>(b, a, "QUIT")
                 }
             }
         }

@@ -1,28 +1,15 @@
 module guessing_game.GuessingGame;
 
 type <java> "java.lang.Long" from "rt.jar" as Long;
+type <java> "java.lang.Int" from "rt.jar" as Int;
 
-global protocol GuessingGame(role Magician, role User) {
-    Min(Long) from Magician to User;
-    Max(Long) from Magician to User;
-
-    rec X
+global protocol GuessingGame(role Magician, role User, role C) {
+    choice at Magician
     {
-        Guess(Long) from User to Magician;
-
-        choice at Magician
+        () from Magician to User;
+        choice at User
         {
-            Lower() from Magician to User;
-            continue X;
-        }
-        or
-        {
-            Higher() from Magician to User;
-            continue X;
-        }
-        or
-        {
-            Correct() from Magician to User;
+            () from User to C;
         }
     }
 }

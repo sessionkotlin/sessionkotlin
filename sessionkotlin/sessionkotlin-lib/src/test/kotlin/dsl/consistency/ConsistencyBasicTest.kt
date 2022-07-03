@@ -2,6 +2,7 @@ package dsl.consistency
 
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.exception.InconsistentExternalChoiceException
+import com.github.d_costa.sessionkotlin.dsl.exception.NonDeterministicStatesException
 import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
 import com.github.d_costa.sessionkotlin.dsl.types.*
 import dsl.util.BoolClass
@@ -24,14 +25,14 @@ class ConsistencyBasicTest {
         assertFailsWith<InconsistentExternalChoiceException> {
             globalProtocolInternal {
                 choice(b) {
-                    branch("Case1") {
+                    branch {
                         // 'a' activated
-                        send<String>(b, a)
+                        send<String>(b, a, "Case1")
                         send<String>(a, c)
                     }
-                    branch("Case2") {
+                    branch {
                         // 'a' not activated
-                        send<Int>(a, c)
+                        send<Int>(a, c, "Case2")
                         send<Int>(c, a)
                     }
                 }
@@ -44,13 +45,13 @@ class ConsistencyBasicTest {
         assertFailsWith<InconsistentExternalChoiceException> {
             globalProtocolInternal {
                 choice(b) {
-                    branch("Case1") {
-                        send<Int>(b, c)
+                    branch {
+                        send<Int>(b, c, "Case1")
                         // 'a' enabled by 'c'
                         send<Int>(c, a)
                     }
-                    branch("Case2") {
-                        send<Int>(b, c)
+                    branch {
+                        send<Int>(b, c, "Case2")
                         // 'a' enabled by 'b'
                         send<String>(b, a)
                     }
@@ -64,15 +65,15 @@ class ConsistencyBasicTest {
         assertFailsWith<InconsistentExternalChoiceException> {
             globalProtocolInternal {
                 choice(b) {
-                    branch("Case1") {
-                        send<String>(b, c)
+                    branch {
+                        send<String>(b, c, "Case1")
                         send<String>(b, c)
                         // 'a' not enabled
                     }
-                    branch("Case2") {
+                    branch {
                         // 'a' enabled by b
-                        send<String>(b, a)
-                        send<String>(a, c)
+                        send<String>(b, a, "Case2")
+                        send<String>(a, c, "Case2")
                     }
                 }
             }
@@ -85,14 +86,15 @@ class ConsistencyBasicTest {
         assertFailsWith<InconsistentExternalChoiceException> {
             globalProtocolInternal {
                 choice(b) {
-                    branch("Case1") {
+                    branch {
                         // 'c' enabled by 'b'
-                        send<String>(b, c)
+                        send<String>(b, c, "Case1")
+                        send<String>(b, a, "Case1")
                     }
-                    branch("Case2") {
-                        send<String>(b, a)
+                    branch {
+                        send<String>(b, a, "Case2")
                         // 'c' enabled by 'a'
-                        send<String>(a, c)
+                        send<String>(a, c, "Case2")
                     }
                 }
             }
@@ -110,14 +112,14 @@ class ConsistencyBasicTest {
                 send<Int>(s, b)
                 send<Int>(a, b)
                 choice(b) {
-                    branch("Ok") {
-                        send<String>(b, s)
+                    branch {
+                        send<String>(b, s, "Ok")
                         // 'a' enabled by 's'
                         send<String>(s, a)
                     }
-                    branch("Quit") {
-                        send<String>(b, a)
-                        // 'a' not enabled
+                    branch {
+                        send<String>(b, a, "Quit")
+                        // 's' not enabled
                     }
                 }
             }
@@ -128,116 +130,103 @@ class ConsistencyBasicTest {
     fun `merge inlined and non inlined`() {
         val g = globalProtocolInternal {
             choice(b) {
-                // 'a' is not enabled in any branch
-                branch("1") {
-                    send<String>(a, b)
-                    send(a, b, BoolClass)
+                // 'c' is not enabled in any branch
+                branch {
+                    send<String>(b, a, "b1")
+                    send(c, a, BoolClass)
                 }
-                branch("2") {
-                    send(a, b, StringClass)
-                    send<Boolean>(a, b)
+                branch {
+                    send<String>(b, a, "b2")
+                    send<Boolean>(c, a)
                 }
             }
         }
-        val lA = LocalTypeSend(b, StringClass, LocalTypeSend(b, BoolClass, LocalTypeEnd))
-        val lB = LocalTypeInternalChoice(
-            mapOf(
-                "1" to LocalTypeReceive(
-                    a,
-                    StringClass,
-                    LocalTypeReceive(a, BoolClass, LocalTypeEnd)
-                ),
-                "2" to LocalTypeReceive(
-                    a,
-                    StringClass,
-                    LocalTypeReceive(a, BoolClass, LocalTypeEnd)
-                )
-            )
-        )
-        assertEquals(lA, g.project(a))
-        assertEquals(lB, g.project(b))
+        val lC = LocalTypeSend(a, BoolClass, LocalTypeEnd)
+        assertEquals(lC, g.project(c))
     }
 
     @Test
     fun `test enabled by`() {
         val g = globalProtocolInternal {
             choice(a) {
-                branch("1") {
-                    send<Long>(a, b)
-                    send<Long>(a, c)
+                branch {
+                    send<Long>(a, b, "1")
+                    send<Long>(a, c, "1")
 
                     // ensure this choice does not override 'a' enabling 'b'
                     choice(c) {
-                        branch("1.1") {
-                            send<Int>(c, b)
+                        branch {
+                            send<Int>(c, b, "1.1")
                         }
-                        branch("1.2") {
-                            send<String>(c, b)
+                        branch {
+                            send<String>(c, b, "1.2")
                         }
                     }
                 }
-                branch("2") {
-                    send<Int>(a, b)
-                    send<Boolean>(a, c)
+                branch {
+                    send<Int>(a, b, "2")
+                    send<Boolean>(a, c, "2")
                 }
             }
         }
         val lA = LocalTypeInternalChoice(
-            mapOf(
-                "1" to LocalTypeSend(
+            listOf(
+                LocalTypeSend(
                     b,
                     LongClass,
+                    MsgLabel("1"),
                     LocalTypeSend(
-                        c, LongClass, LEnd, "1"
-                    ),
-                    "1"
+                        c, LongClass, MsgLabel("1"), LEnd
+                    )
                 ),
-                "2" to LocalTypeSend(
+                LocalTypeSend(
                     b,
                     IntClass,
+                    MsgLabel("2"),
                     LocalTypeSend(
-                        c, BoolClass, LEnd, "2"
+                        c, BoolClass, MsgLabel("2"), LEnd
                     ),
-                    "2"
                 ),
             )
         )
         val lB = LocalTypeExternalChoice(
             a,
-            mapOf(
-                "1" to LocalTypeReceive(
+            listOf(
+                LocalTypeReceive(
                     a,
                     LongClass,
+                    MsgLabel("1"),
                     LocalTypeExternalChoice(
                         c,
-                        mapOf(
-                            "1.1" to LocalTypeReceive(c, IntClass, LEnd),
-                            "1.2" to LocalTypeReceive(c, StringClass, LEnd)
+                        listOf(
+                            LocalTypeReceive(c, IntClass, MsgLabel("1.1"), LEnd),
+                            LocalTypeReceive(c, StringClass, MsgLabel("1.2"), LEnd)
                         )
                     )
                 ),
-                "2" to LocalTypeReceive(
+                LocalTypeReceive(
                     a,
-                    IntClass, LEnd
+                    IntClass, MsgLabel("2"), LEnd
                 )
             )
         )
         val lC = LocalTypeExternalChoice(
             a,
-            mapOf(
-                "1" to LocalTypeReceive(
+            listOf(
+                LocalTypeReceive(
                     a,
                     LongClass,
+                    MsgLabel("1"),
                     LocalTypeInternalChoice(
-                        mapOf(
-                            "1.1" to LocalTypeSend(b, IntClass, LEnd, "1.1"),
-                            "1.2" to LocalTypeSend(b, StringClass, LEnd, "1.2")
+                        listOf(
+                            LocalTypeSend(b, IntClass, MsgLabel("1.1"), LEnd),
+                            LocalTypeSend(b, StringClass, MsgLabel("1.2"), LEnd)
                         )
                     )
                 ),
-                "2" to LocalTypeReceive(
+                LocalTypeReceive(
                     a,
-                    BoolClass, LEnd
+                    BoolClass, MsgLabel("2"), LEnd
                 )
             )
         )
@@ -250,18 +239,18 @@ class ConsistencyBasicTest {
     fun `valid unguarded external choice`() {
         globalProtocolInternal {
             choice(b) {
-                branch("1") {
+                branch {
                     choice(b) {
-                        branch("1.1") {
-                            send<Int>(b, a)
+                        branch {
+                            send<Int>(b, a, "1.1")
                         }
-                        branch("1.2") {
-                            send<Long>(b, a)
+                        branch {
+                            send<Long>(b, a, "1.2")
                         }
                     }
                 }
-                branch("2") {
-                    send<String>(b, a)
+                branch {
+                    send<String>(b, a, "2")
                 }
             }
         }
@@ -271,22 +260,22 @@ class ConsistencyBasicTest {
     fun `valid unguarded external choice 2`() {
         globalProtocolInternal {
             choice(b) {
-                branch("1") {
-                    send<Int>(b, c)
+                branch {
+                    send<Int>(b, c, "pre")
                     choice(c) {
-                        branch("1.1") {
-                            send<String>(c, b)
-                            send<Int>(b, a)
+                        branch {
+                            send<String>(c, b, "b1")
+                            send<Int>(b, a, "b1")
                         }
-                        branch("1.2") {
-                            send<Long>(c, b)
-                            send<Long>(b, a)
+                        branch {
+                            send<Long>(c, b, "b12")
+                            send<Long>(b, a, "b12")
                         }
                     }
                 }
-                branch("2") {
-                    send<Int>(b, c)
-                    send<String>(b, a)
+                branch {
+                    send<Int>(b, c, "b2")
+                    send<String>(b, a, "b2")
                 }
             }
         }
@@ -297,22 +286,53 @@ class ConsistencyBasicTest {
         assertFailsWith<InconsistentExternalChoiceException> {
             globalProtocolInternal {
                 choice(b) {
-                    branch("1") {
-                        send<Int>(b, c)
+                    branch {
+                        send<Int>(b, c, "pre")
                         choice(c) {
-                            branch("1.1") {
-                                send<String>(c, b)
-                                send<Int>(c, a) // A receives from C
+                            branch {
+                                send<String>(c, b, "b1")
+                                send<Int>(c, a, "b1") // A receives from C
                             }
-                            branch("1.2") {
-                                send<Long>(c, b)
-                                send<Long>(c, a) // A receives from C
+                            branch {
+                                send<Long>(c, b, "b12")
+                                send<Long>(c, a, "b12") // A receives from C
                             }
                         }
                     }
-                    branch("2") {
-                        send<Int>(b, c)
-                        send<String>(b, a) // A receives from B
+                    branch {
+                        send<Int>(b, c, "b2")
+                        send<String>(b, a, "b2") // A receives from B
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `non deterministic through recursion`() {
+        assertFailsWith<NonDeterministicStatesException> {
+            globalProtocolInternal {
+                send<Int>(a, c)
+
+                choice(a) {
+                    branch {
+                        send<Long>(a, c, "250") // this
+                    }
+                    branch {
+                        val t2 = mu()
+                        choice(a) {
+                            branch {
+                                send<Int>(a, c, "201")
+                                send<Int>(a, c, "200")
+                                goto(t2)
+                            }
+                            branch {
+                                send<Int>(a, c, "250") // and this
+                            }
+                            branch {
+                                send<Int>(a, c)
+                            }
+                        }
                     }
                 }
             }

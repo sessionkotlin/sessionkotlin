@@ -1,11 +1,9 @@
 package api
 
-import com.github.d_costa.sessionkotlin.api.exception.NoMessageLabelException
 import com.github.d_costa.sessionkotlin.dsl.GlobalProtocol
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.globalProtocol
 import org.junit.jupiter.api.Test
-import kotlin.test.assertFailsWith
 
 class APIGenTest {
     companion object {
@@ -18,10 +16,10 @@ class APIGenTest {
         globalProtocol("Test", callbacks = false) {
             send<Int>(A, B)
             choice(A) {
-                branch("1") {
+                branch() {
                     send<Long>(A, B, "val1", "val1 > 0")
                 }
-                branch("2") {
+                branch() {
                     send<Long>(A, B, "val2", "val2 <= 0")
                 }
             }
@@ -33,10 +31,10 @@ class APIGenTest {
         globalProtocol("Test", callbacks = true) {
             send<Int>(A, B, "val0")
             choice(A) {
-                branch("1") {
+                branch() {
                     send<Long>(A, B, "val1", "val1 > 0")
                 }
-                branch("2") {
+                branch() {
                     send<Long>(A, B, "val2", "val2 <= 0")
                 }
             }
@@ -49,10 +47,10 @@ class APIGenTest {
             send<Int>(A, B)
             val t = mu()
             choice(A) {
-                branch("1") {
+                branch() {
                     send<Long>(A, B, "val1", "val1 > 0")
                 }
-                branch("2") {
+                branch() {
                     send<Long>(A, B, "val2", "val2 <= 0")
                     goto(t)
                 }
@@ -66,22 +64,13 @@ class APIGenTest {
             send<Int>(A, B, "val0")
             val t = mu()
             choice(A) {
-                branch("1") {
+                branch() {
                     send<Long>(A, B, "val1", "val1 > 0")
                 }
-                branch("2") {
+                branch() {
                     send<Long>(A, B, "val2", "val2 <= 0")
                     goto(t)
                 }
-            }
-        }
-    }
-
-    @Test
-    fun `test callbacks require labels`() {
-        assertFailsWith<NoMessageLabelException> {
-            globalProtocol("Test", callbacks = true) {
-                send<Int>(A, B)
             }
         }
     }
@@ -108,10 +97,10 @@ class APIGenTest {
             val t = mu()
 
             choice(A) {
-                branch("1") {
+                branch() {
                     p1()
                 }
-                branch("2") {
+                branch() {
                     p2()
                     goto(t)
                 }

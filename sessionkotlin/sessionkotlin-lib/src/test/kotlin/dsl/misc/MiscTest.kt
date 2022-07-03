@@ -4,7 +4,6 @@ import com.github.d_costa.sessionkotlin.dsl.GlobalProtocol
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.exception.ProjectionTargetException
 import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
-import com.github.d_costa.sessionkotlin.dsl.types.asFormattedString
 import com.github.d_costa.sessionkotlin.dsl.types.asString
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFailsWith
@@ -35,7 +34,7 @@ class MiscTest {
 
         globalProtocolInternal {
             choice(b) {
-                branch("1") {
+                branch {
                     case1()
                     send<Int>(c, a)
                 }
@@ -52,14 +51,12 @@ class MiscTest {
 
         val g = globalProtocolInternal {
             choice(b) {
-                branch("1") {
+                branch {
                     case1()
                     send<Int>(c, a)
                 }
             }
         }
-        g.project(a).asFormattedString()
-        g.project(b).asFormattedString()
         g.project(a).asString()
         g.project(b).asString()
     }

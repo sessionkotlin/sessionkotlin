@@ -20,12 +20,12 @@ class UnfinishedRecursionTest {
             globalProtocolInternal {
                 val t = mu()
                 choice(a) {
-                    branch("1") {
+                    branch {
                         send<Unit>(a, c)
                         // 'b' is not enabled
                         goto(t)
                     }
-                    branch("2") {
+                    branch {
                         send<Unit>(a, b)
                         send<Unit>(a, c)
                     }
@@ -40,18 +40,18 @@ class UnfinishedRecursionTest {
         assertFailsWith<UnfinishedRolesException> {
             globalProtocolInternal {
                 choice(a) {
-                    branch("1") {
+                    branch {
                         send<Int>(a, b)
                         val t = mu()
                         send<Int>(b, c)
 
                         choice(c) {
-                            branch("1.1") {
+                            branch {
                                 send<String>(c, a)
                                 // 'd' not enabled
                                 goto(t)
                             }
-                            branch("1.2") {
+                            branch {
                                 send<Int>(c, a)
                                 send<String>(c, d)
                                 // 'd' enabled
@@ -72,18 +72,18 @@ class UnfinishedRecursionTest {
                 val x = mu()
                 send<Int>(a, b)
                 choice(a) {
-                    branch("1") {
+                    branch {
                         goto(x)
                     }
-                    branch("2") {
+                    branch {
                         val y = mu()
                         send<Long>(a, b)
                         choice(a) {
-                            branch("1.1") {
+                            branch {
                                 // 'b' not enabled
                                 goto(y)
                             }
-                            branch("1.2") {
+                            branch {
                                 send<Long>(a, b)
                             }
                         }
@@ -99,12 +99,12 @@ class UnfinishedRecursionTest {
             globalProtocolInternal {
                 val x = mu()
                 choice(a) {
-                    branch("1") {
+                    branch {
                         // 'b' not used before goto
                         // 'b' not enabled
                         goto(x)
                     }
-                    branch("2") {
+                    branch {
                         send<Int>(a, b)
                         // 'b' enabled
                     }
@@ -118,12 +118,12 @@ class UnfinishedRecursionTest {
         globalProtocolInternal {
             val x = mu()
             choice(a) {
-                branch("1") {
-                    send<Long>(a, b)
+                branch {
+                    send<Long>(a, b, "b1")
                     goto(x)
                 }
-                branch("2") {
-                    send<Int>(a, b)
+                branch {
+                    send<Int>(a, b, "b2")
                 }
             }
         }

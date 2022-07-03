@@ -7,6 +7,7 @@ import com.github.d_costa.sessionkotlin.backend.endpoint.AlreadyConnectedExcepti
 import com.github.d_costa.sessionkotlin.backend.endpoint.NotConnectedException
 import com.github.d_costa.sessionkotlin.backend.endpoint.ReadClosedConnectionException
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
+import com.github.d_costa.sessionkotlin.backend.message.SKDummyMessage
 import com.github.d_costa.sessionkotlin.backend.message.SKMessage
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
@@ -21,8 +22,13 @@ class SocketsTest {
         object B : SKGenRole()
         object C : SKGenRole()
 
-//        val payloads = listOf<Any>("Hello world", 10, 10L, 2.3)
-        val payloads = listOf<Any>(1, 2, 3, 4)
+        val msgs = listOf<SKMessage>(
+            SKMessage("hello label", "Hello world"),
+            SKMessage("label", "stuff"),
+            SKMessage("another", 10),
+            SKMessage("long", 10L),
+            SKMessage("someFloat", 2.3)
+        )
     }
 
     @Test
@@ -35,12 +41,12 @@ class SocketsTest {
                     c.send(s.port)
                     endpoint.accept(B, s)
 
-                    for (p in payloads) {
-                        endpoint.send(B, SKMessage(p))
+                    for (p in msgs) {
+                        endpoint.send(B, p)
                     }
-                    for (p in payloads) {
+                    for (p in msgs) {
                         val received = endpoint.receive(B)
-                        assertEquals(received.payload, p)
+                        assertEquals(received, p)
                     }
                 }
             }
@@ -48,12 +54,12 @@ class SocketsTest {
                 SKMPEndpoint().use { endpoint ->
                     endpoint.request(A, "localhost", c.receive())
 
-                    for (p in payloads) {
+                    for (p in msgs) {
                         val received = endpoint.receive(A)
-                        assertEquals(received.payload, p)
+                        assertEquals(received, p)
                     }
-                    for (p in payloads) {
-                        endpoint.send(A, SKMessage(p))
+                    for (p in msgs) {
+                        endpoint.send(A, p)
                     }
                 }
             }
@@ -68,12 +74,12 @@ class SocketsTest {
             launch {
                 SKMPEndpoint().use { endpoint ->
                     endpoint.connect(B, chan)
-                    for (p in payloads) {
-                        endpoint.send(B, SKMessage(p))
+                    for (p in msgs) {
+                        endpoint.send(B, p)
                     }
-                    for (p in payloads) {
+                    for (p in msgs) {
                         val received = endpoint.receive(B)
-                        assertEquals(received.payload, p)
+                        assertEquals(received, p)
                     }
                 }
             }
@@ -82,12 +88,12 @@ class SocketsTest {
             launch {
                 SKMPEndpoint().use { endpoint ->
                     endpoint.connect(A, chan)
-                    for (p in payloads) {
+                    for (p in msgs) {
                         val received = endpoint.receive(A)
-                        assertEquals(received.payload, p)
+                        assertEquals(received, p)
                     }
-                    for (p in payloads) {
-                        endpoint.send(A, SKMessage(p))
+                    for (p in msgs) {
+                        endpoint.send(A, p)
                     }
                 }
             }
@@ -108,10 +114,10 @@ class SocketsTest {
                     c.send(s.port)
                     endpoint.accept(B, s)
 
-                    for (p in payloads) {
-                        endpoint.send(B, SKMessage(p))
+                    for (p in msgs) {
+                        endpoint.send(B, p)
                         val received = endpoint.receive(B)
-                        assertEquals(received.payload, p)
+                        assertEquals(received, p)
                     }
                 }
             }
@@ -121,7 +127,7 @@ class SocketsTest {
                     endpoint.request(A, "localhost", c.receive())
                     endpoint.connect(C, chanBC)
 
-                    for (p in payloads) {
+                    for (p in msgs) {
                         val receivedA = endpoint.receive(A)
                         endpoint.send(C, receivedA)
 
@@ -136,7 +142,7 @@ class SocketsTest {
                 SKMPEndpoint().use { endpoint ->
                     endpoint.connect(B, chanBC)
 
-                    for (p in payloads) {
+                    for (p in msgs) {
                         val received = endpoint.receive(B)
                         endpoint.send(B, received)
                     }
@@ -211,7 +217,7 @@ class SocketsTest {
             runBlocking {
                 launch {
                     SKMPEndpoint().use { endpoint ->
-                        endpoint.send(B, SKMessage(""))
+                        endpoint.send(B, SKDummyMessage(""))
                     }
                 }
             }
@@ -301,13 +307,13 @@ class SocketsTest {
             launch {
                 SKMPEndpoint().use { endpoint ->
                     endpoint.connect(B, chan)
-                    endpoint.send(B, SKMessage(0, "b1"))
+                    endpoint.send(B, SKMessage("b1", ""))
                 }
             }
             launch {
                 SKMPEndpoint().use { endpoint ->
                     endpoint.connect(A, chan)
-                    assertEquals("b1", endpoint.receive(A).branch)
+                    assertEquals("b1", endpoint.receive(A).label)
                 }
             }
         }
@@ -334,6 +340,39 @@ class SocketsTest {
             launch {
                 SKMPEndpoint().use { endpoint ->
                     endpoint.request(C, "localhost", c.receive())
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `test accept`() {
+        val c = Channel<Int>()
+        runBlocking {
+            launch {
+                SKMPEndpoint().use { endpoint ->
+                    endpoint.accept(B, 9999)
+
+                    for (p in msgs) {
+                        endpoint.send(B, p)
+                    }
+                    for (p in msgs) {
+                        val received = endpoint.receive(B)
+                        assertEquals(received, p)
+                    }
+                }
+            }
+            launch {
+                SKMPEndpoint().use { endpoint ->
+                    endpoint.request(A, "localhost", 9999)
+
+                    for (p in msgs) {
+                        val received = endpoint.receive(A)
+                        assertEquals(received, p)
+                    }
+                    for (p in msgs) {
+                        endpoint.send(A, p)
+                    }
                 }
             }
         }

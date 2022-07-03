@@ -21,14 +21,14 @@ class TwoBuyers {
 
         val aux: GlobalProtocol = {
             choice(b) {
-                branch("Ok") {
-                    send<Address>(b, seller)
+                branch {
+                    send<Address>(b, seller, "ok")
                     send<Date>(seller, b)
-                    send<Date>(b, a)
+                    send<Date>(b, a, "ok")
                 }
-                branch("Quit") {
-                    send<Unit>(b, seller)
-                    send<Unit>(b, a)
+                branch {
+                    send<Unit>(b, seller, "quit")
+                    send<Unit>(b, a, "quit")
                 }
             }
         }
@@ -52,9 +52,9 @@ class TwoBuyers {
                     b, IntClass,
                     LocalTypeExternalChoice(
                         b,
-                        mapOf(
-                            "Ok" to LocalTypeReceive(b, Date::class.java, LEnd),
-                            "Quit" to LocalTypeReceive(b, UnitClass, LEnd),
+                        listOf(
+                            LocalTypeReceive(b, Date::class.java, MsgLabel("ok"), LEnd),
+                            LocalTypeReceive(b, UnitClass, MsgLabel("quit"), LEnd),
                         )
                     )
                 )
@@ -68,9 +68,9 @@ class TwoBuyers {
                     b, IntClass,
                     LocalTypeExternalChoice(
                         b,
-                        mapOf(
-                            "Ok" to LocalTypeReceive(b, Address::class.java, LocalTypeSend(b, Date::class.java, LEnd)),
-                            "Quit" to LocalTypeReceive(b, UnitClass, LEnd),
+                        listOf(
+                            LocalTypeReceive(b, Address::class.java, MsgLabel("ok"), LocalTypeSend(b, Date::class.java, LEnd)),
+                            LocalTypeReceive(b, UnitClass, MsgLabel("quit"), LEnd),
                         )
                     )
                 )
@@ -81,17 +81,15 @@ class TwoBuyers {
             LocalTypeReceive(
                 a, IntClass,
                 LocalTypeInternalChoice(
-                    mapOf(
-                        "Ok" to LocalTypeSend(
+                    listOf(
+                        LocalTypeSend(
                             seller,
-                            Address::class.java,
-                            LocalTypeReceive(seller, Date::class.java, LocalTypeSend(a, Date::class.java, LEnd, "Ok")),
-                            "Ok"
+                            Address::class.java, MsgLabel("ok"),
+                            LocalTypeReceive(seller, Date::class.java, LocalTypeSend(a, Date::class.java, MsgLabel("ok"), LEnd))
                         ),
-                        "Quit" to LocalTypeSend(
-                            seller, UnitClass,
-                            LocalTypeSend(a, UnitClass, LEnd, "Quit"),
-                            "Quit"
+                        LocalTypeSend(
+                            seller, UnitClass, MsgLabel("quit"),
+                            LocalTypeSend(a, UnitClass, MsgLabel("quit"), LEnd)
                         ),
                     )
                 )

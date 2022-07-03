@@ -3,11 +3,9 @@ package dsl.syntax
 import com.github.d_costa.sessionkotlin.dsl.GlobalProtocol
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.exception.*
+import com.github.d_costa.sessionkotlin.dsl.globalProtocol
 import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
-import com.github.d_costa.sessionkotlin.dsl.types.LEnd
-import com.github.d_costa.sessionkotlin.dsl.types.LocalTypeExternalChoice
-import com.github.d_costa.sessionkotlin.dsl.types.LocalTypeReceive
-import com.github.d_costa.sessionkotlin.dsl.types.LocalTypeSend
+import com.github.d_costa.sessionkotlin.dsl.types.*
 import dsl.util.DoubleClass
 import dsl.util.IntClass
 import dsl.util.StringClass
@@ -77,14 +75,14 @@ class SyntaxBasicTest {
     fun `simple choice`() {
         globalProtocolInternal {
             choice(b) {
-                branch("Case1") {
-                    send<String>(b, a)
+                branch {
+                    send<String>(b, a, "b1")
                     send<String>(b, a)
                 }
-                branch("Case2") {
+                branch {
                     choice(b) {
-                        branch("SubCase1") {
-                            send<Long>(b, a)
+                        branch {
+                            send<Long>(b, a, "b2")
                         }
                     }
                 }
@@ -102,12 +100,12 @@ class SyntaxBasicTest {
             send<Int>(s, b)
             send<Int>(a, b)
             choice(b) {
-                branch("Ok") {
-                    send<String>(b, s)
+                branch {
+                    send<String>(b, s, "1")
                     send<String>(s, b)
                 }
-                branch("Quit") {
-                    send<String>(b, s)
+                branch {
+                    send<String>(b, s, "2")
                 }
             }
         }
@@ -118,10 +116,10 @@ class SyntaxBasicTest {
         assertFailsWith<TerminalInstructionException> {
             globalProtocolInternal {
                 choice(a) {
-                    branch("Case1") {
+                    branch {
                         send<Unit>(a, b)
                     }
-                    branch("Case2") {
+                    branch {
                         send<Unit>(a, c)
                     }
                 }
@@ -133,13 +131,13 @@ class SyntaxBasicTest {
 
     @Test
     fun `dupe case labels`() {
-        assertFailsWith<DuplicateBranchLabelException> {
+        assertFailsWith<NonDeterministicStatesException> {
             globalProtocolInternal {
                 choice(b) {
-                    branch("Case1") {
+                    branch {
                         send<String>(b, a)
                     }
-                    branch("Case1") {
+                    branch {
                         send<Int>(b, a)
                         send<Long>(a, b)
                     }
@@ -152,17 +150,17 @@ class SyntaxBasicTest {
     fun `dupe branch labels nested`() {
         globalProtocolInternal {
             choice(b) {
-                branch("Case1") {
-                    send<String>(b, a)
+                branch {
+                    send<String>(b, a, "b1")
                 }
-                branch("Case2") {
-                    send<Int>(b, a)
-                    send<Long>(a, b)
+                branch {
+                    send<Int>(b, a, "b2")
+                    send<Long>(a, b, "HERE")
                     choice(a) {
-                        branch("Case2") {
-                            send<Int>(a, b)
+                        branch {
+                            send<Int>(a, b, "HERE")
                         }
-                        branch("Case1") {
+                        branch {
                             send<Int>(a, b)
                         }
                     }
@@ -175,13 +173,13 @@ class SyntaxBasicTest {
     fun `commutative sends in choice branches`() {
         globalProtocolInternal {
             choice(b) {
-                branch("Case1") {
-                    send<Int>(b, c)
-                    send<String>(b, a)
+                branch {
+                    send<Int>(b, c, "1")
+                    send<String>(b, a, "1")
                 }
-                branch("Case2") {
-                    send<String>(b, a)
-                    send<Int>(b, c)
+                branch {
+                    send<String>(b, a, "2")
+                    send<Int>(b, c, "2")
                 }
             }
         }
@@ -191,21 +189,21 @@ class SyntaxBasicTest {
     fun `different actual choice subject`() {
         val g = globalProtocolInternal {
             choice(b) {
-                branch("1") {
-                    send<String>(b, c)
-                    send<String>(c, a)
+                branch {
+                    send<String>(b, c, "b1")
+                    send<String>(c, a, "b1")
                 }
-                branch("2") {
-                    send<Int>(b, c)
-                    send<Int>(c, a)
+                branch {
+                    send<Int>(b, c, "b2")
+                    send<Int>(c, a, "b2")
                 }
             }
         }
         val lA = LocalTypeExternalChoice(
             c,
-            mapOf(
-                "1" to LocalTypeReceive(c, StringClass, LEnd),
-                "2" to LocalTypeReceive(c, IntClass, LEnd)
+            listOf(
+                LocalTypeReceive(c, StringClass, MsgLabel("b1"), LEnd),
+                LocalTypeReceive(c, IntClass, MsgLabel("b2"), LEnd)
             )
         )
         assertEquals(g.project(a), lA)
@@ -215,21 +213,21 @@ class SyntaxBasicTest {
     fun `different actual choice subject 2`() {
         val g = globalProtocolInternal {
             choice(b) {
-                branch("1") {
-                    send<Int>(b, c)
-                    send<Int>(c, a)
+                branch {
+                    send<Int>(b, c, "1")
+                    send<Int>(c, a, "1")
                 }
-                branch("2") {
-                    send<Int>(b, c)
-                    send<Int>(c, a)
+                branch {
+                    send<Int>(b, c, "2")
+                    send<Int>(c, a, "2")
                 }
             }
         }
         val lA = LocalTypeExternalChoice(
             c,
-            mapOf(
-                "1" to LocalTypeReceive(c, IntClass, LEnd),
-                "2" to LocalTypeReceive(c, IntClass, LEnd)
+            listOf(
+                LocalTypeReceive(c, IntClass, MsgLabel("1"), LEnd),
+                LocalTypeReceive(c, IntClass, MsgLabel("2"), LEnd)
             )
         )
         assertEquals(g.project(a), lA)
@@ -239,10 +237,7 @@ class SyntaxBasicTest {
     fun `space in label`() {
         assertFailsWith<BranchLabelWhitespaceException> {
             globalProtocolInternal {
-                choice(a) {
-                    branch(" Case1") {
-                    }
-                }
+                send<Int>(a, b, " Case1")
             }
         }
     }
@@ -251,10 +246,7 @@ class SyntaxBasicTest {
     fun `multiple spaces in label`() {
         assertFailsWith<BranchLabelWhitespaceException> {
             globalProtocolInternal {
-                choice(a) {
-                    branch("C ase 1") {
-                    }
-                }
+                send<Int>(a, b, "C ase 1")
             }
         }
     }
@@ -263,10 +255,7 @@ class SyntaxBasicTest {
     fun `tab in label`() {
         assertFailsWith<BranchLabelWhitespaceException> {
             globalProtocolInternal {
-                choice(a) {
-                    branch("before\tafter") {
-                    }
-                }
+                send<Unit>(a, b, "before\tafter")
             }
         }
     }
@@ -275,18 +264,15 @@ class SyntaxBasicTest {
     fun `newline in label`() {
         assertFailsWith<BranchLabelWhitespaceException> {
             globalProtocolInternal {
-                choice(a) {
-                    branch("before\nafter") {
-                    }
-                }
+                send<Int>(a, b, "before\nafter")
             }
         }
     }
 
     @Test
     fun `dupe msg label`() {
-        assertFailsWith<DuplicateMessageLabelException> {
-            globalProtocolInternal {
+        assertFailsWith<DuplicateMessageLabelsException> {
+            globalProtocol("Proto", callbacks = true) {
                 send<String>(a, b, "my_label")
                 send<String>(b, a, "my_label")
             }
@@ -298,8 +284,8 @@ class SyntaxBasicTest {
         val aux: GlobalProtocol = {
             send<String>(a, b, "my_label")
         }
-        assertFailsWith<DuplicateMessageLabelException> {
-            globalProtocolInternal {
+        assertFailsWith<DuplicateMessageLabelsException> {
+            globalProtocol("Proto", callbacks = true) {
                 send<String>(a, b, "my_label")
                 aux()
             }
@@ -311,8 +297,8 @@ class SyntaxBasicTest {
         val aux: GlobalProtocol = {
             send<String>(a, b, "my_label")
         }
-        assertFailsWith<DuplicateMessageLabelException> {
-            globalProtocolInternal {
+        assertFailsWith<DuplicateMessageLabelsException> {
+            globalProtocol("Proto", callbacks = true) {
                 aux()
                 send<String>(a, b, "my_label")
             }
@@ -321,13 +307,13 @@ class SyntaxBasicTest {
 
     @Test
     fun `dupe msg label choice`() {
-        assertFailsWith<DuplicateMessageLabelException> {
+        assertFailsWith<NonDeterministicStatesException> {
             globalProtocolInternal {
                 choice(b) {
-                    branch("1") {
+                    branch {
                         send<String>(b, a, "my_label")
                     }
-                    branch("2") {
+                    branch {
                         send<Int>(b, a, "my_label")
                     }
                 }
@@ -339,11 +325,11 @@ class SyntaxBasicTest {
     fun `role declared inside choice`() {
         globalProtocolInternal {
             choice(b) {
-                branch("1") {
-                    send<String>(b, a)
+                branch {
+                    send<String>(b, a, "1")
                 }
-                branch("2") {
-                    send<Int>(b, a)
+                branch {
+                    send<Int>(b, a, "2")
                 }
             }
         }
