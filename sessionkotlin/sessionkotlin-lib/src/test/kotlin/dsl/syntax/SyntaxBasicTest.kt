@@ -271,10 +271,18 @@ class SyntaxBasicTest {
 
     @Test
     fun `dupe msg label`() {
+        globalProtocol("Proto", callbacks = true) {
+            send<String>(a, b, "my_label")
+            send<String>(b, a, "my_label")
+        }
+    }
+
+    @Test
+    fun `dupe msg label 2`() {
         assertFailsWith<DuplicateMessageLabelsException> {
             globalProtocol("Proto", callbacks = true) {
                 send<String>(a, b, "my_label")
-                send<String>(b, a, "my_label")
+                send<String>(a, b, "my_label")
             }
         }
     }

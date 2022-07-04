@@ -2,28 +2,19 @@ package com.github.d_costa.sessionkotlin.fsm
 
 import com.github.d_costa.sessionkotlin.api.exception.NoInitialStateException
 import com.github.d_costa.sessionkotlin.dsl.RecursionTag
-import com.github.d_costa.sessionkotlin.dsl.types.LocalType
-import com.github.d_costa.sessionkotlin.dsl.types.LocalTypeEnd
-import com.github.d_costa.sessionkotlin.dsl.types.LocalTypeExternalChoice
-import com.github.d_costa.sessionkotlin.dsl.types.LocalTypeInternalChoice
-import com.github.d_costa.sessionkotlin.dsl.types.LocalTypeReceive
-import com.github.d_costa.sessionkotlin.dsl.types.LocalTypeRecursion
-import com.github.d_costa.sessionkotlin.dsl.types.LocalTypeRecursionDefinition
-import com.github.d_costa.sessionkotlin.dsl.types.LocalTypeSend
-import com.github.d_costa.sessionkotlin.util.*
+import com.github.d_costa.sessionkotlin.dsl.SKRole
+import com.github.d_costa.sessionkotlin.dsl.exception.NonDeterministicStatesException
+import com.github.d_costa.sessionkotlin.dsl.types.*
+import com.github.d_costa.sessionkotlin.util.mapMutable
+import com.github.d_costa.sessionkotlin.util.merge
 
 internal typealias LocalTypeId = Int
 
-internal fun statesFromLocalType(localType: LocalType): List<State> {
-    val fsm = fsmFromLocalType(localType)
-    println(fsm)
-    return fsm.asStates()
-}
 
 /**
  * Create a Finite State Automata from a LocalType representation.
  */
-internal fun fsmFromLocalType(localType: LocalType): FSM {
+internal fun statesFromLocalType(localType: LocalType): List<State> {
     /*
      * When a transition is created, it points to a LocalTypeId.
      * After the automata is built, translateIds() translates LocalTypeIds to StateIds.
@@ -140,7 +131,7 @@ internal fun fsmFromLocalType(localType: LocalType): FSM {
 /**
  * Create a simplified graph by removing epsilon transitions and unreachable states
  */
-private fun simplify(fsm: NDFSM): FSM {
+private fun simplify(fsm: NDFSM): List<State> {
     val transitionsWithoutEpsilon = fsm.transitions.mapValues { (k, _) ->
         getTransitions(k, fsm)
     }
@@ -150,7 +141,65 @@ private fun simplify(fsm: NDFSM): FSM {
 
     val states = fsm.states.filter { reachableStateIds.contains(it.id) }.toSet()
     val transitions = transitionsWithoutEpsilon.filterKeys { reachableStateIds.contains(it) }
-    return FSM(states, transitions)
+
+    val pair = removeRedundantStates(states, transitions)
+
+    validateDeterminism(pair.first, pair.second)
+
+    return toRichStates(pair.first, pair.second)
+}
+
+private fun removeRedundantStates(
+    states: Set<SimpleState>,
+    transitions: StateTransitions,
+): Pair<List<SimpleState>, StateTransitions> {
+    /**
+     * Maps a redundant state to its substitute
+     */
+    val redundant = mutableMapOf<StateId, StateId>()
+
+
+    val entries = mutableMapOf<List<SimpleTransition>, MutableList<StateId>>()
+    for (s in states) {
+        val ts = transitions.getOrDefault(s.id, emptyList())
+        entries.merge(ts, s.id)
+    }
+
+    for ((_, ids) in entries) {
+        if (ids.size > 1) {
+            // Keep smallest id
+            val stateToKeep = ids.minByOrNull { it }!! // size > 1
+            val redundantStates = ids.filter { it != stateToKeep }
+
+            for (r in redundantStates) {
+                redundant[r] = stateToKeep
+            }
+        }
+    }
+
+
+    val newTransitions = transitions.mapValues { (_, ts) ->
+        ts.map {
+            val substitute = redundant[it.cont]
+            if (substitute != null) {
+                it.copy(cont = substitute)
+            } else it
+        }
+    }
+    val newStates = states.filter { it.id !in redundant }
+    return Pair(newStates, newTransitions)
+}
+
+private fun validateDeterminism(states: List<SimpleState>, transitions: StateTransitions) {
+    for (s in states) {
+        val ts = transitions.getOrElse(s.id, ::emptyList)
+        val dupeLabels = ts
+            .groupingBy { it.action.label.name }.eachCount().filter { it.value > 1 }
+
+        if (dupeLabels.isNotEmpty() && ts.any { it.action is ReceiveAction }) {
+            throw NonDeterministicStatesException(ts.filter { it.action.label.name in dupeLabels })
+        }
+    }
 }
 
 /**
@@ -168,11 +217,16 @@ private fun getTransitionsRecursive(
     stateId: StateId, // the original
     currId: StateId,
     fsm: NDFSM,
-    i: Long = 0
+    i: Long = 0,
 ): List<SimpleTransition> =
     fsm.transitions.getValue(currId).flatMap { t ->
         when (t) {
-            is Epsilon -> if (t.cont == stateId && i > 0) emptyList() else getTransitionsRecursive(stateId, t.cont, fsm, i + 1)
+            is Epsilon -> if (t.cont == stateId && i > 0) emptyList() else getTransitionsRecursive(
+                stateId,
+                t.cont,
+                fsm,
+                i + 1
+            )
             is TransitionWithAction -> listOf(SimpleTransition(t.action, t.cont))
         }
     }
@@ -195,3 +249,40 @@ private fun reachable(
         reachable
     }
 }
+
+private fun commonSource(transitions: List<SimpleTransition>): SKRole {
+    val sources = transitions.map { (it.action as ReceiveAction).from }.toSet()
+    if (sources.size > 1)
+        throw RuntimeException("Inconsistent external choice: [${sources.joinToString()}]")
+    return sources.first()
+}
+
+private fun toRichStates(states: List<SimpleState>, transitions: StateTransitions): List<State> =
+    states.map { s ->
+        if (s is EndSimpleState) return@map EndState
+
+        val ts = transitions.getValue(s.id)
+        if (ts.all { it.action is ReceiveAction }) {
+            if (ts.size == 1) {
+                val t = ts.first()
+                ReceiveState(s.id, ReceiveTransition(t.action as ReceiveAction, t.cont))
+            } else {
+                ExternalChoiceState(
+                    s.id,
+                    commonSource(ts),
+                    ts.map { ReceiveTransition(it.action as ReceiveAction, it.cont) })
+            }
+        } else {
+            if (ts.size == 1) {
+                val t = ts.first()
+                SendState(s.id, SendTransition(t.action as SendAction, t.cont))
+            } else {
+                InternalChoiceState(s.id, ts.map {
+                    when (it.action) {
+                        is SendAction -> SendTransition(it.action, it.cont)
+                        is ReceiveAction -> ReceiveTransition(it.action, it.cont)
+                    }
+                })
+            }
+        }
+    }

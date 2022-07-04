@@ -5,7 +5,6 @@ import com.github.d_costa.sessionkotlin.backend.SKBuffer
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
 import com.github.d_costa.sessionkotlin.backend.message.SKDummyMessage
 import com.github.d_costa.sessionkotlin.backend.message.SKMessage
-import java.util.*
 
 /**
  * Linear endpoint. Throws [SKLinearException] when [SKLinearEndpoint.use] is called more than once.
@@ -23,7 +22,7 @@ public open class SKLinearEndpoint {
 /**
  * Abstract linear endpoint that corresponds to an output.
  */
-public abstract class SKOutputEndpoint(private val e: SKMPEndpoint) : SKLinearEndpoint() {
+public abstract class SKOutputEndpoint(private val e: SKMPEndpoint) : SKInputEndpoint(e) {
 
     /**
      * Sends a message with payload of type [T] to the target [role].

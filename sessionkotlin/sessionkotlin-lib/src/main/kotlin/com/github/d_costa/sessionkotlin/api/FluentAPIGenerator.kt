@@ -14,6 +14,7 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
     private val superInterfacePostFix = "Branch"
     private val stateInterfacePostFix = "Interface"
     private val bufferParameterName = "buf"
+    private val lambdaParameterName = "consumer"
     private val argParameterName = "arg"
     private val endClassName = ClassName(packageName, "End")
 
@@ -196,18 +197,35 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
                 .addSuperclassConstructorParameter(msgParameter.name)
 
             functionBody.addStatement("%S -> %T(e, msg)", t.action.label.name, intermediaryClassName)
+            val params = generateBufferFunctionParameters(t.action)
 
             /**
              * Function for the new class
              */
             val function = FunSpec.builder(generateFunctionName(t.action))
                 .addModifiers(KModifier.SUSPEND)
-                .addParameters(generateFunctionParameters(t.action))
+                .addParameters(params)
                 .returns(getInterfaceClassName(t.cont, role))
 
             val code = generateFunctionBody(t.action, getClassName(t.cont, role))
             addFunctionsToClassAndInterface(intermediaryClassInterface, function, code)
 
+            // Lambda
+            if (params.isNotEmpty()) {
+                val lambdaParam = generateLambdaFunctionParameters(t.action)
+                val lambdaFunction = FunSpec.builder(generateFunctionName(t.action))
+                    .returns(getInterfaceClassName(t.cont, role))
+                    .addParameters(lambdaParam)
+                    .addModifiers(KModifier.SUSPEND)
+                val lambdaFunctionCode = CodeBlock.builder()
+                    .addStatement(
+                        "val %L = %T()",
+                        bufferParameterName,
+                        SKBuffer::class.parameterizedBy(t.action.type.kotlin)
+                    )
+                generateFunctionBody(lambdaFunctionCode, t.action, getClassName(t.cont, role))
+                addFunctionsToClassAndInterface(intermediaryClassInterface, lambdaFunction, lambdaFunctionCode.build())
+            }
             classes.add(intermediaryClassInterface.stateClass.build())
             classes.add(intermediaryClassInterface.stateInterface.build())
         }
@@ -230,13 +248,28 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
             val nextInterfaceName = getInterfaceClassName(t.cont, role)
             val functionName = generateFunctionName(t.action)
 
-            val function = FunSpec.builder(functionName)
+            val bufferParam = generateBufferFunctionParameters(t.action)
+
+            // function with buffer
+            val bufferFunction = FunSpec.builder(functionName)
                 .returns(nextInterfaceName)
-                .addParameters(generateFunctionParameters(t.action))
+                .addParameters(bufferParam)
                 .addModifiers(KModifier.SUSPEND)
 
             val code = generateFunctionBody(t.action, nextClassName)
-            addFunctionsToClassAndInterface(classBuilders, function, code)
+            addFunctionsToClassAndInterface(classBuilders, bufferFunction, code)
+
+            if (t.action is ReceiveAction && bufferParam.isNotEmpty()) {
+                val lambdaParam = generateLambdaFunctionParameters(t.action)
+                val lambdaFunction = FunSpec.builder(functionName)
+                    .returns(nextInterfaceName)
+                    .addParameters(lambdaParam)
+                    .addModifiers(KModifier.SUSPEND)
+                val lambdaFunctionCode = CodeBlock.builder()
+                    .addStatement("val %L = %T()", bufferParameterName, SKBuffer::class.parameterizedBy(t.action.type.kotlin))
+                generateFunctionBody(lambdaFunctionCode, t.action, nextClassName)
+                addFunctionsToClassAndInterface(classBuilders, lambdaFunction, lambdaFunctionCode.build())
+            }
         }
     }
 
@@ -264,14 +297,21 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
         )
     }
 
-    private fun generateFunctionParameters(action: Action): Iterable<ParameterSpec> {
-        val p = generateFunctionParameter(action)
+    private fun generateBufferFunctionParameters(action: Action): List<ParameterSpec> {
+        val p = generateBufferFunctionParameter(action)
         return if (p == null)
             emptyList()
         else listOf(p)
     }
 
-    private fun generateFunctionParameter(action: Action): ParameterSpec? =
+    private fun generateLambdaFunctionParameters(action: Action): List<ParameterSpec> {
+        val p = generateLambdaFunctionParameter(action)
+        return if (p == null)
+            emptyList()
+        else listOf(p)
+    }
+
+    private fun generateBufferFunctionParameter(action: Action): ParameterSpec? =
         if (action.type == Unit::class.java) null
         else
             when (action) {
@@ -287,9 +327,30 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
                 }
             }
 
+    private fun generateLambdaFunctionParameter(action: Action): ParameterSpec? =
+        if (action.type == Unit::class.java) null
+        else
+            when (action) {
+                is ReceiveAction -> {
+                    val lambdaType = LambdaTypeName.get(
+                        parameters = listOf(ParameterSpec.unnamed(action.type.kotlin)),
+                        returnType = Unit::class.asClassName()
+                    )
+                    ParameterSpec
+                        .builder(lambdaParameterName, lambdaType)
+                        .build()
+                }
+                else -> null
+            }
+
     private fun generateFunctionBody(action: Action, nextClassName: ClassName): CodeBlock {
-        val param = generateFunctionParameter(action)
-        val codeBlock = CodeBlock.builder()
+        val cb = CodeBlock.builder()
+        generateFunctionBody(cb, action, nextClassName)
+        return cb.build()
+    }
+
+    private fun generateFunctionBody(codeBlock: CodeBlock.Builder, action: Action, nextClassName: ClassName): CodeBlock {
+        val param = generateBufferFunctionParameter(action)
 
         when (action) {
             is ReceiveAction -> {

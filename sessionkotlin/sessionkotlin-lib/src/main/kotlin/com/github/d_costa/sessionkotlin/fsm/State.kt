@@ -4,6 +4,7 @@ import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.types.MsgLabel
 
 internal typealias StateId = Int
+internal typealias StateTransitions = Map<StateId, List<SimpleTransition>>
 
 public open class SimpleState(public open val id: StateId) {
     override fun toString(): String = "State[$id]"
@@ -35,6 +36,6 @@ internal sealed class State(open val id: StateId) {
 }
 internal data class ReceiveState(override val id: StateId, val transition: ReceiveTransition) : State(id)
 internal data class SendState(override val id: StateId, val transition: SendTransition) : State(id)
-internal data class InternalChoiceState(override val id: StateId, val transitions: List<SendTransition>) : State(id)
+internal data class InternalChoiceState(override val id: StateId, val transitions: List<Transition>) : State(id)
 internal data class ExternalChoiceState(override val id: StateId, val from: SKRole, val transitions: List<ReceiveTransition>) : State(id)
 internal object EndState : State(endStateIndex)

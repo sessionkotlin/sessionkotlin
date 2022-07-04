@@ -5,7 +5,7 @@ import com.github.d_costa.sessionkotlin.api.FluentAPIGenerator
 import com.github.d_costa.sessionkotlin.backend.message.SKMessage
 import com.github.d_costa.sessionkotlin.dsl.exception.*
 import com.github.d_costa.sessionkotlin.dsl.types.*
-import com.github.d_costa.sessionkotlin.fsm.fsmFromLocalType
+import com.github.d_costa.sessionkotlin.fsm.statesFromLocalType
 import com.github.d_costa.sessionkotlin.parser.RefinementParser
 import com.github.d_costa.sessionkotlin.util.hasWhitespace
 import com.github.d_costa.sessionkotlin.util.printlnIndent
@@ -24,6 +24,18 @@ import java.io.File
 public typealias GlobalProtocol = GlobalEnv.() -> Unit
 private val logger = KotlinLogging.logger {}
 
+
+internal data class MsgExchange(private val action: Action, val label: String, val a: SKRole, val b: SKRole) {
+    internal enum class Action {
+        Send, Receive
+    }
+
+    override fun toString(): String {
+        return "$action($a, $b, $label)"
+    }
+}
+
+
 @SessionKotlinDSL
 public sealed class GlobalEnv(
     roles: Set<SKRole>,
@@ -32,7 +44,7 @@ public sealed class GlobalEnv(
     internal var instructions = mutableListOf<Instruction>()
     internal val roles = roles.toMutableSet()
     private val recursionVariables = recursionVariables.toMutableSet()
-    internal val msgLabels = mutableListOf<String>()
+    internal val msgLabels = mutableListOf<MsgExchange>()
 
     /**
      *
@@ -78,7 +90,9 @@ public sealed class GlobalEnv(
         label: String = SKMessage.DEFAULT_LABEL,
         condition: String = "",
     ) {
-        msgLabels.add(label)
+        msgLabels.add(MsgExchange(MsgExchange.Action.Send, label, from, to))
+        msgLabels.add(MsgExchange(MsgExchange.Action.Receive, label, from, to))
+
         if (condition.isNotBlank()) {
             RefinementParser.parseToEnd(condition)
         }
@@ -179,7 +193,8 @@ public sealed class GlobalEnv(
         val g = asGlobalType()
         val localTypes = roles.map {
             try {
-                Pair(it, g.project(it))
+                val state = ProjectionState(it)
+                Pair(it, g.project(it, state).removeRecursions(state.emptyRecursions))
             } catch (e: SessionKotlinDSLException) {
                 logError(it)
                 throw e
@@ -187,7 +202,7 @@ public sealed class GlobalEnv(
         }
         localTypes.forEach { (role, localType) ->
             try {
-                fsmFromLocalType(localType) // check determinism
+                statesFromLocalType(localType) // check determinism
             } catch (e: SessionKotlinDSLException) {
                 logError(role)
                 throw e
@@ -276,7 +291,7 @@ public fun globalProtocol(name: String, callbacks: Boolean = false, protocolBuil
     if (callbacks) {
         val dupeMsgLabels = g.msgLabels.groupingBy { it }.eachCount().filter { it.value > 1 }
         if (dupeMsgLabels.isNotEmpty()) {
-            throw DuplicateMessageLabelsException(dupeMsgLabels.keys)
+            throw DuplicateMessageLabelsException(dupeMsgLabels.keys.map { it.toString() })
         }
         CallbacksAPIGenerator(g).writeTo(outputDirectory)
     }

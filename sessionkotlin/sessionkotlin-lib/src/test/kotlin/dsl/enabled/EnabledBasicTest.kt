@@ -3,6 +3,7 @@ package dsl.enabled
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.exception.RoleNotEnabledException
 import com.github.d_costa.sessionkotlin.dsl.exception.UnfinishedRolesException
+import com.github.d_costa.sessionkotlin.dsl.globalProtocol
 import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
 import com.github.d_costa.sessionkotlin.dsl.types.*
 import dsl.util.IntClass
@@ -45,7 +46,7 @@ class EnabledBasicTest {
 
     @Test
     fun `role not enabled 2 branches mergeable`() {
-        val g = globalProtocolInternal {
+        globalProtocol("Proto") {
             send<Int>(a, b)
             send<Int>(b, a)
 
@@ -61,14 +62,6 @@ class EnabledBasicTest {
                 }
             }
         }
-        val lA = LocalTypeSend(
-            b, IntClass,
-            LocalTypeReceive(
-                b, IntClass,
-                LocalTypeSend(b, StringClass, LEnd)
-            )
-        )
-        assertEquals(g.project(a), lA)
     }
 
     @Test
@@ -267,5 +260,26 @@ class EnabledBasicTest {
             )
         )
         assertEquals(g.project(b), lB)
+    }
+
+    @Test
+    fun `external choice with input transitions`() {
+        globalProtocol("Simple") {
+            choice(a) {
+                branch {
+                    send<String>(b, a)
+                    send<Int>(a, c, "_201", "_201 > 0")
+                    send<Int>(a, c, "_200")
+                }
+                branch {
+                    send<Int>(a, c, "_250")
+                    send<String>(b, a)
+                }
+                branch {
+                    send<Int>(a, c, "Quit")
+                    send<String>(b, a)
+                }
+            }
+        }
     }
 }

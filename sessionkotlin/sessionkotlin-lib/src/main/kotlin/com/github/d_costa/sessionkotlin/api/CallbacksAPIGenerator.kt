@@ -152,7 +152,7 @@ internal class CallbacksAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globa
                 callbacksInterfaceBuilder.addFunction(choiceCallbackFunction)
 
                 codeBlockBuilder.beginControlFlow("when(%L.%L())", callbacksParameterName, choiceCallbackName)
-                for (t: SendTransition in state.transitions) {
+                for (t: Transition in state.transitions) {
                     val enumConstant = getChoiceEnumConstant(state.id, t.action.label.name)
                     choiceEnumBuilder.addEnumConstant(enumConstant)
 
@@ -161,20 +161,9 @@ internal class CallbacksAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globa
                         .ifPresent { callbacksInterfaceBuilder.addFunction(it) }
 
                     codeBlockBuilder.beginControlFlow("%T.%L ->", choiceEnumClassname, enumConstant)
-                    codeBlockBuilder.addStatement(
-                        "val %L = %L.%L()",
-                        generateMessageLabel(t.action),
-                        callbacksParameterName,
-                        callbackName
-                    )
-                    addRefinementAssert(t.action, codeBlockBuilder)
-                    codeBlockBuilder.addStatement(
-                        "sendProtected(%L, %T(%S, %L))",
-                        roleMap.getValue(t.action.to),
-                        SKMessage::class,
-                        t.action.label.name,
-                        generateMessageLabel(t.action)
-                    )
+
+                    addSimpleFunctionStatements(t.action, codeBlockBuilder, callbackName)
+
                     codeBlockBuilder.addStatement("%L()", getStateFunctionName(t.cont))
                     codeBlockBuilder.endControlFlow()
                 }
@@ -215,7 +204,7 @@ internal class CallbacksAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globa
 
     private fun generateStateFunction(name: String): FunSpec.Builder =
         FunSpec.builder(name)
-            .addModifiers(KModifier.SUSPEND)
+            .addModifiers(KModifier.SUSPEND, KModifier.PRIVATE)
 
     private fun addSimpleFunctionStatements(action: Action, codeBlockBuilder: CodeBlock.Builder, callbackName: String) {
         val msgVariableName = generateMessageLabel(action)
@@ -339,4 +328,11 @@ internal class CallbacksAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globa
             )
         }
     }
+
+    private fun addRefinementAssert(action: Action, codeBlockBuilder: CodeBlock.Builder, variableName: String? = null) =
+        when(action) {
+            is ReceiveAction -> addRefinementAssert(action, codeBlockBuilder, variableName)
+            is SendAction -> addRefinementAssert(action, codeBlockBuilder, variableName)
+        }
+
 }
