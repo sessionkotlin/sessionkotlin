@@ -1,5 +1,6 @@
 package impl
 
+
 import adder.Adder.Adder.Adder
 import adder.Adder.Adder.ops.quit
 import adder.Adder.Adder.ops.sum
@@ -10,10 +11,7 @@ import adder.Adder.Adder.roles.Server
 import adder.Adder.Adder.statechans.Client.Adder_Client_1
 import adder.Adder.Adder.statechans.Server.Adder_Server_1
 import adder.Adder.Adder.statechans.Server.ioifaces.Branch_Server_Client_quit__Client_v1_int
-import adderIterations
-
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.scribble.runtime.message.ObjectStreamFormatter
@@ -22,15 +20,14 @@ import org.scribble.runtime.net.SocketChannelServer
 import org.scribble.runtime.session.MPSTEndpoint
 import org.scribble.runtime.util.Buf
 
-fun adder() {
-    val portChan = Channel<Int>()
+fun adderScribble() {
+    val port = 9995
 
-    val session = Adder()
-    runBlocking {
-        launch(Dispatchers.IO) {
+    runBlocking(Dispatchers.IO) {
+        val session = Adder()
+
+        launch {
             MPSTEndpoint(session, Server.Server, ObjectStreamFormatter()).use { e ->
-                val port = 9999
-                portChan.send(9999)
                 e.accept(SocketChannelServer(port), Client.Client)
 
                 serverProtocol(e)
@@ -38,7 +35,8 @@ fun adder() {
         }
         launch {
             MPSTEndpoint(session, Client.Client, ObjectStreamFormatter()).use { e ->
-                e.request(Server.Server, ::SocketChannelEndpoint, "localhost", portChan.receive())
+                e.request(Server.Server, ::SocketChannelEndpoint, "localhost", port)
+
                 clientProtocol(e)
             }
         }
@@ -71,7 +69,7 @@ fun serverProtocol(e: MPSTEndpoint<Adder, Server>) {
 fun clientProtocol(e: MPSTEndpoint<Adder, Client>) {
     var index = 0
 
-    var b =  Adder_Client_1(e)
+    var b = Adder_Client_1(e)
 
     repeat(adderIterations) {
         b = b

@@ -21,8 +21,6 @@ pluginManagement {
 }
 
 rootProject.name = "benchmark"
-include("util")
 include("protocols")
-include("sessionkotlin-callbacks")
-include("sessionkotlin-fluent")
-include("scribble-java")
+include("bench")
+

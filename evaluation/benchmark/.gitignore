@@ -11,3 +11,5 @@ build
 /plot.svg
 /sj/
 /scribble-dist/
+/bench/src/main/java/twobuyer/TwoBuyer/TwoBuyer/
+/bench/src/main/java/adder/Adder/Adder/

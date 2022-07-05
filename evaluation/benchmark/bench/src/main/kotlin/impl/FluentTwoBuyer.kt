@@ -1,40 +1,26 @@
 package app.impl
 
-import channelsKey
 import com.github.d_costa.sessionkotlin.backend.channel.SKChannel
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
+import com.github.d_costa.sessionkotlin.backend.endpoint.SKServerSocket
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import socketsKey
-import twoBuyerIterations
+import impl.twoBuyerIterations
 import twobuyer.ClientA
 import twobuyer.ClientB
 import twobuyer.Seller
 import twobuyer.fluent.*
 import java.util.*
 
-val date = Date()
 
-fun twoBuyer(backend: String) {
-    when (backend) {
-        channelsKey -> {
-            twoBuyerChannels()
-        }
-        socketsKey -> {
-            twoBuyerSockets()
-        }
-        else -> throw RuntimeException()
-    }
-}
-
-fun twoBuyerChannels() {
-    val chanA_Seller = SKChannel()
-    val chanB_Seller = SKChannel()
-    val chanA_B = SKChannel()
-
+fun twoBuyerFluentChannels() {
     runBlocking {
-        launch {
+        val chanA_Seller = SKChannel(ClientA, Seller)
+        val chanB_Seller = SKChannel(ClientB, Seller)
+        val chanA_B = SKChannel(ClientA, ClientB)
+
+        val j1 = launch {
             // Seller
             SKMPEndpoint().use { e ->
                 e.connect(ClientA, chanA_Seller)
@@ -42,7 +28,7 @@ fun twoBuyerChannels() {
                 twoBuyerSeller(e)
             }
         }
-        launch {
+        val j2 = launch {
             // Client A
             SKMPEndpoint().use { e ->
                 e.connect(Seller, chanA_Seller)
@@ -50,7 +36,7 @@ fun twoBuyerChannels() {
                 twoBuyerClientA(e)
             }
         }
-        launch {
+        val j3 =  launch {
             // Client B
             SKMPEndpoint().use { e ->
                 e.connect(Seller, chanB_Seller)
@@ -58,46 +44,45 @@ fun twoBuyerChannels() {
                 twoBuyerClientB(e)
             }
         }
+        j1.join()
+        j2.join()
+        j3.join()
     }
 }
 
-fun twoBuyerSockets() {
-    val sellerPortChan = Channel<Int>()
-    val bPortChan = Channel<Int>()
-
+fun twoBuyerFluentSockets(serverSocket: SKServerSocket, clientBSocket: SKServerSocket) {
     runBlocking {
-        launch {
+
+        val j1 = launch {
             // Seller
             SKMPEndpoint().use { e ->
-                val s = SKMPEndpoint.bind()
-                sellerPortChan.send(s.port) // for A
-                sellerPortChan.send(s.port) // for B
-                e.accept(ClientA, s)
-                e.accept(ClientB, s)
+                e.accept(ClientA, serverSocket)
+                e.accept(ClientB, serverSocket)
 
                 twoBuyerSeller(e)
             }
         }
-        launch {
+        val j2 = launch {
             // Client A
             SKMPEndpoint().use { e ->
-                e.request(Seller, "localhost", sellerPortChan.receive())
-                e.request(ClientB, "localhost", bPortChan.receive())
+                e.request(Seller, "localhost", serverSocket.port)
+                e.request(ClientB, "localhost", clientBSocket.port)
 
                 twoBuyerClientA(e)
             }
         }
-        launch {
+        val j3 = launch {
             // Client B
             SKMPEndpoint().use { e ->
-                val s = SKMPEndpoint.bind()
-                bPortChan.send(s.port)
-                e.request(Seller, "localhost", sellerPortChan.receive())
-                e.accept(ClientA, s)
+                e.request(Seller, "localhost", serverSocket.port)
+                e.accept(ClientA, clientBSocket)
 
                 twoBuyerClientB(e)
             }
         }
+        j1.join()
+        j2.join()
+        j3.join()
     }
 }
 
@@ -152,7 +137,7 @@ suspend fun twoBuyerSeller(e: SKMPEndpoint) {
                 .let { b6 ->
                     when (b6) {
                         is TwoBuyerSeller6_AddressInterface -> b6.receiveAddressFromClientB { }
-                            .sendDateToClientB(date)
+                            .sendDateToClientB(Date())
                             .branch()
                         is TwoBuyerSeller6_RejectInterface -> b6.receiveRejectFromClientB().branch()
                     }
