@@ -14,19 +14,18 @@ G = ./gradlew $(GRADLE_FLAGS)
 
 # Scribble
 SJ = scribble-java
-PROTOCOL = GuessingGame
-ROLES = "Magician" "User"
 SJ_TAG = 0.5.0
 SJ_CLONE = sj
 SJ_TARGET = scribble-dist
+TwoBuyerRoles = Seller A B
+AdderRoles = Client Server
 
 # Sessionkotlin args
-CHANNELS = channels
-SOCKETS = sockets
-KEYS = $(CHANNELS) $(SOCKETS)
+BACKENDS = channels sockets
+PROTOCOLS = TwoBuyer Adder
 
 # Benchmarks
-N_RUNS = 20
+N_RUNS = 5
 BENCH_CMD = /usr/bin/time --format "%e" --output $(O) --append
 SLEEP = 1.0  # seconds
 
@@ -38,10 +37,13 @@ clean:
 	@rm $(SJ_CLONE) $(SJ_TARGET) -rf
 
 .PHONY: scribble
-scribble:
-	@for r in $(ROLES); do \
-  		./$(SJ_TARGET)/scribblec.sh $(SJ)/$(PROTOCOL).scr -api $(PROTOCOL) $$r -d $(SJ)/src/main/java; \
-  	done
+scribble: $(SJ_TARGET)
+	@for r in $(AdderRoles); do \
+		./$(SJ_TARGET)/scribblec.sh $(SJ)/Adder.scr -api Adder $$r -d $(SJ)/src/main/java; \
+	done
+	@for r in $(TwoBuyerRoles); do \
+		./$(SJ_TARGET)/scribblec.sh $(SJ)/TwoBuyer.scr -api TwoBuyer $$r -d $(SJ)/src/main/java; \
+	done
 
 .PHONY: protocols
 protocols:
@@ -70,23 +72,24 @@ endef
 .PHONY: bench
 bench: build
 	@: > $(O)  # create or truncate file
-	@for k in $(KEYS); do \
-  		$(call echof,"#sk/callbacks/$$k"); \
-  		$(call bench_cmd,sessionkotlin-callbacks:run --args $$k); \
-  		$(call echof,"#sk/fluent/$$k"); \
-  		$(call bench_cmd,sessionkotlin-fluent:run --args $$k); \
-  	done
-	@for k in {1..1}; do \
-		$(call echof,"#scribble-java"); \
-		$(call bench_cmd,scribble-java:run); \
-  	done
+	@for p in $(PROTOCOLS); do \
+		for b in $(BACKENDS); do \
+      		$(call echof,"#sk/$$p/callbacks/$$b"); \
+      		$(call bench_cmd,sessionkotlin-callbacks:run --args "$$b $$p"); \
+      		$(call echof,"#sk/$$p/fluent/$$b"); \
+      		$(call bench_cmd,sessionkotlin-fluent:run --args "$$b $$p"); \
+      	done; \
+    	for k in {1..1}; do \
+    		$(call echof,"#scribble-java/$$p"); \
+    		$(call bench_cmd,scribble-java:run --args "$$p"); \
+      	done; \
+	done
 
 .PHONY: report
 report:
 	$(P) report.py
 
-.PHONY: install-scribble
-install-scribble:
+$(SJ_TARGET):
 	git clone --depth 1 --branch $(SJ_TAG) -c advice.detachedHead=false https://github.com/scribble/scribble-java.git $(SJ_CLONE)
 	@cd $(SJ_CLONE) && mvn install --quiet
 	@unzip $(SJ_CLONE)/$(SJ_TARGET)/target/scribble-dist-$(SJ_TAG)-SNAPSHOT.zip -d $(SJ_TARGET)
