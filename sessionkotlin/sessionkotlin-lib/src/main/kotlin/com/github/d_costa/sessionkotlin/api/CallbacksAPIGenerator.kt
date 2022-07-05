@@ -2,6 +2,7 @@ package com.github.d_costa.sessionkotlin.api
 
 import com.github.d_costa.sessionkotlin.api.exception.NoInitialStateException
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
+import com.github.d_costa.sessionkotlin.backend.message.SKDummyMessage
 import com.github.d_costa.sessionkotlin.backend.message.SKMessage
 import com.github.d_costa.sessionkotlin.dsl.RootEnv
 import com.github.d_costa.sessionkotlin.dsl.SKRole
@@ -127,13 +128,9 @@ internal class CallbacksAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globa
 
                     codeBlockBuilder.beginControlFlow("%S ->", t.action.label.name)
                     addRefinementAssert(t.action, codeBlockBuilder, msgVariableName)
-                    codeBlockBuilder.addStatement(
-                        "%L.%L(%L.payload as %T)",
-                        callbacksParameterName,
-                        callbackName,
-                        msgVariableName,
-                        t.action.type.kotlin
-                    )
+
+                    addReceiveCallbackStatement(codeBlockBuilder, callbackName, t.action, msgVariableName)
+
                     codeBlockBuilder.addStatement("%L()", getStateFunctionName(t.cont))
                     codeBlockBuilder.endControlFlow()
                 }
@@ -183,6 +180,30 @@ internal class CallbacksAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globa
         return stuffToAddToEndpointClassFile
     }
 
+    private fun addReceiveCallbackStatement(
+        codeBlockBuilder: CodeBlock.Builder,
+        callbackName: String,
+        action: Action,
+        msgVariableName: String
+    ) {
+        if (action.type == Unit::class.java) {
+            codeBlockBuilder.addStatement(
+                "%L.%L(%T)",
+                callbacksParameterName,
+                callbackName,
+                Unit::class
+            )
+        } else {
+            codeBlockBuilder.addStatement(
+                "%L.%L(%L.payload as %T)",
+                callbacksParameterName,
+                callbackName,
+                msgVariableName,
+                if (action.type.kotlin == Unit::class.java) Unit::class else action.type.kotlin
+            )
+        }
+    }
+
     private fun getChoiceEnumConstant(stateId: StateId, label: String): String = "Choice${stateId}_$label"
 
     private fun getChoiceEnumClassName(stateId: StateId): ClassName =
@@ -217,24 +238,38 @@ internal class CallbacksAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globa
                     roleMap.getValue(action.from)
                 )
                 addRefinementAssert(action, codeBlockBuilder)
-                codeBlockBuilder.addStatement(
-                    "%L.%L(%L.payload as %T)",
-                    callbacksParameterName,
-                    callbackName,
-                    msgVariableName,
-                    action.type.kotlin
-                )
+                addReceiveCallbackStatement(codeBlockBuilder, callbackName, action, msgVariableName)
             }
             is SendAction -> {
-                codeBlockBuilder.addStatement("val %L = %L.%L()", msgVariableName, callbacksParameterName, callbackName)
+                if (action.type == Unit::class.java) {
+                    codeBlockBuilder.addStatement("%L.%L()", callbacksParameterName, callbackName)
+                } else {
+                    codeBlockBuilder.addStatement(
+                        "val %L = %L.%L()",
+                        msgVariableName,
+                        callbacksParameterName,
+                        callbackName
+                    )
+                }
+
                 addRefinementAssert(action, codeBlockBuilder)
-                codeBlockBuilder.addStatement(
-                    "sendProtected(%L, %T(%S, %L))",
-                    roleMap.getValue(action.to),
-                    SKMessage::class,
-                    action.label.name,
-                    msgVariableName
-                )
+
+                if (action.type == Unit::class.java) {
+                    codeBlockBuilder.addStatement(
+                        "sendProtected(%L, %T(%S))",
+                        roleMap.getValue(action.to),
+                        SKDummyMessage::class,
+                        action.label.name
+                    )
+                } else {
+                    codeBlockBuilder.addStatement(
+                        "sendProtected(%L, %T(%S, %L))",
+                        roleMap.getValue(action.to),
+                        SKMessage::class,
+                        action.label.name,
+                        msgVariableName
+                    )
+                }
             }
         }
     }
@@ -294,7 +329,11 @@ internal class CallbacksAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globa
     private fun getClassName(role: SKRole, postFix: String = ""): ClassName =
         ClassName(packageName, buildClassname(role, postFix = postFix))
 
-    private fun addRefinementAssert(action: SendAction, codeBlockBuilder: CodeBlock.Builder, variableName: String? = null) {
+    private fun addRefinementAssert(
+        action: SendAction,
+        codeBlockBuilder: CodeBlock.Builder,
+        variableName: String? = null,
+    ) {
         if (action.label.mentioned) {
             codeBlockBuilder.addStatement(
                 "%L[%S] = %L.%M()",
@@ -316,7 +355,11 @@ internal class CallbacksAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globa
         }
     }
 
-    private fun addRefinementAssert(action: ReceiveAction, codeBlockBuilder: CodeBlock.Builder, variableName: String? = null) {
+    private fun addRefinementAssert(
+        action: ReceiveAction,
+        codeBlockBuilder: CodeBlock.Builder,
+        variableName: String? = null,
+    ) {
         if (action.label.mentioned) {
             codeBlockBuilder.addStatement(
                 "%L[%S] = (%L.payload as %T).%M()",
@@ -328,11 +371,4 @@ internal class CallbacksAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globa
             )
         }
     }
-
-    private fun addRefinementAssert(action: Action, codeBlockBuilder: CodeBlock.Builder, variableName: String? = null) =
-        when(action) {
-            is ReceiveAction -> addRefinementAssert(action, codeBlockBuilder, variableName)
-            is SendAction -> addRefinementAssert(action, codeBlockBuilder, variableName)
-        }
-
 }

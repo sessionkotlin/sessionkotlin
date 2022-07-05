@@ -1,7 +1,6 @@
 package com.github.d_costa.sessionkotlin.backend.message
 
 import java.io.Serializable
-import java.util.*
 
 public open class SKMessage(
     public val label: String,
@@ -10,6 +9,7 @@ public open class SKMessage(
 
     public companion object {
         public const val DEFAULT_LABEL: String = "EMPTY_LABEL"
+        public const val DUMMY_MSG_PAYLOAD: String = "DUMMY_MSG_PAYLOAD"
     }
 
     override fun toString(): String {
@@ -29,4 +29,4 @@ public open class SKMessage(
     }
 }
 
-public class SKDummyMessage(label: String) : SKMessage(label, "")
+public class SKDummyMessage(label: String) : SKMessage(label, DUMMY_MSG_PAYLOAD)

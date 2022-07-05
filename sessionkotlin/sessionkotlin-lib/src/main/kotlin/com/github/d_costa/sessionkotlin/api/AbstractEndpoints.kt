@@ -65,27 +65,3 @@ public abstract class SKCaseEndpoint(e: SKMPEndpoint, private val msg: SKMessage
         return msg
     }
 }
-
-//
-// public abstract class SKSendEndpoint(e: SKMPEndpoint): SKOutputEndpoint(e)
-// public abstract class SKReceiveEndpoint(e: SKMPEndpoint): SKInputEndpoint(e) {
-//
-//    /**
-//     * Receive a message with payload of type [T] from [role]
-//     * and assign its payload to [buf]'s value.
-//     */
-//    @Suppress("unchecked_cast")
-//    protected suspend fun <T : Any> receivePayload(role: SKGenRole, buf: SKBuffer<T>) {
-//        val msg = receive<T>(role)
-//        if (msg is SKPayload<*>) {
-//            buf.value = (msg as SKPayload<T>).payload
-//        }
-//    }
-//
-//    /**
-//     * Receive a message from [role] and ignore its content.
-//     */
-//    protected suspend fun receiveDummy(role: SKGenRole) {
-//        receive<Any>(role)
-//    }
-// }

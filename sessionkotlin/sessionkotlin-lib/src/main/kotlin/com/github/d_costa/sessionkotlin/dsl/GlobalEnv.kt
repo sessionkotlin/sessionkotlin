@@ -24,7 +24,6 @@ import java.io.File
 public typealias GlobalProtocol = GlobalEnv.() -> Unit
 private val logger = KotlinLogging.logger {}
 
-
 internal data class MsgExchange(private val action: Action, val label: String, val a: SKRole, val b: SKRole) {
     internal enum class Action {
         Send, Receive
@@ -34,7 +33,6 @@ internal data class MsgExchange(private val action: Action, val label: String, v
         return "$action($a, $b, $label)"
     }
 }
-
 
 @SessionKotlinDSL
 public sealed class GlobalEnv(

@@ -207,8 +207,9 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
                 .addParameters(params)
                 .returns(getInterfaceClassName(t.cont, role))
 
-            val code = generateFunctionBody(t.action, getClassName(t.cont, role))
-            addFunctionsToClassAndInterface(intermediaryClassInterface, function, code)
+            val code = generateFunctionBody(t.action)
+            addNextStateCall(code, getClassName(t.cont, role))
+            addFunctionsToClassAndInterface(intermediaryClassInterface, function, code.build())
 
             // Lambda
             if (params.isNotEmpty()) {
@@ -223,7 +224,9 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
                         bufferParameterName,
                         SKBuffer::class.parameterizedBy(t.action.type.kotlin)
                     )
-                generateFunctionBody(lambdaFunctionCode, t.action, getClassName(t.cont, role))
+                generateFunctionBody(lambdaFunctionCode, t.action)
+                addConsumerCall(lambdaFunctionCode)
+                addNextStateCall(lambdaFunctionCode, getClassName(t.cont, role))
                 addFunctionsToClassAndInterface(intermediaryClassInterface, lambdaFunction, lambdaFunctionCode.build())
             }
             classes.add(intermediaryClassInterface.stateClass.build())
@@ -256,8 +259,9 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
                 .addParameters(bufferParam)
                 .addModifiers(KModifier.SUSPEND)
 
-            val code = generateFunctionBody(t.action, nextClassName)
-            addFunctionsToClassAndInterface(classBuilders, bufferFunction, code)
+            val code = generateFunctionBody(t.action)
+            addNextStateCall(code, nextClassName)
+            addFunctionsToClassAndInterface(classBuilders, bufferFunction, code.build())
 
             if (t.action is ReceiveAction && bufferParam.isNotEmpty()) {
                 val lambdaParam = generateLambdaFunctionParameters(t.action)
@@ -267,10 +271,16 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
                     .addModifiers(KModifier.SUSPEND)
                 val lambdaFunctionCode = CodeBlock.builder()
                     .addStatement("val %L = %T()", bufferParameterName, SKBuffer::class.parameterizedBy(t.action.type.kotlin))
-                generateFunctionBody(lambdaFunctionCode, t.action, nextClassName)
+                generateFunctionBody(lambdaFunctionCode, t.action)
+                addConsumerCall(lambdaFunctionCode)
+                addNextStateCall(lambdaFunctionCode, nextClassName)
                 addFunctionsToClassAndInterface(classBuilders, lambdaFunction, lambdaFunctionCode.build())
             }
         }
+    }
+
+    private fun addConsumerCall(code: CodeBlock.Builder) {
+        code.addStatement("%L(%L.value)", lambdaParameterName, bufferParameterName)
     }
 
     private fun addFunctionsToClassAndInterface(
@@ -343,13 +353,13 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
                 else -> null
             }
 
-    private fun generateFunctionBody(action: Action, nextClassName: ClassName): CodeBlock {
+    private fun generateFunctionBody(action: Action): CodeBlock.Builder {
         val cb = CodeBlock.builder()
-        generateFunctionBody(cb, action, nextClassName)
-        return cb.build()
+        generateFunctionBody(cb, action)
+        return cb
     }
 
-    private fun generateFunctionBody(codeBlock: CodeBlock.Builder, action: Action, nextClassName: ClassName): CodeBlock {
+    private fun generateFunctionBody(codeBlock: CodeBlock.Builder, action: Action): CodeBlock {
         val param = generateBufferFunctionParameter(action)
 
         when (action) {
@@ -370,9 +380,11 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
                 )
             }
         }
-        codeBlock.addStatement("return %T(%N)", nextClassName, endpointParameter)
         return codeBlock.build()
     }
+
+    fun addNextStateCall(codeBlockBuilder: CodeBlock.Builder, nextClassName: ClassName) =
+        codeBlockBuilder.addStatement("return %T(%N)", nextClassName, endpointParameter)
 
     private fun addRefinementAssert(action: SendAction, codeBlockBuilder: CodeBlock.Builder) {
         if (action.label.mentioned) {

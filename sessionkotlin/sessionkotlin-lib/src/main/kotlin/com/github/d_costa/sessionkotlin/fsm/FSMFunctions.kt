@@ -10,7 +10,6 @@ import com.github.d_costa.sessionkotlin.util.merge
 
 internal typealias LocalTypeId = Int
 
-
 /**
  * Create a Finite State Automata from a LocalType representation.
  */
@@ -158,7 +157,6 @@ private fun removeRedundantStates(
      */
     val redundant = mutableMapOf<StateId, StateId>()
 
-
     val entries = mutableMapOf<List<SimpleTransition>, MutableList<StateId>>()
     for (s in states) {
         val ts = transitions.getOrDefault(s.id, emptyList())
@@ -176,7 +174,6 @@ private fun removeRedundantStates(
             }
         }
     }
-
 
     val newTransitions = transitions.mapValues { (_, ts) ->
         ts.map {
@@ -270,19 +267,23 @@ private fun toRichStates(states: List<SimpleState>, transitions: StateTransition
                 ExternalChoiceState(
                     s.id,
                     commonSource(ts),
-                    ts.map { ReceiveTransition(it.action as ReceiveAction, it.cont) })
+                    ts.map { ReceiveTransition(it.action as ReceiveAction, it.cont) }
+                )
             }
         } else {
             if (ts.size == 1) {
                 val t = ts.first()
                 SendState(s.id, SendTransition(t.action as SendAction, t.cont))
             } else {
-                InternalChoiceState(s.id, ts.map {
-                    when (it.action) {
-                        is SendAction -> SendTransition(it.action, it.cont)
-                        is ReceiveAction -> ReceiveTransition(it.action, it.cont)
+                InternalChoiceState(
+                    s.id,
+                    ts.map {
+                        when (it.action) {
+                            is SendAction -> SendTransition(it.action, it.cont)
+                            is ReceiveAction -> ReceiveTransition(it.action, it.cont)
+                        }
                     }
-                })
+                )
             }
         }
     }
