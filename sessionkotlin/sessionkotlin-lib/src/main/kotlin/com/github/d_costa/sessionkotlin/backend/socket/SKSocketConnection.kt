@@ -29,6 +29,7 @@ internal class SKSocketConnection(
     private val logger = KotlinLogging.logger {}
 
     override fun close() {
+        outputStream.close()
         s.close()
     }
 

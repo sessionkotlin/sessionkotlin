@@ -52,7 +52,9 @@ public open class SKMPEndpoint(
         /**
          * Create a server socket and bind it to [port].
          *
-         * @param port the port to bind. Default is zero (0), to use a port that is automatically allocated.
+         * Note that SKMPEndpoint will *not* automatically close this socket.
+         *
+         * @param port the port to bind. Default is zero (0), to use an available port that is automatically allocated.
          */
         public fun bind(port: Int = 0): SKServerSocket {
             return SKServerSocket(
