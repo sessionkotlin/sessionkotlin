@@ -25,8 +25,8 @@ internal data class SendAction(val to: SKRole, override val type: Class<*>, over
 internal data class ReceiveAction(val from: SKRole, override val type: Class<*>, override val label: MsgLabel) : Action(type, label)
 
 internal sealed class Transition(open val action: Action, open val cont: Int)
-internal class SendTransition(override val action: SendAction, override val cont: Int) : Transition(action, cont)
-internal class ReceiveTransition(override val action: ReceiveAction, override val cont: Int) : Transition(action, cont)
+internal data class SendTransition(override val action: SendAction, override val cont: Int) : Transition(action, cont)
+internal data class ReceiveTransition(override val action: ReceiveAction, override val cont: Int) : Transition(action, cont)
 
 internal sealed class State(open val id: StateId) {
     companion object {
@@ -38,4 +38,6 @@ internal data class ReceiveState(override val id: StateId, val transition: Recei
 internal data class SendState(override val id: StateId, val transition: SendTransition) : State(id)
 internal data class InternalChoiceState(override val id: StateId, val transitions: List<Transition>) : State(id)
 internal data class ExternalChoiceState(override val id: StateId, val from: SKRole, val transitions: List<ReceiveTransition>) : State(id)
-internal object EndState : State(endStateIndex)
+internal object EndState : State(endStateIndex) {
+    override fun toString() = "${this::class.simpleName ?: super.toString()}($id)"
+}

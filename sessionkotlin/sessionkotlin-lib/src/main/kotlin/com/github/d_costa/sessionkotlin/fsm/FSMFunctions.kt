@@ -143,9 +143,11 @@ private fun simplify(fsm: NDFSM): List<State> {
 
     val pair = removeRedundantStates(states, transitions)
 
-    validateDeterminism(pair.first, pair.second)
+    val simplePair = simplifyStateIds(pair.first, pair.second)
 
-    return toRichStates(pair.first, pair.second)
+    validateDeterminism(simplePair.first, simplePair.second)
+
+    return toRichStates(simplePair.first, simplePair.second)
 }
 
 private fun removeRedundantStates(
@@ -184,6 +186,41 @@ private fun removeRedundantStates(
         }
     }
     val newStates = states.filter { it.id !in redundant }
+    return Pair(newStates, newTransitions)
+}
+
+private fun simplifyStateIds(
+    states: List<SimpleState>,
+    transitions: StateTransitions,
+): Pair<List<SimpleState>, StateTransitions> {
+
+    val substitutions = mutableMapOf<StateId, StateId>()
+
+    var counter = State.initialStateIndex
+    for (s in states) {
+        if (s.id == State.endStateIndex) continue
+
+        if (s.id > counter) {
+            substitutions[s.id] = counter
+        }
+        counter++
+    }
+
+    val newTransitions = transitions.mapValues { (_, ts) ->
+        ts.map {
+            val substitute = substitutions[it.cont]
+            if (substitute != null) {
+                it.copy(cont = substitute)
+            } else it
+        }
+    }.mapKeys { (id, _) -> substitutions[id] ?: id }
+
+    val newStates = states.map {
+        val substitute = substitutions[it.id]
+        if (substitute != null) {
+            SimpleState(substitute)
+        } else it
+    }
     return Pair(newStates, newTransitions)
 }
 
