@@ -19,19 +19,19 @@ class TestAPI {
 
         runBlocking {
             launch {
-                suspend fun handle201(initialState: SimpleClient7Interface) {
+                suspend fun handle201(initialState: SimpleClient3Interface) {
                     var state = initialState
 
                     while (true) {
                         val b = state.receive_200FromServer(SKBuffer())
                             .branch()
                         when (b) {
-                            is SimpleClient8_Interface -> {
+                            is SimpleClient4_Interface -> {
                                 b.receiveFromServer(SKBuffer())
                                 break
                             }
-                            is SimpleClient8__201Interface -> state = b.receive_201FromServer(SKBuffer())
-                            is SimpleClient8__250Interface -> {
+                            is SimpleClient4__201Interface -> state = b.receive_201FromServer(SKBuffer())
+                            is SimpleClient4__250Interface -> {
                                 b.receive_250FromServer(SKBuffer())
                                 break
                             }
@@ -104,7 +104,7 @@ class TestAPI {
                     override fun send_250ToClient(): Int = 1
                     override fun sendToClient(): Int = 10
                     override fun send_200ToClient(): Int = 10
-                    override fun onChoice8(): Choice8 = Choice8.Choice8__250
+                    override fun onChoice4(): Choice4 = Choice4.Choice4__250
                 }
                 SimpleServerCallbacksEndpoint(callbacks).use { e ->
                     e.connect(Client, chanAB)

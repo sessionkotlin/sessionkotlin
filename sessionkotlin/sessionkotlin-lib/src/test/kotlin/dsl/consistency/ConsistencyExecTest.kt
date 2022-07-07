@@ -3,6 +3,7 @@ package dsl.consistency
 import com.github.d_costa.sessionkotlin.dsl.GlobalProtocol
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.exception.InconsistentExternalChoiceException
+import com.github.d_costa.sessionkotlin.dsl.globalProtocol
 import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFailsWith

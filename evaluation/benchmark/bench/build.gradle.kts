@@ -3,7 +3,6 @@ plugins {
     `java-library`
     id("com.github.d-costa.sessionkotlin.plugin")
     id("me.champeau.jmh") version "0.6.6"
-
 }
 
 val kotlinxCoroutinesVersion: String by project
@@ -15,7 +14,6 @@ dependencies {
     implementation("org.scribble:scribble-core:$scribbleVersion")
     implementation("org.scribble:scribble-runtime:$scribbleVersion")
     testImplementation(kotlin("test"))
-
 }
 
 tasks.test {
@@ -23,9 +21,8 @@ tasks.test {
 }
 
 jmh {
-    warmupIterations.set(1)
+    warmupIterations.set(2)
     iterations.set(3)
-    fork.set(1)
+    fork.set(3)
     benchmarkMode.set(listOf("Throughput"))
-    failOnError.set(true)
 }

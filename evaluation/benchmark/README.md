@@ -3,7 +3,7 @@
 ## Usage
 
 ```shell
-./gradlew jmh
+make bench
 ```
 
 The report wil be available at `bench/build/results/jmh/results.txt`.

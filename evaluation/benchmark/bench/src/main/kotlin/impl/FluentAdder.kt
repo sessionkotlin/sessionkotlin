@@ -1,4 +1,4 @@
-package app.impl
+package impl
 
 import adder.Client
 import adder.Server
@@ -6,53 +6,46 @@ import adder.fluent.*
 import com.github.d_costa.sessionkotlin.backend.channel.SKChannel
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKServerSocket
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import impl.adderIterations
 
 fun adderFluentChannels() {
     val chan = SKChannel(Client, Server)
 
     runBlocking {
-        val job1 = launch {
+        launch {
             // Server
             SKMPEndpoint().use { e ->
                 e.connect(Client, chan)
                 adderServer(e)
             }
         }
-        val job2 = launch {
+        launch {
             // Client
             SKMPEndpoint().use { e ->
                 e.connect(Server, chan)
                 adderClient(e)
             }
         }
-        job1.join()
-        job2.join()
     }
 }
 
 fun adderFluentSockets(serverSocket: SKServerSocket) {
     runBlocking {
-        val job1 = launch {
-            // Client
-            SKMPEndpoint().use { e ->
-                e.request(Server, "localhost", serverSocket.port)
-                adderClient(e)
-            }
-        }
-        val job2 = launch {
+        launch {
             // Server
             SKMPEndpoint().use { e ->
                 e.accept(Client, serverSocket)
                 adderServer(e)
             }
         }
-        job1.join()
-        job2.join()
+        launch {
+            // Client
+            SKMPEndpoint().use { e ->
+                e.request(Server, "localhost", serverSocket.port)
+                adderClient(e)
+            }
+        }
     }
 }
 

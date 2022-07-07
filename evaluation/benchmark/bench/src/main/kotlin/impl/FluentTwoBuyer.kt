@@ -1,12 +1,10 @@
-package app.impl
+package impl
 
 import com.github.d_costa.sessionkotlin.backend.channel.SKChannel
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKServerSocket
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import impl.twoBuyerIterations
 import twobuyer.ClientA
 import twobuyer.ClientB
 import twobuyer.Seller
@@ -20,7 +18,7 @@ fun twoBuyerFluentChannels() {
         val chanB_Seller = SKChannel(ClientB, Seller)
         val chanA_B = SKChannel(ClientA, ClientB)
 
-        val j1 = launch {
+        launch {
             // Seller
             SKMPEndpoint().use { e ->
                 e.connect(ClientA, chanA_Seller)
@@ -28,7 +26,7 @@ fun twoBuyerFluentChannels() {
                 twoBuyerSeller(e)
             }
         }
-        val j2 = launch {
+        launch {
             // Client A
             SKMPEndpoint().use { e ->
                 e.connect(Seller, chanA_Seller)
@@ -36,7 +34,7 @@ fun twoBuyerFluentChannels() {
                 twoBuyerClientA(e)
             }
         }
-        val j3 =  launch {
+        launch {
             // Client B
             SKMPEndpoint().use { e ->
                 e.connect(Seller, chanB_Seller)
@@ -44,16 +42,13 @@ fun twoBuyerFluentChannels() {
                 twoBuyerClientB(e)
             }
         }
-        j1.join()
-        j2.join()
-        j3.join()
     }
 }
 
 fun twoBuyerFluentSockets(serverSocket: SKServerSocket, clientBSocket: SKServerSocket) {
     runBlocking {
 
-        val j1 = launch {
+        launch {
             // Seller
             SKMPEndpoint().use { e ->
                 e.accept(ClientA, serverSocket)
@@ -62,7 +57,7 @@ fun twoBuyerFluentSockets(serverSocket: SKServerSocket, clientBSocket: SKServerS
                 twoBuyerSeller(e)
             }
         }
-        val j2 = launch {
+        launch {
             // Client A
             SKMPEndpoint().use { e ->
                 e.request(Seller, "localhost", serverSocket.port)
@@ -71,7 +66,7 @@ fun twoBuyerFluentSockets(serverSocket: SKServerSocket, clientBSocket: SKServerS
                 twoBuyerClientA(e)
             }
         }
-        val j3 = launch {
+        launch {
             // Client B
             SKMPEndpoint().use { e ->
                 e.request(Seller, "localhost", serverSocket.port)
@@ -80,9 +75,6 @@ fun twoBuyerFluentSockets(serverSocket: SKServerSocket, clientBSocket: SKServerS
                 twoBuyerClientB(e)
             }
         }
-        j1.join()
-        j2.join()
-        j3.join()
     }
 }
 
@@ -96,8 +88,8 @@ suspend fun twoBuyerClientA(e: SKMPEndpoint) {
             .branch()
             .let {
                 when (it) {
-                    is TwoBuyerClientA6_DateInterface -> it.receiveDateFromClientB { }
-                    is TwoBuyerClientA6_RejectInterface -> it.receiveRejectFromClientB()
+                    is TwoBuyerClientA4_DateInterface -> it.receiveDateFromClientB { }
+                    is TwoBuyerClientA4_RejectInterface -> it.receiveRejectFromClientB()
                 }
             }
     }
@@ -136,10 +128,10 @@ suspend fun twoBuyerSeller(e: SKMPEndpoint) {
                 .branch()
                 .let { b6 ->
                     when (b6) {
-                        is TwoBuyerSeller6_AddressInterface -> b6.receiveAddressFromClientB { }
+                        is TwoBuyerSeller4_AddressInterface -> b6.receiveAddressFromClientB { }
                             .sendDateToClientB(Date())
                             .branch()
-                        is TwoBuyerSeller6_RejectInterface -> b6.receiveRejectFromClientB().branch()
+                        is TwoBuyerSeller4_RejectInterface -> b6.receiveRejectFromClientB().branch()
                     }
                 }
             is TwoBuyerSeller1_QuitInterface -> {

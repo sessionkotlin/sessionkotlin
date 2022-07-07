@@ -4,7 +4,8 @@ import io.ktor.network.sockets.*
 import io.ktor.util.network.*
 import java.io.Closeable
 
-public class SKServerSocket(internal val ss: ServerSocket) : Closeable {
+public class SKServerSocket internal constructor(internal val ss: ServerSocket) : Closeable{
+
     public val port: Int
         get() = ss.localAddress.toJavaAddress().port
 

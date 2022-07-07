@@ -2,22 +2,23 @@ package bench
 
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKServerSocket
-import impl.adderCallbacksSockets
-import impl.adderFluentSockets
+import impl.adderScribble
+import impl.newCustomServerSocket
 import org.openjdk.jmh.annotations.Benchmark
 import org.openjdk.jmh.annotations.Scope
 import org.openjdk.jmh.annotations.Setup
 import org.openjdk.jmh.annotations.State
 import org.openjdk.jmh.annotations.TearDown
+import java.nio.channels.ServerSocketChannel
 
 @State(Scope.Thread)
-open class AdderSocketsBenchmark {
+open class AdderScribbleBenchmark {
 
-    private lateinit var serverSocket: SKServerSocket
+    private lateinit var serverSocket: ServerSocketChannel
 
     @Setup
     open fun prepare() {
-        serverSocket = SKMPEndpoint.bind(0)
+        serverSocket = newCustomServerSocket()
     }
 
     @TearDown
@@ -26,12 +27,7 @@ open class AdderSocketsBenchmark {
     }
 
     @Benchmark
-    open fun benchAdderFluentSockets() {
-        adderFluentSockets(serverSocket)
-    }
-
-    @Benchmark
-    open fun benchAdderCallbacksSockets() {
-        adderCallbacksSockets(serverSocket)
+    open fun benchAdderScribble() {
+        adderScribble(serverSocket)
     }
 }

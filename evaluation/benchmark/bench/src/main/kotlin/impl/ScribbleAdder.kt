@@ -11,36 +11,30 @@ import adder.Adder.Adder.roles.Server
 import adder.Adder.Adder.statechans.Client.Adder_Client_1
 import adder.Adder.Adder.statechans.Server.Adder_Server_1
 import adder.Adder.Adder.statechans.Server.ioifaces.Branch_Server_Client_quit__Client_v1_int
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.scribble.runtime.message.ObjectStreamFormatter
 import org.scribble.runtime.net.SocketChannelEndpoint
-import org.scribble.runtime.net.SocketChannelServer
 import org.scribble.runtime.session.MPSTEndpoint
 import org.scribble.runtime.util.Buf
+import java.nio.channels.ServerSocketChannel
+import kotlin.concurrent.thread
 
-fun adderScribble() {
-    val port = 9995
 
-    runBlocking(Dispatchers.IO) {
-        val session = Adder()
+fun adderScribble(s: ServerSocketChannel) {
+    val session = Adder()
 
-        launch {
-            MPSTEndpoint(session, Server.Server, ObjectStreamFormatter()).use { e ->
-                e.accept(SocketChannelServer(port), Client.Client)
-
-                serverProtocol(e)
-            }
-        }
-        launch {
-            MPSTEndpoint(session, Client.Client, ObjectStreamFormatter()).use { e ->
-                e.request(Server.Server, ::SocketChannelEndpoint, "localhost", port)
-
-                clientProtocol(e)
-            }
+    val t = thread {
+        MPSTEndpoint(session, Server.Server, ObjectStreamFormatter()).use { e ->
+            e.accept(CustomScribbleServerSocket(s), Client.Client)
+            serverProtocol(e)
         }
     }
+
+    MPSTEndpoint(session, Client.Client, ObjectStreamFormatter()).use { e ->
+        e.request(Server.Server, ::SocketChannelEndpoint, "localhost", s.socket().localPort)
+        clientProtocol(e)
+    }
+
+    t.join()
 }
 
 fun serverProtocol(e: MPSTEndpoint<Adder, Server>) {

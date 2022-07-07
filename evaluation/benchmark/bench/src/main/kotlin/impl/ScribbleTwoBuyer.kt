@@ -1,12 +1,7 @@
-package app.impl
+package impl
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import impl.twoBuyerIterations
 import org.scribble.runtime.message.ObjectStreamFormatter
 import org.scribble.runtime.net.SocketChannelEndpoint
-import org.scribble.runtime.net.SocketChannelServer
 import org.scribble.runtime.session.MPSTEndpoint
 import org.scribble.runtime.util.Buf
 import twobuyer.TwoBuyer.TwoBuyer.TwoBuyer
@@ -21,47 +16,48 @@ import twobuyer.TwoBuyer.TwoBuyer.statechans.B.ioifaces.Branch_B_Seller_Quit__Se
 import twobuyer.TwoBuyer.TwoBuyer.statechans.Seller.TwoBuyer_Seller_1
 import twobuyer.TwoBuyer.TwoBuyer.statechans.Seller.ioifaces.Branch_Seller_A_Quit__A_id_String
 import twobuyer.TwoBuyer.TwoBuyer.statechans.Seller.ioifaces.Branch_Seller_B_address_String__B_reject
+import java.nio.channels.ServerSocketChannel
 import java.util.*
+import kotlin.concurrent.thread
 
 val currDate = Date()
 
 
-fun twoBuyerScribble() {
-    runBlocking(Dispatchers.IO) {
-        val session = TwoBuyer()
-        val sellerPortA = 9998
-        val sellerPortB = 9999
-        val bPort = 9997
+fun twoBuyerScribble(
+    sellerSocketA: ServerSocketChannel,
+    sellerSocketB: ServerSocketChannel,
+    bSocket: ServerSocketChannel,
+) {
+    val session = TwoBuyer()
 
-        launch {
-            // Client A
-            MPSTEndpoint(session, A.A, ObjectStreamFormatter()).use { e ->
-                e.request(Seller.Seller, ::SocketChannelEndpoint, "localhost", sellerPortA)
-                e.request(B.B, ::SocketChannelEndpoint, "localhost", bPort)
+    val t1 = thread {
+        // Seller
+        MPSTEndpoint(session, Seller.Seller, ObjectStreamFormatter()).use { e ->
+            e.accept(CustomScribbleServerSocket(sellerSocketA), A.A)
+            e.accept(CustomScribbleServerSocket(sellerSocketB), B.B)
 
-                clientAProtocol(e)
-            }
-        }
-        launch {
-            // Client B
-            MPSTEndpoint(session, B.B, ObjectStreamFormatter()).use { e ->
-
-                e.accept(SocketChannelServer(bPort), A.A)
-                e.request(Seller.Seller, ::SocketChannelEndpoint, "localhost", sellerPortB)
-
-                clientBProtocol(e)
-            }
-        }
-        launch {
-            // Seller
-            MPSTEndpoint(session, Seller.Seller, ObjectStreamFormatter()).use { e ->
-                e.accept(SocketChannelServer(sellerPortA), A.A)
-                e.accept(SocketChannelServer(sellerPortB), B.B)
-
-                sellerProtocol(e)
-            }
+            sellerProtocol(e)
         }
     }
+    val t2 = thread {
+        // Client B
+        MPSTEndpoint(session, B.B, ObjectStreamFormatter()).use { e ->
+            e.accept(CustomScribbleServerSocket(bSocket), A.A)
+            e.request(Seller.Seller, ::SocketChannelEndpoint, "localhost", sellerSocketB.socket().localPort)
+
+            clientBProtocol(e)
+        }
+    }
+    // Client A
+    MPSTEndpoint(session, A.A, ObjectStreamFormatter()).use { e ->
+        e.request(Seller.Seller, ::SocketChannelEndpoint, "localhost", sellerSocketA.socket().localPort)
+        e.request(B.B, ::SocketChannelEndpoint, "localhost", bSocket.socket().localPort)
+
+        clientAProtocol(e)
+    }
+
+    t1.join()
+    t2.join()
 }
 
 fun sellerProtocol(e: MPSTEndpoint<TwoBuyer, Seller>) {
@@ -111,7 +107,10 @@ fun clientAProtocol(e: MPSTEndpoint<TwoBuyer, A>) {
             .let {
                 when (it.op) {
                     Branch_A_B_date_Date__B_reject.Branch_A_B_date_Date__B_reject_Enum.date -> it.receive(date.date)
-                    Branch_A_B_date_Date__B_reject.Branch_A_B_date_Date__B_reject_Enum.reject -> it.receive(date.date, Buf())
+                    Branch_A_B_date_Date__B_reject.Branch_A_B_date_Date__B_reject_Enum.reject -> it.receive(
+                        date.date,
+                        Buf()
+                    )
                     null -> throw RuntimeException()
                 }
             }

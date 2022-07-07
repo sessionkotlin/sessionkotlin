@@ -1,12 +1,9 @@
-package app.impl
+package impl
 
 import com.github.d_costa.sessionkotlin.backend.channel.SKChannel
-import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKServerSocket
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import impl.twoBuyerIterations
 import twobuyer.ClientA
 import twobuyer.ClientB
 import twobuyer.Seller
@@ -19,7 +16,7 @@ fun twoBuyerCallbacksChannels() {
         val chanB_Seller = SKChannel(ClientB, Seller)
         val chanA_B = SKChannel(ClientA, ClientB)
 
-        val j1 = launch {
+        launch {
             // Seller
             TwoBuyerSellerCallbacksEndpoint(twoBuyerSellerCallbacks()).use { e ->
                 e.connect(ClientA, chanA_Seller)
@@ -28,7 +25,7 @@ fun twoBuyerCallbacksChannels() {
                 e.start()
             }
         }
-        val j2 = launch {
+        launch {
             // Client A
             TwoBuyerClientACallbacksEndpoint(twoBuyerClientACallbacks()).use { e ->
                 e.connect(ClientB, chanA_B)
@@ -37,7 +34,7 @@ fun twoBuyerCallbacksChannels() {
                 e.start()
             }
         }
-        val j3 = launch {
+        launch {
             // Client B
             TwoBuyerClientBCallbacksEndpoint(twoBuyerClientBCallbacks()).use { e ->
                 e.connect(ClientA, chanA_B)
@@ -46,15 +43,12 @@ fun twoBuyerCallbacksChannels() {
                 e.start()
             }
         }
-        j1.join()
-        j2.join()
-        j3.join()
     }
 }
 
 fun twoBuyerCallbacksSockets(serverSocket: SKServerSocket, clientBSocket: SKServerSocket) {
     runBlocking {
-        val j1 = launch {
+        launch {
             // Seller
             TwoBuyerSellerCallbacksEndpoint(twoBuyerSellerCallbacks()).use { e ->
                 e.accept(ClientA, serverSocket)
@@ -63,7 +57,7 @@ fun twoBuyerCallbacksSockets(serverSocket: SKServerSocket, clientBSocket: SKServ
                 e.start()
             }
         }
-        val j2 = launch {
+        launch {
             // Client A
             TwoBuyerClientACallbacksEndpoint(twoBuyerClientACallbacks()).use { e ->
                 e.request(Seller, "localhost", serverSocket.port)
@@ -72,7 +66,7 @@ fun twoBuyerCallbacksSockets(serverSocket: SKServerSocket, clientBSocket: SKServ
                 e.start()
             }
         }
-        val j3 = launch {
+        launch {
             // Client B
             TwoBuyerClientBCallbacksEndpoint(twoBuyerClientBCallbacks()).use { e ->
                 e.request(Seller, "localhost", serverSocket.port)
@@ -81,9 +75,6 @@ fun twoBuyerCallbacksSockets(serverSocket: SKServerSocket, clientBSocket: SKServ
                 e.start()
             }
         }
-        j1.join()
-        j2.join()
-        j3.join()
     }
 }
 
@@ -113,7 +104,7 @@ fun twoBuyerClientBCallbacks(): TwoBuyerClientBCallbacks {
         override fun receivePriceFromSeller(v: Int) {}
         override fun receiveQuitFromSeller(v: Unit) {}
         override fun receiveaShareFromClientA(v: Int) {}
-        override fun onChoice5() = Choice5.Choice5_Address
+        override fun onChoice3() = Choice3.Choice3_Address
         override fun sendAddressToSeller() = ""
         override fun sendRejectToSeller() {}
         override fun receiveDateFromSeller(v: Date) {

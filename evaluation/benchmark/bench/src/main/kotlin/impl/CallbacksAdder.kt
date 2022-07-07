@@ -1,16 +1,12 @@
-package app.impl
+package impl
 
 import adder.Client
 import adder.Server
 import adder.callbacks.*
 import com.github.d_costa.sessionkotlin.backend.channel.SKChannel
-import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKServerSocket
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import impl.adderIterations
 
 
 fun adderCallbacksChannels() {
@@ -18,45 +14,39 @@ fun adderCallbacksChannels() {
 
     runBlocking {
 
-        val job1 = launch {
+        launch {
             // Client
             AdderClientCallbacksEndpoint(adderClientCallbacks()).use { e ->
                 e.connect(Server, chan)
                 e.start()
             }
         }
-        val job2 = launch {
+        launch {
             // Server
             AdderServerCallbacksEndpoint(adderServerCallbacks()).use { e ->
                 e.connect(Client, chan)
                 e.start()
             }
         }
-        job1.join()
-        job2.join()
     }
 }
 
 fun adderCallbacksSockets(serverSocket: SKServerSocket) {
     runBlocking {
-        val portChan = Channel<Int>()
-
-        val job1 = launch {
+        launch {
             // Client
             AdderClientCallbacksEndpoint(adderClientCallbacks()).use { e ->
                 e.request(Server, "localhost", serverSocket.port)
                 e.start()
             }
         }
-        val job2 = launch {
+        launch {
             // Server
             AdderServerCallbacksEndpoint(adderServerCallbacks()).use { e ->
                 e.accept(Client, serverSocket)
                 e.start()
             }
         }
-        job1.join()
-        job2.join()
     }
 }
 

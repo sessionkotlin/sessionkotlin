@@ -6,6 +6,6 @@ const val channelsKey = "channels"
 const val socketsKey = "sockets"
 const val adderProtocol = "adder"
 const val twoBuyerProtocol = "twobuyer"
-const val twoBuyerIterations = 1
-const val adderIterations = 1
+const val twoBuyerIterations = 1000
+const val adderIterations = 1000
 
