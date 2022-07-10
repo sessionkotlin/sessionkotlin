@@ -15,7 +15,7 @@ fun main() {
             branch {
                 // Service ready
                 send<C220>(server, client, Code.C220)
-                ehlo()
+                ehlo(tls)()
             }
             branch {
                 // Transaction failed
@@ -26,7 +26,7 @@ fun main() {
 }
 
 
-private val ehlo: GlobalProtocol = {
+private fun ehlo(continuation: GlobalProtocol): GlobalProtocol = {
     lateinit var tEhlo: RecursionTag
 
     choice(client) {
@@ -45,12 +45,80 @@ private val ehlo: GlobalProtocol = {
                 }
                 branch {
                     send<C250>(server, client, Code.C250)
-                    mail()
+                    continuation()
                 }
             }
         }
         branch {
             clientQuit()
+        }
+    }
+}
+
+/**
+ * https://datatracker.ietf.org/doc/html/rfc3207
+ */
+private val tls: GlobalProtocol = {
+    choice(client) {
+        branch {
+            send<StartTLS>(client, server, Code.TLS)
+            send<C220>(server, client, Code.C220)
+            // Do TLS handshake
+
+            // Secure ehlo
+            ehlo(auth)()
+        }
+        branch {
+            clientQuit()
+        }
+    }
+}
+
+/**
+ * https://datatracker.ietf.org/doc/html/rfc4954
+ */
+private val auth: GlobalProtocol = {
+    choice(client) {
+        branch {
+            send<AuthLogin>(client, server, Code.Auth)
+            send<C334>(server, client)
+            send<AuthUsername>(client, server)
+            send<C334>(server, client)
+            send<AuthPassword>(client, server)
+
+            choice(server) {
+                branch {
+                    // Authentication Succeeded
+                    send<C235>(server, client, Code.C235)
+                    mail()
+                }
+                branch {
+                    val t = mu()
+                    // Authentication credentials invalid
+                    choice(server) {
+                        branch {
+                            send<C535>(server, client, Code.C535)
+                        }
+                        branch {
+                            send<C535Hyphen>(server, client, Code.C535Hyphen)
+                            goto(t)
+                        }
+                    }
+
+                }
+                branch {
+                    // Encryption required for requested authentication mechanism
+                    send<C538>(server, client, Code.C538)
+                }
+                branch {
+                    // Requested authentication method is invalid
+                    send<C504>(server, client, Code.C504)
+                }
+                branch {
+                    // TODO
+                    send<C501>(server, client, Code.C501)
+                }
+            }
         }
     }
 }
@@ -68,6 +136,10 @@ private val mail: GlobalProtocol = {
             // Requested action not taken: mailbox name not allowed (e.g.,
             // mailbox syntax incorrect)
             send<C553>(server, client, Code.C553)
+        }
+        branch {
+            // TODO
+            send<C530>(server, client, Code.C530)
         }
     }
 }

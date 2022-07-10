@@ -3,12 +3,10 @@ package backend
 import com.github.d_costa.sessionkotlin.api.SKGenRole
 import com.github.d_costa.sessionkotlin.backend.channel.BinaryConnectionException
 import com.github.d_costa.sessionkotlin.backend.channel.SKChannel
-import com.github.d_costa.sessionkotlin.backend.endpoint.AlreadyConnectedException
-import com.github.d_costa.sessionkotlin.backend.endpoint.NotConnectedException
-import com.github.d_costa.sessionkotlin.backend.endpoint.ReadClosedConnectionException
-import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
+import com.github.d_costa.sessionkotlin.backend.endpoint.*
 import com.github.d_costa.sessionkotlin.backend.message.SKDummyMessage
 import com.github.d_costa.sessionkotlin.backend.message.SKMessage
+import com.github.d_costa.sessionkotlin.backend.tls.TLSSocketWrapper
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -372,6 +370,83 @@ class SocketsTest {
                     for (p in msgs) {
                         endpoint.send(A, p)
                     }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `test wrapper on channels`() {
+        assertFailsWith<WrapperException> {
+            val chan = SKChannel()
+
+            runBlocking {
+                launch {
+                    SKMPEndpoint().use { endpoint ->
+                        endpoint.connect(B, chan)
+                        endpoint.wrap(B, TLSSocketWrapper(ConnectionEnd.Client))
+                        endpoint.send(B, SKMessage("b1", ""))
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `test tls wrapper`() {
+        val chan = Channel<Int>()
+        val msg = SKMessage("b1", "")
+        runBlocking {
+            launch {
+                SKMPEndpoint().use { endpoint ->
+                    val s = SKMPEndpoint.bind()
+                    chan.send(s.port)
+                    endpoint.accept(B, s)
+
+                    endpoint.wrap(B, TLSSocketWrapper(ConnectionEnd.Server))
+
+                    endpoint.send(B, msg)
+                }
+            }
+            launch {
+                SKMPEndpoint().use { endpoint ->
+
+                    endpoint.request(A, "localhost", chan.receive())
+
+                    endpoint.wrap(A, TLSSocketWrapper(ConnectionEnd.Client))
+
+                    assertEquals(msg, endpoint.receive(A))
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `test tls nested wrappers`() {
+        val chan = Channel<Int>()
+        val msg = SKMessage("b1", "")
+        runBlocking {
+            launch {
+                SKMPEndpoint().use { endpoint ->
+                    val s = SKMPEndpoint.bind()
+                    chan.send(s.port)
+                    endpoint.accept(B, s)
+
+                    endpoint.wrap(B, TLSSocketWrapper(ConnectionEnd.Server))
+                    endpoint.wrap(B, TLSSocketWrapper(ConnectionEnd.Client))
+
+                    endpoint.send(B, msg)
+                }
+            }
+            launch {
+                SKMPEndpoint().use { endpoint ->
+
+                    endpoint.request(A, "localhost", chan.receive())
+
+                    endpoint.wrap(A, TLSSocketWrapper(ConnectionEnd.Client))
+                    endpoint.wrap(A, TLSSocketWrapper(ConnectionEnd.Server))
+
+                    assertEquals(msg, endpoint.receive(A))
                 }
             }
         }

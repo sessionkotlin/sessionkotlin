@@ -1,5 +1,7 @@
 import com.github.d_costa.sessionkotlin.backend.SKBuffer
+import com.github.d_costa.sessionkotlin.backend.endpoint.ConnectionEnd
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
+import com.github.d_costa.sessionkotlin.backend.tls.TLSSocketWrapper
 import messages.*
 import smtp.Server
 import smtp.fluent.*
@@ -18,6 +20,7 @@ val port = (props["port"] as String).toInt()
 val domain = props["domain"] as String
 val sender = props["sender"] as String
 val recipient = props["recipient"] as String
+val password = props["password"] as String
 
 val mailBody = listOf(
     "Hello world,",
@@ -43,90 +46,151 @@ suspend fun main() {
                 when (b1) {
                     is SMTPClient1_220Interface -> b1
                         .receive220FromServer(SKBuffer())
-                        .let { doEhlo(it) }
+                        .let { doEhlo(e, it) }
                     is SMTPClient1_554Interface -> b1.receive554FromServer(SKBuffer())
                 }
             }
     }
 }
 
-suspend fun doEhlo(s3: SMTPClient3Interface) {
-    s3.sendehloToServer(Ehlo(domain))
+suspend fun doEhlo(e: SKMPEndpoint, s: SMTPClient2Interface) {
+    s.sendEhloToServer(Ehlo(domain))
         .let {
-            when (val b5 = it.branch()) {
-                is `SMTPClient5_250-Interface` -> {
-                    read250HLines(b5.`receive250-FromServer`(SKBuffer()))
-                }
-                is SMTPClient5_250Interface -> {
-                    doMail(b5.receive250FromServer(SKBuffer()))
+            var s3Branch: SMTPClient3Branch = it.branch()
+
+            while (true) {
+                s3Branch = when (s3Branch) {
+                    is `SMTPClient3_250-Interface` -> {
+                        s3Branch.`receive250-FromServer`(SKBuffer()).branch()
+                    }
+                    is SMTPClient3_250Interface -> {
+                        doTLS(e, s3Branch.receive250FromServer(SKBuffer()))
+                        break
+                    }
                 }
             }
         }
 }
 
-suspend fun read250HLines(smtpClient8Interface: SMTPClient8Interface) {
-    var b = smtpClient8Interface
-    do {
-        when (val b8 = b.branch()) {
-            is `SMTPClient8_250-Interface` -> b = b8.`receive250-FromServer`(SKBuffer())
-            is SMTPClient8_250Interface -> {
-                doMail(b8.receive250FromServer(SKBuffer()))
-                break
-            }
-        }
-    } while (true)
+suspend fun doTLS(e: SKMPEndpoint, s: SMTPClient4Interface) {
+    val s6 = s.sendStartTLSToServer(StartTLS())
+        .receive220FromServer { }
+
+    e.wrap(Server, TLSSocketWrapper(ConnectionEnd.Client))
+
+    doSecureEhlo(s6)
 }
 
-suspend fun doMail(b10: SMTPClient10Interface) {
-    val b11 = b10.sendmailToServer(Mail(sender))
+
+suspend fun doSecureEhlo(s: SMTPClient6Interface) {
+    s.sendEhloToServer(Ehlo(domain))
+        .let {
+            var s7Branch: SMTPClient7Branch = it.branch()
+
+            while (true) {
+                s7Branch = when (s7Branch) {
+                    is `SMTPClient7_250-Interface` -> {
+                        s7Branch.`receive250-FromServer`(SKBuffer()).branch()
+                    }
+                    is SMTPClient7_250Interface -> {
+                        doAuth(s7Branch.receive250FromServer(SKBuffer()))
+                        break
+                    }
+                }
+            }
+        }
+}
+
+suspend fun doAuth(s: SMTPClient8Interface) {
+    var b = s.sendAuthToServer(AuthLogin())
+        .receiveFromServer { }
+        .sendToServer(AuthUsername(sender))
+        .receiveFromServer { }
+        .sendToServer(AuthPassword(password))
         .branch()
-    when (b11) {
-        is SMTPClient11_553Interface -> b11.receive553FromServer(SKBuffer())
-        is SMTPClient11_250Interface -> b11.receive250FromServer(SKBuffer())
-            .sendrcptToServer(RCPT(recipient))
+
+
+    when (b) {
+        is SMTPClient13_535Interface -> b.receive535FromServer { }
+        is SMTPClient13_538Interface -> b.receive538FromServer { }
+        is SMTPClient13_235Interface -> doMail(b.receive235FromServer { })
+        is SMTPClient13_504Interface -> b.receive504FromServer { }
+        is SMTPClient13_501Interface -> b.receive501FromServer { }
+        is `SMTPClient13_535-Interface` -> consume535(b.`receive535-FromServer` { })
+    }
+
+
+}
+
+suspend fun consume535(s: SMTPClient26Interface) {
+    var b = s.branch()
+
+    do {
+        var done = true
+        when(b) {
+            is `SMTPClient26_535-Interface` -> {
+                b = b.`receive535-FromServer` { }.branch()
+                done = false
+            }
+            is SMTPClient26_535Interface -> b.receive535FromServer { }
+        }
+    } while (!done)
+}
+
+
+suspend fun doMail(s: SMTPClient14Interface) {
+    val s9 = s.sendMailToServer(Mail(sender))
+        .branch()
+    when (s9) {
+        is SMTPClient15_530Interface -> s9.receive530FromServer { }
+        is SMTPClient15_553Interface -> s9.receive553FromServer { }
+        is SMTPClient15_250Interface -> s9.receive250FromServer { }
+            .sendRcptToServer(RCPT(recipient))
             .branch()
             .let {
                 when (it) {
-                    is SMTPClient16_550Interface -> it.receive550FromServer(SKBuffer())
-                    is `SMTPClient16_550-Interface` -> consumeRCPT550(it)
-                    is SMTPClient16_250Interface -> it.receive250FromServer(SKBuffer())
-                        .senddataToServer(Data())
-                        .receive354FromServer(SKBuffer())
+                    is SMTPClient17_550Interface -> it.receive550FromServer { }
+                    is `SMTPClient17_550-Interface` -> consumeRCPT550(it)
+                    is SMTPClient17_250Interface -> it.receive250FromServer { }
+                        .sendDataToServer(Data())
+                        .receive354FromServer { }
                         .sendToServer(MessageIdHeader(messageId()))
                         .sendToServer(FromHeader(sender))
                         .sendToServer(ToHeader(recipient))
-//                        .let { addMailBody(it) }
-//                        .senddataOverToServer(DataOver())
-//                        .branch()
-//                        .let { when(it) {
-//                            is SMTPClient34_250Interface -> it.receive250FromServer(SKBuffer())
-//                            is `SMTPClient34_550-Interface` -> consumeData550(it)
-//                            is SMTPClient34_550Interface -> it.receive550FromServer(SKBuffer())
-//                        } }
+                        .let { addMailBody(it) }
+                        .sendDataOverToServer(DataOver())
+                        .branch()
+                        .let {
+                            when (it) {
+                                is SMTPClient24_250Interface -> it.receive250FromServer { }
+                                is `SMTPClient24_550-Interface` -> consumeData550(it)
+                                is SMTPClient24_550Interface -> it.receive550FromServer { }
+                            }
+                        }
                 }
             }
     }
 }
 
-suspend fun addMailBody(b29: SMTPClient29Interface): SMTPClient32Interface {
-    var b = b29.senddataLineToServer(DataLine(mailBody.first()))
+suspend fun addMailBody(s: SMTPClient23Interface): SMTPClient23Interface {
+    var b = s.sendDataLineToServer(DataLine(mailBody.first()))
 
     for (l in mailBody.subList(1, mailBody.size)) {
-        b = b.senddataLineToServer(DataLine(l))
+        b = b.sendDataLineToServer(DataLine(l))
     }
 
     return b
 }
 
-suspend fun consumeData550(b31: `SMTPClient34_550-Interface`) {
-    b31.`receive550-FromServer`(SKBuffer())
+suspend fun consumeData550(s: `SMTPClient24_550-Interface`) {
+    s.`receive550-FromServer` { }
         .let {
             var b = it.branch()
             do {
                 when (b) {
-                    is `SMTPClient39_550-Interface` -> b = b.`receive550-FromServer`(SKBuffer()).branch()
-                    is SMTPClient39_550Interface -> {
-                        b.receive550FromServer(SKBuffer())
+                    is `SMTPClient25_550-Interface` -> b = b.`receive550-FromServer` { }.branch()
+                    is SMTPClient25_550Interface -> {
+                        b.receive550FromServer { }
                         break
                     }
                 }
@@ -134,15 +198,15 @@ suspend fun consumeData550(b31: `SMTPClient34_550-Interface`) {
         }
 }
 
-suspend fun consumeRCPT550(b16: `SMTPClient16_550-Interface`) {
-    b16.`receive550-FromServer`(SKBuffer())
+suspend fun consumeRCPT550(s: `SMTPClient17_550-Interface`) {
+    s.`receive550-FromServer` { }
         .let {
             var b = it.branch()
             do {
                 when (b) {
-                    is `SMTPClient23_550-Interface` -> b = b.`receive550-FromServer`(SKBuffer()).branch()
-                    is SMTPClient23_550Interface -> {
-                        b.receive550FromServer(SKBuffer())
+                    is `SMTPClient18_550-Interface` -> b = b.`receive550-FromServer` { }.branch()
+                    is SMTPClient18_550Interface -> {
+                        b.receive550FromServer { }
                         break
                     }
                 }

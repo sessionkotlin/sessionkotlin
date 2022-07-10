@@ -6,9 +6,7 @@ import java.nio.charset.Charset
 import java.util.*
 fun ByteArray.toHex(): String = joinToString(separator = "") { eachByte -> "%02x".format(eachByte) }
 class SMTPMsgFormatter : SKMessageFormatter {
-    companion object {
-        val charset = Charsets.UTF_8
-    }
+
 
     override fun fromBytes(b: ByteBuffer): Optional<SKMessage> {
 
@@ -18,13 +16,11 @@ class SMTPMsgFormatter : SKMessageFormatter {
         }
 
         // Extract 4 first bytes
-        val head = String(Arrays.copyOfRange(b.array(), b.position(), b.position() + 4), charset)
+        val head = String(Arrays.copyOfRange(b.array(), b.position(), b.position() + 4), SMTPMessage.charset)
         // Update position
         b.position(b.position() + 4)
 
         if (!validSMTPCode(head)) {
-            println(b.position())
-            println(b.array().toHex())
             throw InvalidSMTPCode(head)
         }
 
@@ -33,9 +29,19 @@ class SMTPMsgFormatter : SKMessageFormatter {
         val msg = when (head.trim()) {
             Code.C220 -> C220(body)
             Code.C221 -> C221(body)
+            Code.C235 -> C235(body)
             Code.C250 -> C250(body)
             Code.C250Hyphen -> C250Hyphen(body)
+
+            Code.C334 -> C334(body.decodeBase64())
             Code.C354 -> C354(body)
+
+            Code.C501 -> C501(body)
+            Code.C530 -> C530(body)
+            Code.C535 -> C535(body)
+            Code.C535Hyphen -> C535Hyphen(body)
+            Code.C538 -> C538(body)
+            Code.C504 -> C504(body)
             Code.C550 -> C550(body)
             Code.C550Hyphen -> C550Hyphen(body)
             Code.C554 -> C554(body)
@@ -91,6 +97,6 @@ class SMTPMsgFormatter : SKMessageFormatter {
     private fun serialize(msg: SMTPMessage): ByteArray {
         val termination = "${SMTPMessage.CR}${SMTPMessage.LF}"
         val content = listOf(msg.code, msg.body).joinToString(" ").trim()
-        return ("$content$termination").toByteArray(charset)
+        return ("$content$termination").toByteArray(SMTPMessage.charset)
     }
 }

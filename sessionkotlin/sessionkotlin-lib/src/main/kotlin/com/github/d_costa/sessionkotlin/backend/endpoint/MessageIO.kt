@@ -6,7 +6,7 @@ import java.io.Closeable
 /**
  * An endpoint with read and write operations.
  */
-internal interface SKConnection : Closeable {
+internal interface MessageIO : Closeable {
     /**
      * @throws [kotlinx.coroutines.channels.ClosedReceiveChannelException] when closed to receive.
      */

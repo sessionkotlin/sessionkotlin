@@ -2,11 +2,11 @@ package com.github.d_costa.sessionkotlin.backend.endpoint
 
 import com.github.d_costa.sessionkotlin.api.SKGenRole
 import com.github.d_costa.sessionkotlin.backend.channel.SKChannel
-import com.github.d_costa.sessionkotlin.backend.channel.SKChannelConnection
+import com.github.d_costa.sessionkotlin.backend.channel.SKChannelMessageIO
 import com.github.d_costa.sessionkotlin.backend.message.ObjectFormatter
 import com.github.d_costa.sessionkotlin.backend.message.SKMessage
 import com.github.d_costa.sessionkotlin.backend.message.SKMessageFormatter
-import com.github.d_costa.sessionkotlin.backend.socket.SKSocketConnection
+import com.github.d_costa.sessionkotlin.backend.socket.SKSocketMessageIO
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
 import io.ktor.util.network.*
@@ -32,7 +32,7 @@ public open class SKMPEndpoint(
     /**
      * Maps generated roles to the individual endpoint that must be used for communication.
      */
-    private val connections = mutableMapOf<SKGenRole, SKConnection>()
+    private val connections = mutableMapOf<SKGenRole, MessageIO>()
 
     /**
      * Map of ports that are bound and the corresponding server socket
@@ -42,7 +42,8 @@ public open class SKMPEndpoint(
     private val logger = KotlinLogging.logger(this::class.simpleName!!)
 
     public companion object {
-        internal const val defaultBufferSize = 16_384
+//        internal const val defaultBufferSize = 16_384
+        internal const val defaultBufferSize = 32_768
 
         /**
          * Service that manages NIO selectors and selection threads.
@@ -140,7 +141,7 @@ public open class SKMPEndpoint(
         val socket = aSocket(selectorManager)
             .tcp()
             .connect(hostname, port)
-        connections[role] = SKSocketConnection(socket, msgFormatter, bufferSize)
+        connections[role] = SKSocketMessageIO(socket, msgFormatter, bufferSize)
     }
 
     /**
@@ -158,7 +159,7 @@ public open class SKMPEndpoint(
             .also { serverSockets[port] = it }
 
         val socket = serverSocket.accept()
-        connections[role] = SKSocketConnection(socket, msgFormatter, bufferSize)
+        connections[role] = SKSocketMessageIO(socket, msgFormatter, bufferSize)
 
         return serverSocket.localAddress.toJavaAddress().port
     }
@@ -173,7 +174,7 @@ public open class SKMPEndpoint(
             throw AlreadyConnectedException(role)
         }
         val socket = serverSocket.ss.accept()
-        connections[role] = SKSocketConnection(socket, msgFormatter, bufferSize)
+        connections[role] = SKSocketMessageIO(socket, msgFormatter, bufferSize)
     }
 
     /**
@@ -183,6 +184,16 @@ public open class SKMPEndpoint(
         if (role in connections) {
             throw AlreadyConnectedException(role)
         }
-        connections[role] = SKChannelConnection(chan.getEndpoints(role))
+        connections[role] = SKChannelMessageIO(chan.getEndpoints(role))
+    }
+
+    public suspend fun wrap(role: SKGenRole, wrapper: SocketWrapper) {
+        val ch = connections[role] ?: throw NotConnectedException(role)
+
+        if (ch !is SKSocketMessageIO) {
+            throw WrapperException()
+        }
+
+        ch.wrapSocket(wrapper)
     }
 }

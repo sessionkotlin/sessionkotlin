@@ -1,10 +1,10 @@
 package com.github.d_costa.sessionkotlin.backend.socket
 
-import com.github.d_costa.sessionkotlin.backend.endpoint.SKConnection
+import com.github.d_costa.sessionkotlin.backend.endpoint.MessageIO
+import com.github.d_costa.sessionkotlin.backend.endpoint.SocketWrapper
 import com.github.d_costa.sessionkotlin.backend.message.SKMessage
 import com.github.d_costa.sessionkotlin.backend.message.SKMessageFormatter
 import io.ktor.network.sockets.*
-import io.ktor.utils.io.*
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import mu.KotlinLogging
 import java.nio.ByteBuffer
@@ -12,11 +12,13 @@ import java.nio.ByteBuffer
 /**
  * Endpoint implementation with sockets.
  */
-internal class SKSocketConnection(
-    private var s: Socket,
+internal class SKSocketMessageIO(
+    internal var s: Socket,
     private val objFormatter: SKMessageFormatter,
-    bufferSize: Int,
-) : SKConnection {
+    private val bufferSize: Int,
+) : MessageIO {
+
+    private val buffer = ByteBuffer.allocate(bufferSize)
 
     /**
      * As messages are often very small, we must flush after every send or else
@@ -24,12 +26,13 @@ internal class SKSocketConnection(
      */
     private val outputStream = s.openWriteChannel(autoFlush = true)
     private val inputStream = s.openReadChannel()
-    private val buffer = ByteBuffer.allocate(bufferSize)
-    private val queue = mutableListOf<SKMessage>()
+    internal var socketIO: SocketIO = SocketStreamWrapper(inputStream, outputStream, bufferSize)
+
+    internal val queue = mutableListOf<SKMessage>()
     private val logger = KotlinLogging.logger {}
 
     override fun close() {
-        outputStream.close()
+        socketIO.close()
         s.close()
     }
 
@@ -37,12 +40,8 @@ internal class SKSocketConnection(
         return if (queue.isNotEmpty()) {
             queue.removeFirst()
         } else {
-            inputStream.read(0) {
-                if (buffer.remaining() < it.remaining()) {
-                    logger.error { "Allocated buffer is too small: ${buffer.remaining()}. Needs to be at least ${it.remaining()}, but ${it.capacity()} is recommended." }
-                }
-                buffer.put(it)
-            }
+            socketIO.readBytes(buffer)
+
             buffer.flip()
 
             if (!buffer.hasRemaining()) {
@@ -63,6 +62,12 @@ internal class SKSocketConnection(
 
     override suspend fun writeMsg(msg: SKMessage) {
         val msgBytes = objFormatter.toBytes(msg)
-        outputStream.writeFully(msgBytes)
+        socketIO.writeBytes(ByteBuffer.wrap(msgBytes))
+    }
+
+    suspend fun wrapSocket(wrapper: SocketWrapper) {
+        wrapper.init(socketIO, bufferSize)
+        wrapper.handshake()
+        socketIO = wrapper
     }
 }
