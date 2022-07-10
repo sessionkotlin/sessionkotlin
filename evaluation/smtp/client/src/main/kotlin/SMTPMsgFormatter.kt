@@ -4,7 +4,7 @@ import messages.*
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
 import java.util.*
-fun ByteArray.toHex(): String = joinToString(separator = "") { eachByte -> "%02x".format(eachByte) }
+
 class SMTPMsgFormatter : SKMessageFormatter {
 
 

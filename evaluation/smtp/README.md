@@ -42,7 +42,7 @@ For gmail, check out this
 Either the sender/password combination is incorrect or the SMTP server
 refuses to authenticate the client.
 
-For example, Gmail will respond with 535 when attempting to login with the account's password
+For example, Gmail will respond with 535 when attempting to log in with the account's password
 and the account does not have two-factor activated.
 
 To fix this, enable 2FA and create

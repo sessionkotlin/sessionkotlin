@@ -12,6 +12,8 @@ import java.util.*
 
 val props = Properties()
 val envFile = File("mail.env")
+
+@Suppress("unused")
 val d = props.load(java.io.FileInputStream(envFile))
 
 val host = props["host"] as String
@@ -103,7 +105,7 @@ suspend fun doSecureEhlo(s: SMTPClient6Interface) {
 }
 
 suspend fun doAuth(s: SMTPClient8Interface) {
-    var b = s.sendAuthToServer(AuthLogin())
+    val b = s.sendAuthToServer(AuthLogin())
         .receiveFromServer { }
         .sendToServer(AuthUsername(sender))
         .receiveFromServer { }
@@ -165,11 +167,11 @@ suspend fun doMail(s: SMTPClient14Interface) {
         is SMTPClient15_250Interface -> s9.receive250FromServer { }
             .sendRcptToServer(RCPT(recipient))
             .branch()
-            .let {
-                when (it) {
-                    is SMTPClient17_550Interface -> it.receive550FromServer { }
-                    is `SMTPClient17_550-Interface` -> consumeRCPT550(it)
-                    is SMTPClient17_250Interface -> it.receive250FromServer { }
+            .let {rcptBranch ->
+                when (rcptBranch) {
+                    is SMTPClient17_550Interface -> rcptBranch.receive550FromServer { }
+                    is `SMTPClient17_550-Interface` -> consumeRCPT550(rcptBranch)
+                    is SMTPClient17_250Interface -> rcptBranch.receive250FromServer { }
                         .sendDataToServer(Data())
                         .receive354FromServer { }
                         .sendToServer(MessageIdHeader(messageId()))
