@@ -14,6 +14,8 @@ class Code {
         const val C501 = "501"
         const val C504 = "504"
         const val C530 = "530"
+        const val C534 = "534"
+        const val C534Hyphen = "534-"
         const val C535 = "535"
         const val C535Hyphen = "535-"
         const val C538 = "538"

@@ -13,7 +13,7 @@ class MessageIdHeader(id: String): SMTPMessage("","message-id:<$id>")
 class FromHeader(id: String): SMTPMessage("","from:<$id>")
 class ToHeader(id: String): SMTPMessage("","to:<$id>")
 class StartTLS: SMTPMessage(Code.TLS)
-class AuthLogin: SMTPMessage(Code.Auth, "LOGIN")
+class AuthLogin: SMTPMessage("${Code.Auth} LOGIN")
 class AuthUsername(username: String): SMTPMessage("", username.encodeBase64())
 class AuthPassword(password: String): SMTPMessage("", password.encodeBase64())
 

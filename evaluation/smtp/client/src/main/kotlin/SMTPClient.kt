@@ -87,6 +87,7 @@ suspend fun doSecureEhlo(s: SMTPClient6Interface) {
         .let {
             var s7Branch: SMTPClient7Branch = it.branch()
 
+            // Server will send a 250 message with the supported Auth methods
             while (true) {
                 s7Branch = when (s7Branch) {
                     is `SMTPClient7_250-Interface` -> {
@@ -117,9 +118,26 @@ suspend fun doAuth(s: SMTPClient8Interface) {
         is SMTPClient13_504Interface -> b.receive504FromServer { }
         is SMTPClient13_501Interface -> b.receive501FromServer { }
         is `SMTPClient13_535-Interface` -> consume535(b.`receive535-FromServer` { })
+        is `SMTPClient13_534-Interface` -> consume534(b.`receive534-FromServer` { })
+        is SMTPClient13_534Interface -> b.receive534FromServer { }
     }
 
 
+}
+
+suspend fun consume534(s: SMTPClient27Interface) {
+    var b = s.branch()
+
+    do {
+        var done = true
+        when(b) {
+            is `SMTPClient27_534-Interface` -> {
+                b = b.`receive534-FromServer` { }.branch()
+                done = false
+            }
+            is SMTPClient27_534Interface -> b.receive534FromServer { }
+        }
+    } while (!done)
 }
 
 suspend fun consume535(s: SMTPClient26Interface) {

@@ -93,8 +93,8 @@ private val auth: GlobalProtocol = {
                     mail()
                 }
                 branch {
+                    // Authentication unsuccessful
                     val t = mu()
-                    // Authentication credentials invalid
                     choice(server) {
                         branch {
                             send<C535>(server, client, Code.C535)
@@ -107,6 +107,19 @@ private val auth: GlobalProtocol = {
 
                 }
                 branch {
+                    // Application-specific password required
+                    val t = mu()
+                    choice(server) {
+                        branch {
+                            send<C534>(server, client, Code.C534)
+                        }
+                        branch {
+                            send<C534Hyphen>(server, client, Code.C534Hyphen)
+                            goto(t)
+                        }
+                    }
+                }
+                branch {
                     // Encryption required for requested authentication mechanism
                     send<C538>(server, client, Code.C538)
                 }
@@ -115,7 +128,7 @@ private val auth: GlobalProtocol = {
                     send<C504>(server, client, Code.C504)
                 }
                 branch {
-                    // TODO
+                    // Invalid arguments
                     send<C501>(server, client, Code.C501)
                 }
             }
