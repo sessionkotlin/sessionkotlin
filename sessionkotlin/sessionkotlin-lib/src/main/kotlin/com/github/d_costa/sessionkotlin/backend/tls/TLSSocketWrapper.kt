@@ -3,7 +3,9 @@ package com.github.d_costa.sessionkotlin.backend.tls
 import com.github.d_costa.sessionkotlin.backend.endpoint.ConnectionEnd
 import com.github.d_costa.sessionkotlin.backend.endpoint.SocketWrapper
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import mu.KotlinLogging
 import java.nio.ByteBuffer
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLEngine
@@ -14,17 +16,30 @@ import javax.net.ssl.SSLEngineResult.Status
  *  https://docs.oracle.com/javase/8/docs/technotes/guides/security/jsse/JSSERefGuide.html#SSLEngine
  *
  */
-public class TLSSocketWrapper(private val connectionEnd: ConnectionEnd) : SocketWrapper() {
+public class TLSSocketWrapper(
+    private val connectionEnd: ConnectionEnd,
+    private val debug: Boolean = false,
+) : SocketWrapper() {
 
     private val sslEngine: SSLEngine
 
-//    private var appData: ByteBuffer
+    /**
+     * Encoded outbound data
+     */
     private var netData: ByteBuffer
 
+    /**
+     * Decoded inbound data
+     */
     private var peerAppData: ByteBuffer
+
+    /**
+     * Encoded inbound data
+     */
     private var peerNetData: ByteBuffer
 
-    private val EMPTY_BYTE_BUFFER = ByteBuffer.allocate(0)
+    private val emptyByteBuffer = ByteBuffer.allocate(0)
+    private val logger = KotlinLogging.logger(this::class.simpleName!!)
 
     init {
         val sslContext = SSLContext.getInstance("TLSv1.2")
@@ -32,10 +47,7 @@ public class TLSSocketWrapper(private val connectionEnd: ConnectionEnd) : Socket
         sslEngine = sslContext.createSSLEngine()
 
         val session = sslEngine.session
-
-//        appData = ByteBuffer.allocate(session.applicationBufferSize)
         netData = ByteBuffer.allocate(session.packetBufferSize)
-
         peerAppData = ByteBuffer.allocate(session.applicationBufferSize)
         peerNetData = ByteBuffer.allocate(session.packetBufferSize)
     }
@@ -49,7 +61,6 @@ public class TLSSocketWrapper(private val connectionEnd: ConnectionEnd) : Socket
             Status.OK -> {
             }
             else -> {
-                println(result.status)
                 TODO()
             }
         }
@@ -69,7 +80,6 @@ public class TLSSocketWrapper(private val connectionEnd: ConnectionEnd) : Socket
 //                wrappedBytes.compact()
                 }
                 else -> {
-                    println(result.status)
                     TODO()
                 }
             }
@@ -116,17 +126,14 @@ public class TLSSocketWrapper(private val connectionEnd: ConnectionEnd) : Socket
 
                         handshakeStatus = result.handshakeStatus
 
-//                        println("Need unwrap $counter, $result")
-
                         when (result.status) {
                             Status.OK -> {}
                             Status.BUFFER_UNDERFLOW -> {
+                                // Need more source bytes
                                 socketIO.readBytes(peerNetData)
-//                                println("underflow")
                                 done = false
                             }
                             else -> {
-                                println(result.status)
                                 TODO()
                             }
                         }
@@ -138,11 +145,9 @@ public class TLSSocketWrapper(private val connectionEnd: ConnectionEnd) : Socket
 
                     // Generate handshaking data
                     val result = withContext(Dispatchers.IO) {
-                        sslEngine.wrap(EMPTY_BYTE_BUFFER, netData)
+                        sslEngine.wrap(emptyByteBuffer, netData)
                     }
                     handshakeStatus = result.handshakeStatus
-
-//                    println("Need wrap $counter, $result")
 
                     when (result.status) {
                         Status.OK -> {
@@ -155,7 +160,6 @@ public class TLSSocketWrapper(private val connectionEnd: ConnectionEnd) : Socket
                             netData.compact()
                         }
                         else -> {
-                            println(result.status)
                             TODO()
                         }
                     }
@@ -163,19 +167,53 @@ public class TLSSocketWrapper(private val connectionEnd: ConnectionEnd) : Socket
 
                 HandshakeStatus.NEED_TASK -> {
                     // Handle blocking tasks
-//                    println("Need task $counter")
-
                     sslEngine.delegatedTask.run()
                     handshakeStatus = sslEngine.handshakeStatus
-//                    println("Need task $counter over")
                 }
 
                 else -> {
-                    println(handshakeStatus)
                     TODO()
                 }
             }
         }
-        println(sslEngine.session)
+        if (debug) {
+            logger.info { "$connectionEnd: TLS Handshake complete" }
+            logger.info { "$connectionEnd: Protocol: ${sslEngine.session.protocol}" }
+            logger.info { "$connectionEnd: CipherSuite: ${sslEngine.session.cipherSuite}" }
+        }
+    }
+
+    private suspend fun shutDown() {
+        if (debug) {
+            logger.info { "$connectionEnd: Closing connection..." }
+        }
+
+        sslEngine.closeOutbound()
+
+        // Send handshake data
+        netData.clear()
+
+        while (!sslEngine.isOutboundDone) {
+            withContext(Dispatchers.IO) {
+                // flush any remaining handshake data
+                sslEngine.wrap(emptyByteBuffer, netData)
+            }
+
+            netData.flip()
+
+            while (netData.hasRemaining()) {
+                socketIO.writeBytes(netData)
+            }
+            netData.compact()
+        }
+
+        if (debug) {
+            logger.info { "$connectionEnd: Connection closed." }
+        }
+    }
+
+    override fun close() {
+        runBlocking { shutDown() }
+        super.close()
     }
 }

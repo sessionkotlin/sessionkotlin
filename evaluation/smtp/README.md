@@ -24,7 +24,11 @@
 
 > 504 Requested authentication method is invalid
 
-The SMTP server used does not support LOGIN authentication.
+The SMTP server used does not support the proposed authentication method.
+
+The server sends the supported methods while answering to the secure ehlo:
+
+`250-AUTH LOGIN PLAIN XOAUTH2 PLAIN-CLIENTTOKEN OAUTHBEARER XOAUTH`
 
 ---
 

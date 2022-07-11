@@ -4,10 +4,12 @@ import io.ktor.utils.io.*
 import mu.KotlinLogging
 import java.nio.ByteBuffer
 
+/**
+ * Wraps socket streams into a SocketIO.
+ */
 internal class SocketStreamWrapper(
     private var inputStream: ByteReadChannel,
-    private var outputStream: ByteWriteChannel,
-    bufferSize: Int,
+    private var outputStream: ByteWriteChannel
 ) : SocketIO {
     private val logger = KotlinLogging.logger {}
 

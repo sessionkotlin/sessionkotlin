@@ -151,7 +151,7 @@ private val mail: GlobalProtocol = {
             send<C553>(server, client, Code.C553)
         }
         branch {
-            // TODO
+            // Authentication required
             send<C530>(server, client, Code.C530)
         }
     }
@@ -229,6 +229,7 @@ private val bodyHeaders: GlobalProtocol = {
     send<MessageIdHeader>(client, server)
     send<FromHeader>(client, server)
     send<ToHeader>(client, server)
+    send<SubjectHeader>(client, server)
 }
 
 private val clientQuit: GlobalProtocol = {

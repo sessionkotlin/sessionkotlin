@@ -12,6 +12,7 @@ class DataOver: SMTPMessage("","$CR$LF.") // serializer adds termination
 class MessageIdHeader(id: String): SMTPMessage("","message-id:<$id>")
 class FromHeader(id: String): SMTPMessage("","from:<$id>")
 class ToHeader(id: String): SMTPMessage("","to:<$id>")
+class SubjectHeader(subject: String): SMTPMessage("","subject:$subject")
 class StartTLS: SMTPMessage(Code.TLS)
 class AuthLogin: SMTPMessage("${Code.Auth} LOGIN")
 class AuthUsername(username: String): SMTPMessage("", username.encodeBase64())

@@ -6,7 +6,6 @@ import com.github.d_costa.sessionkotlin.backend.message.SKMessage
 import com.github.d_costa.sessionkotlin.backend.message.SKMessageFormatter
 import io.ktor.network.sockets.*
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
-import mu.KotlinLogging
 import java.nio.ByteBuffer
 
 /**
@@ -26,10 +25,12 @@ internal class SKSocketMessageIO(
      */
     private val outputStream = s.openWriteChannel(autoFlush = true)
     private val inputStream = s.openReadChannel()
-    internal var socketIO: SocketIO = SocketStreamWrapper(inputStream, outputStream, bufferSize)
+    private var socketIO: SocketIO = SocketStreamWrapper(inputStream, outputStream)
 
-    internal val queue = mutableListOf<SKMessage>()
-    private val logger = KotlinLogging.logger {}
+    /**
+     * Incoming messages
+     */
+    private val queue = mutableListOf<SKMessage>()
 
     override fun close() {
         socketIO.close()

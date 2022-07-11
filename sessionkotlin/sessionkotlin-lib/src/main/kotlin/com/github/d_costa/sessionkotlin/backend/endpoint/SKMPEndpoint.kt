@@ -22,12 +22,12 @@ import mu.KotlinLogging
  *
  * @param msgFormatter (optional) the message formatter. Used to serialize and deserialize messages.
  * @param bufferSize (optional) size of the buffer, when using sockets.
- * @param logMessages (optional) if true, log sent and received message payloads. Default is false.
+ * @param debug (optional) if true, log sent and received message payloads. Default is false.
  */
 public open class SKMPEndpoint(
     private val msgFormatter: SKMessageFormatter = ObjectFormatter(),
     private val bufferSize: Int = defaultBufferSize,
-    private val logMessages: Boolean = false
+    private val debug: Boolean = false
 ) : AutoCloseable {
     /**
      * Maps generated roles to the individual endpoint that must be used for communication.
@@ -42,8 +42,7 @@ public open class SKMPEndpoint(
     private val logger = KotlinLogging.logger(this::class.simpleName!!)
 
     public companion object {
-//        internal const val defaultBufferSize = 16_384
-        internal const val defaultBufferSize = 32_768
+        internal const val defaultBufferSize = 16_384
 
         /**
          * Service that manages NIO selectors and selection threads.
@@ -97,7 +96,7 @@ public open class SKMPEndpoint(
     protected suspend fun sendProtected(role: SKGenRole, msg: SKMessage) {
         val ch = connections[role] ?: throw NotConnectedException(role)
         ch.writeMsg(msg)
-        if (logMessages) {
+        if (debug) {
             logger.info { "Sent    : ${msg.payload}" }
         }
     }
@@ -122,7 +121,7 @@ public open class SKMPEndpoint(
         try {
             val ch = connections[role] ?: throw NotConnectedException(role)
             val msg = ch.readMsg()
-            if (logMessages) {
+            if (debug) {
                 logger.info { "Received: ${msg.payload}" }
             }
             return msg

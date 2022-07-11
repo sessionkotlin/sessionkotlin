@@ -24,6 +24,7 @@ val sender = props["sender"] as String
 val recipient = props["recipient"] as String
 val password = props["password"] as String
 
+val subject = "Hello!"
 val mailBody = listOf(
     "Hello world,",
     "",
@@ -40,16 +41,16 @@ private fun messageId(): String {
 }
 
 suspend fun main() {
-    SKMPEndpoint(SMTPMsgFormatter(), logMessages = true).use { e ->
+    SKMPEndpoint(SMTPMsgFormatter(), debug = true).use { e ->
         e.request(Server, host, port)
         SMTPClient1(e)
             .branch()
             .let { b1 ->
                 when (b1) {
                     is SMTPClient1_220Interface -> b1
-                        .receive220FromServer(SKBuffer())
+                        .receive220FromServer { }
                         .let { doEhlo(e, it) }
-                    is SMTPClient1_554Interface -> b1.receive554FromServer(SKBuffer())
+                    is SMTPClient1_554Interface -> b1.receive554FromServer { }
                 }
             }
     }
@@ -63,10 +64,12 @@ suspend fun doEhlo(e: SKMPEndpoint, s: SMTPClient2Interface) {
             while (true) {
                 s3Branch = when (s3Branch) {
                     is `SMTPClient3_250-Interface` -> {
-                        s3Branch.`receive250-FromServer`(SKBuffer()).branch()
+                        s3Branch
+                            .`receive250-FromServer` { }
+                            .branch()
                     }
                     is SMTPClient3_250Interface -> {
-                        doTLS(e, s3Branch.receive250FromServer(SKBuffer()))
+                        doTLS(e, s3Branch.receive250FromServer { })
                         break
                     }
                 }
@@ -78,7 +81,7 @@ suspend fun doTLS(e: SKMPEndpoint, s: SMTPClient4Interface) {
     val s6 = s.sendStartTLSToServer(StartTLS())
         .receive220FromServer { }
 
-    e.wrap(Server, TLSSocketWrapper(ConnectionEnd.Client))
+    e.wrap(Server, TLSSocketWrapper(ConnectionEnd.Client, debug = true))
 
     doSecureEhlo(s6)
 }
@@ -93,10 +96,12 @@ suspend fun doSecureEhlo(s: SMTPClient6Interface) {
             while (true) {
                 s7Branch = when (s7Branch) {
                     is `SMTPClient7_250-Interface` -> {
-                        s7Branch.`receive250-FromServer`(SKBuffer()).branch()
+                        s7Branch
+                            .`receive250-FromServer` { }
+                            .branch()
                     }
                     is SMTPClient7_250Interface -> {
-                        doAuth(s7Branch.receive250FromServer(SKBuffer()))
+                        doAuth(s7Branch.receive250FromServer { })
                         break
                     }
                 }
@@ -127,32 +132,32 @@ suspend fun doAuth(s: SMTPClient8Interface) {
 
 }
 
-suspend fun consume534(s: SMTPClient27Interface) {
+suspend fun consume534(s: SMTPClient28Interface) {
     var b = s.branch()
 
     do {
         var done = true
         when(b) {
-            is `SMTPClient27_534-Interface` -> {
+            is `SMTPClient28_534-Interface` -> {
                 b = b.`receive534-FromServer` { }.branch()
                 done = false
             }
-            is SMTPClient27_534Interface -> b.receive534FromServer { }
+            is SMTPClient28_534Interface -> b.receive534FromServer { }
         }
     } while (!done)
 }
 
-suspend fun consume535(s: SMTPClient26Interface) {
+suspend fun consume535(s: SMTPClient27Interface) {
     var b = s.branch()
 
     do {
         var done = true
         when(b) {
-            is `SMTPClient26_535-Interface` -> {
+            is `SMTPClient27_535-Interface` -> {
                 b = b.`receive535-FromServer` { }.branch()
                 done = false
             }
-            is SMTPClient26_535Interface -> b.receive535FromServer { }
+            is SMTPClient27_535Interface -> b.receive535FromServer { }
         }
     } while (!done)
 }
@@ -177,14 +182,15 @@ suspend fun doMail(s: SMTPClient14Interface) {
                         .sendToServer(MessageIdHeader(messageId()))
                         .sendToServer(FromHeader(sender))
                         .sendToServer(ToHeader(recipient))
+                        .sendToServer(SubjectHeader(subject))
                         .let { addMailBody(it) }
                         .sendDataOverToServer(DataOver())
                         .branch()
                         .let {
                             when (it) {
-                                is SMTPClient24_250Interface -> it.receive250FromServer { }
-                                is `SMTPClient24_550-Interface` -> consumeData550(it)
-                                is SMTPClient24_550Interface -> it.receive550FromServer { }
+                                is SMTPClient25_250Interface -> it.receive250FromServer { }
+                                is `SMTPClient25_550-Interface` -> consumeData550(it)
+                                is SMTPClient25_550Interface -> it.receive550FromServer { }
                             }
                         }
                 }
@@ -192,7 +198,7 @@ suspend fun doMail(s: SMTPClient14Interface) {
     }
 }
 
-suspend fun addMailBody(s: SMTPClient23Interface): SMTPClient23Interface {
+suspend fun addMailBody(s: SMTPClient24Interface): SMTPClient24Interface {
     var b = s.sendDataLineToServer(DataLine(mailBody.first()))
 
     for (l in mailBody.subList(1, mailBody.size)) {
@@ -202,14 +208,14 @@ suspend fun addMailBody(s: SMTPClient23Interface): SMTPClient23Interface {
     return b
 }
 
-suspend fun consumeData550(s: `SMTPClient24_550-Interface`) {
+suspend fun consumeData550(s: `SMTPClient25_550-Interface`) {
     s.`receive550-FromServer` { }
         .let {
             var b = it.branch()
             do {
                 when (b) {
-                    is `SMTPClient25_550-Interface` -> b = b.`receive550-FromServer` { }.branch()
-                    is SMTPClient25_550Interface -> {
+                    is `SMTPClient26_550-Interface` -> b = b.`receive550-FromServer` { }.branch()
+                    is SMTPClient26_550Interface -> {
                         b.receive550FromServer { }
                         break
                     }
