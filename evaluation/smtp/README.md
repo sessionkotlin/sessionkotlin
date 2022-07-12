@@ -20,7 +20,7 @@
     ```
    The interactions will be logged to the console.
 
-## Notes:
+## Notes
 
 > 504 Requested authentication method is invalid
 

@@ -50,10 +50,7 @@ public abstract class SocketWrapper : SocketIO {
     }
 
     override suspend fun writeBytes(srcBuffer: ByteBuffer) {
-        val wrappedBytes = wrapBytes(srcBuffer)
-        socketIO.writeBytes(wrappedBytes)
-
-        wrappedBytes.compact()
+        socketIO.writeBytes(wrapBytes(srcBuffer))
     }
 
     override fun close() {

@@ -7,7 +7,10 @@ import com.github.d_costa.sessionkotlin.backend.endpoint.*
 import com.github.d_costa.sessionkotlin.backend.message.SKDummyMessage
 import com.github.d_costa.sessionkotlin.backend.message.SKMessage
 import com.github.d_costa.sessionkotlin.backend.tls.TLSSocketWrapper
+import com.github.d_costa.sessionkotlin.util.createKeyManagers
+import com.github.d_costa.sessionkotlin.util.createTrustManagers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
@@ -27,6 +30,14 @@ class SocketsTest {
             SKMessage("long", 10L),
             SKMessage("someFloat", 2.3)
         )
+
+        val pw = "password"
+        val trustStore = "truststore.jks"
+        val keyStore = "keystore.jks"
+        val serverKS = "server_$keyStore"
+        val serverTS = "server_$trustStore"
+        val clientKS = "client_$keyStore"
+        val clientTS = "client_$trustStore"
     }
 
     @Test
@@ -376,6 +387,29 @@ class SocketsTest {
     }
 
     @Test
+    fun `test tls handshake`() {
+        val chan = Channel<Int>()
+        runBlocking {
+            launch {
+                SKMPEndpoint(debug = true).use { endpoint ->
+                    val s = SKMPEndpoint.bind()
+                    chan.send(s.port)
+                    endpoint.accept(B, s)
+
+                    endpoint.wrap(B, genServerTLS())
+                }
+            }
+            launch {
+                SKMPEndpoint(debug = true).use { endpoint ->
+                    endpoint.request(A, "localhost", chan.receive())
+
+                    endpoint.wrap(A, genClientTLS())
+                }
+            }
+        }
+    }
+
+    @Test
     fun `test wrapper on channels`() {
         assertFailsWith<WrapperException> {
             val chan = SKChannel()
@@ -395,60 +429,45 @@ class SocketsTest {
     @Test
     fun `test tls wrapper`() {
         val chan = Channel<Int>()
-        val msg = SKMessage("b1", "")
+        val msg = SKMessage("label", "some payload")
+
         runBlocking {
             launch {
-                SKMPEndpoint().use { endpoint ->
+                SKMPEndpoint(debug = true).use { endpoint ->
                     val s = SKMPEndpoint.bind()
                     chan.send(s.port)
                     endpoint.accept(B, s)
 
-                    endpoint.wrap(B, TLSSocketWrapper(ConnectionEnd.Server))
-
+                    endpoint.wrap(B, genServerTLS())
                     endpoint.send(B, msg)
+                    assertEquals(msg, endpoint.receive(B))
                 }
             }
             launch {
-                SKMPEndpoint().use { endpoint ->
+                SKMPEndpoint(debug = true).use { endpoint ->
 
                     endpoint.request(A, "localhost", chan.receive())
 
-                    endpoint.wrap(A, TLSSocketWrapper(ConnectionEnd.Client))
-
+                    endpoint.wrap(A, genClientTLS())
+                    delay(250)
                     assertEquals(msg, endpoint.receive(A))
+                    endpoint.send(A, msg)
                 }
             }
         }
     }
 
-    @Test
-    fun `test tls nested wrappers`() {
-        val chan = Channel<Int>()
-        val msg = SKMessage("b1", "")
-        runBlocking {
-            launch {
-                SKMPEndpoint().use { endpoint ->
-                    val s = SKMPEndpoint.bind()
-                    chan.send(s.port)
-                    endpoint.accept(B, s)
+    private fun genServerTLS() = TLSSocketWrapper(
+        ConnectionEnd.Server,
+        keyManagers = createKeyManagers(serverKS, pw, pw),
+        trustManagers = createTrustManagers(serverTS, pw),
+        true
+    )
 
-                    endpoint.wrap(B, TLSSocketWrapper(ConnectionEnd.Server))
-                    endpoint.wrap(B, TLSSocketWrapper(ConnectionEnd.Client))
-
-                    endpoint.send(B, msg)
-                }
-            }
-            launch {
-                SKMPEndpoint().use { endpoint ->
-
-                    endpoint.request(A, "localhost", chan.receive())
-
-                    endpoint.wrap(A, TLSSocketWrapper(ConnectionEnd.Client))
-                    endpoint.wrap(A, TLSSocketWrapper(ConnectionEnd.Server))
-
-                    assertEquals(msg, endpoint.receive(A))
-                }
-            }
-        }
-    }
+    private fun genClientTLS() = TLSSocketWrapper(
+        ConnectionEnd.Client,
+        keyManagers = createKeyManagers(clientKS, pw, pw),
+        trustManagers = createTrustManagers(clientTS, pw),
+        true
+    )
 }

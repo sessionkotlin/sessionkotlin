@@ -7,27 +7,38 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import mu.KotlinLogging
 import java.nio.ByteBuffer
+import javax.net.ssl.KeyManager
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLEngine
 import javax.net.ssl.SSLEngineResult.HandshakeStatus
 import javax.net.ssl.SSLEngineResult.Status
+import javax.net.ssl.TrustManager
 
 /**
- *  https://docs.oracle.com/javase/8/docs/technotes/guides/security/jsse/JSSERefGuide.html#SSLEngine
+ * Secure a socket with TLS.
+ *
+ * @param connectionEnd Whether to behave as a client or a server
+ * @param keyManagers List of keyManagers. May be null in which case the installed security providers will be searched
+ * for the highest priority implementation of the appropriate factory.
+ * @param trustManagers List of trust managers. May be null in which case the installed security providers will be searched
+ * for the highest priority implementation of the appropriate factory.
+ * @param debug Whether to log debug information
  *
  */
 public class TLSSocketWrapper(
     private val connectionEnd: ConnectionEnd,
+    keyManagers: Collection<KeyManager>? = null,
+    trustManagers: Collection<TrustManager>? = null,
     private val debug: Boolean = false,
 ) : SocketWrapper() {
 
     private val sslEngine: SSLEngine
 
-    /**
-     * Encoded outbound data
-     */
-    private var netData: ByteBuffer
-
+//    /**
+//     * Encoded outbound data
+//     */
+//    private var netData: ByteBuffer
+//
     /**
      * Decoded inbound data
      */
@@ -36,23 +47,25 @@ public class TLSSocketWrapper(
     /**
      * Encoded inbound data
      */
-    private var peerNetData: ByteBuffer
+//    private var peerNetData: ByteBuffer
 
     private val emptyByteBuffer = ByteBuffer.allocate(0)
     private val logger = KotlinLogging.logger(this::class.simpleName!!)
 
     init {
-        val sslContext = SSLContext.getInstance("TLSv1.2")
-        sslContext.init(null, null, null)
+        // https://docs.oracle.com/javase/8/docs/technotes/guides/security/jsse/JSSERefGuide.html#SSLEngine
+
+        val sslContext = SSLContext.getInstance("TLS")
+        sslContext.init(keyManagers?.toTypedArray(), trustManagers?.toTypedArray(), null)
         sslEngine = sslContext.createSSLEngine()
 
         val session = sslEngine.session
-        netData = ByteBuffer.allocate(session.packetBufferSize)
         peerAppData = ByteBuffer.allocate(session.applicationBufferSize)
-        peerNetData = ByteBuffer.allocate(session.packetBufferSize)
     }
 
     override suspend fun wrapBytes(buffer: ByteBuffer): ByteBuffer {
+        val netData = ByteBuffer.allocate(sslEngine.session.packetBufferSize)
+
         val result = withContext(Dispatchers.IO) {
             sslEngine.wrap(buffer, netData)
         }
@@ -70,14 +83,17 @@ public class TLSSocketWrapper(
     }
 
     override suspend fun unwrapBytes(wrappedBytes: ByteBuffer): ByteBuffer {
+        val peerAppData = ByteBuffer.allocate(sslEngine.session.applicationBufferSize)
+
         while (wrappedBytes.hasRemaining()) {
             val result = withContext(Dispatchers.IO) {
                 sslEngine.unwrap(wrappedBytes, peerAppData)
             }
 
             when (result.status) {
-                Status.OK -> {
-//                wrappedBytes.compact()
+                Status.OK -> {}
+                Status.CLOSED -> {
+                    logger.info { "$connectionEnd: Peer closed the connection" }
                 }
                 else -> {
                     TODO()
@@ -87,6 +103,21 @@ public class TLSSocketWrapper(
 
         peerAppData.flip()
         return peerAppData
+    }
+
+    override suspend fun readBytes(destBuffer: ByteBuffer) {
+        // check for any leftover data
+        // peerAppData is in write mode, so:
+        peerAppData.flip()
+
+        if (peerAppData.hasRemaining()) {
+            destBuffer.put(peerAppData)
+            peerAppData.compact()
+        } else {
+            // back to write mode
+            peerAppData.compact()
+            super.readBytes(destBuffer)
+        }
     }
 
     override suspend fun handshake() {
@@ -100,6 +131,8 @@ public class TLSSocketWrapper(
     }
 
     private suspend fun doHandshake() {
+        val netData = ByteBuffer.allocate(sslEngine.session.packetBufferSize)
+        val peerNetData = ByteBuffer.allocate(sslEngine.session.packetBufferSize)
 
         withContext(Dispatchers.IO) {
             sslEngine.beginHandshake()
@@ -127,7 +160,8 @@ public class TLSSocketWrapper(
                         handshakeStatus = result.handshakeStatus
 
                         when (result.status) {
-                            Status.OK -> {}
+                            Status.OK -> {
+                            }
                             Status.BUFFER_UNDERFLOW -> {
                                 // Need more source bytes
                                 socketIO.readBytes(peerNetData)
@@ -140,9 +174,6 @@ public class TLSSocketWrapper(
                     } while (!done)
                 }
                 HandshakeStatus.NEED_WRAP -> {
-                    // Empty the local network packet buffer.
-                    netData.clear()
-
                     // Generate handshaking data
                     val result = withContext(Dispatchers.IO) {
                         sslEngine.wrap(emptyByteBuffer, netData)
@@ -176,6 +207,16 @@ public class TLSSocketWrapper(
                 }
             }
         }
+
+        // Check for leftover data
+        peerNetData.flip()
+
+        if (peerNetData.hasRemaining()) {
+            peerAppData.put(unwrapBytes(peerNetData))
+        }
+
+        peerNetData.compact()
+
         if (debug) {
             logger.info { "$connectionEnd: TLS Handshake complete" }
             logger.info { "$connectionEnd: Protocol: ${sslEngine.session.protocol}" }
@@ -189,13 +230,11 @@ public class TLSSocketWrapper(
         }
 
         sslEngine.closeOutbound()
-
-        // Send handshake data
-        netData.clear()
+        val netData = ByteBuffer.allocate(sslEngine.session.packetBufferSize)
 
         while (!sslEngine.isOutboundDone) {
             withContext(Dispatchers.IO) {
-                // flush any remaining handshake data
+                // Get close message
                 sslEngine.wrap(emptyByteBuffer, netData)
             }
 

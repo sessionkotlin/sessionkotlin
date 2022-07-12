@@ -37,7 +37,7 @@ internal class SKSocketMessageIO(
         s.close()
     }
 
-    override suspend fun readMsg(): SKMessage {
+    override tailrec suspend fun readMsg(): SKMessage {
         return if (queue.isNotEmpty()) {
             queue.removeFirst()
         } else {
@@ -52,6 +52,7 @@ internal class SKSocketMessageIO(
 
             // Fully process the buffer's content
             var o = objFormatter.fromBytes(buffer)
+
             while (o.isPresent) {
                 queue.add(o.get()) // populate queue
                 o = objFormatter.fromBytes(buffer)
@@ -62,8 +63,7 @@ internal class SKSocketMessageIO(
     }
 
     override suspend fun writeMsg(msg: SKMessage) {
-        val msgBytes = objFormatter.toBytes(msg)
-        socketIO.writeBytes(ByteBuffer.wrap(msgBytes))
+        socketIO.writeBytes(ByteBuffer.wrap(objFormatter.toBytes(msg)))
     }
 
     suspend fun wrapSocket(wrapper: SocketWrapper) {

@@ -8,8 +8,8 @@ import java.nio.ByteBuffer
  * Wraps socket streams into a SocketIO.
  */
 internal class SocketStreamWrapper(
-    private var inputStream: ByteReadChannel,
-    private var outputStream: ByteWriteChannel
+    private val inputStream: ByteReadChannel,
+    private val outputStream: ByteWriteChannel
 ) : SocketIO {
     private val logger = KotlinLogging.logger {}
 
