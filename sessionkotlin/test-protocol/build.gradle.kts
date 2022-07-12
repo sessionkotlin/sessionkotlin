@@ -11,3 +11,9 @@ dependencies {
 application {
     mainClass.set("AppKt")
 }
+
+kotlin.sourceSets.main {
+    kotlin.srcDirs(
+        file("$buildDir/generated/sessionkotlin/main/kotlin"),
+    )
+}

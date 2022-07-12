@@ -2,14 +2,17 @@ package com.github.d_costa.sessionkotlin.backend.endpoint
 
 import com.github.d_costa.sessionkotlin.api.SKGenRole
 import com.github.d_costa.sessionkotlin.backend.channel.SKChannel
-import com.github.d_costa.sessionkotlin.backend.channel.SKChannelConnection
+import com.github.d_costa.sessionkotlin.backend.channel.SKChannelMessageIO
 import com.github.d_costa.sessionkotlin.backend.message.ObjectFormatter
 import com.github.d_costa.sessionkotlin.backend.message.SKMessage
-import com.github.d_costa.sessionkotlin.backend.socket.SKSocketConnection
+import com.github.d_costa.sessionkotlin.backend.message.SKMessageFormatter
+import com.github.d_costa.sessionkotlin.backend.socket.SKSocketMessageIO
 import io.ktor.network.selector.*
 import io.ktor.network.sockets.*
+import io.ktor.util.network.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
+import mu.KotlinLogging
 
 /**
  * A Multiparty Endpoint.
@@ -17,21 +20,30 @@ import kotlinx.coroutines.channels.ClosedReceiveChannelException
  * Provides operations to connect to other endpoints along channels or sockets,
  * and to send and receive messages.
  *
+ * @param msgFormatter (optional) the message formatter. Used to serialize and deserialize messages.
+ * @param bufferSize (optional) size of the buffer, when using sockets.
+ * @param debug (optional) if true, log sent and received message payloads. Default is false.
  */
-public open class SKMPEndpoint : AutoCloseable {
+public open class SKMPEndpoint(
+    private val msgFormatter: SKMessageFormatter = ObjectFormatter(),
+    private val bufferSize: Int = defaultBufferSize,
+    private val debug: Boolean = false
+) : AutoCloseable {
     /**
      * Maps generated roles to the individual endpoint that must be used for communication.
      */
-    private val connections = mutableMapOf<SKGenRole, SKConnection>()
-
-    private val objectFormatter = ObjectFormatter()
+    private val connections = mutableMapOf<SKGenRole, MessageIO>()
 
     /**
      * Map of ports that are bound and the corresponding server socket
      */
     private val serverSockets = mutableMapOf<Int, ServerSocket>()
 
+    private val logger = KotlinLogging.logger(this::class.simpleName!!)
+
     public companion object {
+        internal const val defaultBufferSize = 16_384
+
         /**
          * Service that manages NIO selectors and selection threads.
          */
@@ -39,8 +51,12 @@ public open class SKMPEndpoint : AutoCloseable {
 
         /**
          * Create a server socket and bind it to [port].
+         *
+         * Note that SKMPEndpoint will *not* automatically close this socket.
+         *
+         * @param port the port to bind. Default is zero (0), to use an available port that is automatically allocated.
          */
-        public fun bind(port: Int): SKServerSocket {
+        public fun bind(port: Int = 0): SKServerSocket {
             return SKServerSocket(
                 aSocket(selectorManager)
                     .tcp()
@@ -80,6 +96,9 @@ public open class SKMPEndpoint : AutoCloseable {
     protected suspend fun sendProtected(role: SKGenRole, msg: SKMessage) {
         val ch = connections[role] ?: throw NotConnectedException(role)
         ch.writeMsg(msg)
+        if (debug) {
+            logger.info { "Sent    : ${msg.payload}" }
+        }
     }
 
     /**
@@ -101,7 +120,11 @@ public open class SKMPEndpoint : AutoCloseable {
     protected suspend fun receiveProtected(role: SKGenRole): SKMessage {
         try {
             val ch = connections[role] ?: throw NotConnectedException(role)
-            return ch.readMsg()
+            val msg = ch.readMsg()
+            if (debug) {
+                logger.info { "Received: ${msg.payload}" }
+            }
+            return msg
         } catch (e: ClosedReceiveChannelException) {
             throw ReadClosedConnectionException(role)
         }
@@ -117,13 +140,15 @@ public open class SKMPEndpoint : AutoCloseable {
         val socket = aSocket(selectorManager)
             .tcp()
             .connect(hostname, port)
-        connections[role] = SKSocketConnection(socket, objectFormatter)
+        connections[role] = SKSocketMessageIO(socket, msgFormatter, bufferSize)
     }
 
     /**
      * Bind [port] and accept a connection, attributing it to [role].
+     *
+     * @return the port that was bound
      */
-    public suspend fun accept(role: SKGenRole, port: Int) {
+    public suspend fun accept(role: SKGenRole, port: Int): Int {
         if (role in connections) {
             throw AlreadyConnectedException(role)
         }
@@ -133,7 +158,9 @@ public open class SKMPEndpoint : AutoCloseable {
             .also { serverSockets[port] = it }
 
         val socket = serverSocket.accept()
-        connections[role] = SKSocketConnection(socket, objectFormatter)
+        connections[role] = SKSocketMessageIO(socket, msgFormatter, bufferSize)
+
+        return serverSocket.localAddress.toJavaAddress().port
     }
 
     /**
@@ -146,7 +173,7 @@ public open class SKMPEndpoint : AutoCloseable {
             throw AlreadyConnectedException(role)
         }
         val socket = serverSocket.ss.accept()
-        connections[role] = SKSocketConnection(socket, objectFormatter)
+        connections[role] = SKSocketMessageIO(socket, msgFormatter, bufferSize)
     }
 
     /**
@@ -156,6 +183,16 @@ public open class SKMPEndpoint : AutoCloseable {
         if (role in connections) {
             throw AlreadyConnectedException(role)
         }
-        connections[role] = SKChannelConnection(chan.getEndpoints(role))
+        connections[role] = SKChannelMessageIO(chan.getEndpoints(role))
+    }
+
+    public suspend fun wrap(role: SKGenRole, wrapper: SocketWrapper) {
+        val ch = connections[role] ?: throw NotConnectedException(role)
+
+        if (ch !is SKSocketMessageIO) {
+            throw WrapperException()
+        }
+
+        ch.wrapSocket(wrapper)
     }
 }

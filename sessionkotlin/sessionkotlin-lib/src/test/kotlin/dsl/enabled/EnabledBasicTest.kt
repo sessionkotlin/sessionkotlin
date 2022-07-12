@@ -3,6 +3,7 @@ package dsl.enabled
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.exception.RoleNotEnabledException
 import com.github.d_costa.sessionkotlin.dsl.exception.UnfinishedRolesException
+import com.github.d_costa.sessionkotlin.dsl.globalProtocol
 import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
 import com.github.d_costa.sessionkotlin.dsl.types.*
 import dsl.util.IntClass
@@ -27,7 +28,7 @@ class EnabledBasicTest {
             send<Int>(b, a)
 
             choice(b) {
-                branch("1") {
+                branch {
                     // a not enabled
                     send<String>(a, b)
                 }
@@ -45,30 +46,22 @@ class EnabledBasicTest {
 
     @Test
     fun `role not enabled 2 branches mergeable`() {
-        val g = globalProtocolInternal {
+        globalProtocol("Proto") {
             send<Int>(a, b)
             send<Int>(b, a)
 
             // mergeable for 'a'
             choice(b) {
-                branch("Case1") {
-                    send<String>(b, c)
+                branch {
+                    send<String>(b, c, "b1")
                     send<String>(a, b)
                 }
-                branch("Case2") {
+                branch {
                     send<String>(a, b)
-                    send<String>(b, c)
+                    send<String>(b, c, "b2")
                 }
             }
         }
-        val lA = LocalTypeSend(
-            b, IntClass,
-            LocalTypeReceive(
-                b, IntClass,
-                LocalTypeSend(b, StringClass, LEnd)
-            )
-        )
-        assertEquals(g.project(a), lA)
     }
 
     @Test
@@ -76,12 +69,12 @@ class EnabledBasicTest {
         assertFailsWith<RoleNotEnabledException> {
             globalProtocolInternal {
                 choice(b) {
-                    branch("Case1") {
+                    branch {
                         send<String>(b, c)
                         // 'a' not enabled
                         send<String>(a, b)
                     }
-                    branch("Case2") {
+                    branch {
                         send<Int>(a, b)
                         send<Int>(b, c)
                     }
@@ -94,12 +87,12 @@ class EnabledBasicTest {
     fun `role not enabled 3 roles mergeable`() {
         val g = globalProtocolInternal {
             choice(b) {
-                branch("Case1") {
-                    send<String>(b, a)
+                branch {
+                    send<String>(b, a, "b1")
                     send<String>(d, a)
                 }
-                branch("Case2") {
-                    send<Int>(b, a)
+                branch {
+                    send<Int>(b, a, "b2")
                     send<String>(d, a)
                 }
             }
@@ -112,19 +105,21 @@ class EnabledBasicTest {
     fun `role not enabled 4 roles mergeable`() {
         val g = globalProtocolInternal {
             choice(b) {
-                branch("Case1") {
-                    send<String>(b, a)
+                branch {
+                    send<String>(b, a, "b1")
+
                     send<String>(c, d)
                     send<String>(d, a)
                 }
-                branch("Case2") {
-                    send<Int>(b, a)
+                branch {
+                    send<Int>(b, a, "b2")
+
                     send<String>(c, d)
                     send<String>(d, a)
                 }
             }
         }
-        val lC = LocalTypeSend(d, StringClass, LEnd, "Case1")
+        val lC = LocalTypeSend(d, StringClass, LEnd)
         assertEquals(lC, g.project(c))
     }
 
@@ -133,10 +128,10 @@ class EnabledBasicTest {
         assertFailsWith<RoleNotEnabledException> {
             globalProtocolInternal {
                 choice(b) {
-                    branch("Case1") {
+                    branch {
                         send<String>(b, a)
                     }
-                    branch("Case2") {
+                    branch {
                         send<String>(b, a)
                         send<String>(c, b)
                     }
@@ -150,14 +145,14 @@ class EnabledBasicTest {
         assertFailsWith<UnfinishedRolesException> {
             globalProtocolInternal {
                 choice(b) {
-                    branch("Case1") {
+                    branch {
                         choice(a) {
-                            branch("SubCase1") {
+                            branch {
                                 send<Int>(a, b)
                             }
                         }
                     }
-                    branch("Case2") {
+                    branch {
                         send<Int>(b, a)
                     }
                 }
@@ -169,9 +164,9 @@ class EnabledBasicTest {
     fun `internal choice while ignoring external choice`() {
         val g = globalProtocolInternal {
             choice(b) {
-                branch("Case1") {
+                branch {
                     choice(a) {
-                        branch("SubCase1") {
+                        branch {
                             send<Int>(a, b)
                         }
                     }
@@ -179,7 +174,7 @@ class EnabledBasicTest {
             }
         }
         val lA = LocalTypeInternalChoice(
-            mapOf("SubCase1" to LocalTypeSend(b, IntClass, LEnd, "SubCase1"))
+            listOf(LocalTypeSend(b, IntClass, LEnd))
         )
         assertEquals(lA, g.project(a))
     }
@@ -188,11 +183,11 @@ class EnabledBasicTest {
     fun `role activated`() {
         globalProtocolInternal {
             choice(b) {
-                branch("Case1") {
-                    send<String>(b, a)
+                branch {
+                    send<String>(b, a, "1")
                 }
-                branch("Case2") {
-                    send<Int>(b, a)
+                branch {
+                    send<Int>(b, a, "2")
                     send<Long>(a, b)
                 }
             }
@@ -203,13 +198,13 @@ class EnabledBasicTest {
     fun `role activated transitivity`() {
         globalProtocolInternal {
             choice(b) {
-                branch("Case1") {
-                    send<String>(b, c)
-                    send<String>(c, a)
+                branch {
+                    send<String>(b, c, "b1")
+                    send<String>(c, a, "b1")
                 }
-                branch("Case2") {
-                    send<Int>(b, c)
-                    send<Int>(c, a)
+                branch {
+                    send<Int>(b, c, "b2")
+                    send<Int>(c, a, "b2")
                     send<Int>(a, b)
                 }
             }
@@ -220,14 +215,14 @@ class EnabledBasicTest {
     fun `role activated transitivity 2`() {
         globalProtocolInternal {
             choice(a) {
-                branch("1") {
-                    send<Long>(a, b)
-                    send<Int>(b, c)
+                branch {
+                    send<Long>(a, b, "b1")
+                    send<Int>(b, c, "b1")
                     send<String>(a, b)
                 }
-                branch("2") {
-                    send<String>(a, b)
-                    send<Int>(b, c)
+                branch {
+                    send<String>(a, b, "b2")
+                    send<Int>(b, c, "b2")
                     send<Long>(a, b)
                 }
             }
@@ -238,32 +233,53 @@ class EnabledBasicTest {
     fun `erasable choice after activation`() {
         val g = globalProtocolInternal {
             choice(a) {
-                branch("1") {
-                    send<Long>(a, b)
+                branch {
+                    send<Long>(a, b, "1")
 
                     // b does not participate, and can ignore the choice
                     choice(a) {
-                        branch("1.1") {
-                            send<Int>(a, c)
+                        branch {
+                            send<Int>(a, c, "11")
                         }
-                        branch("1.2") {
-                            send<String>(a, c)
+                        branch {
+                            send<String>(a, c, "12")
                         }
                     }
                 }
-                branch("2") {
-                    send<Int>(a, b)
+                branch {
+                    send<Int>(a, b, "2")
                     send<Boolean>(a, c)
                 }
             }
         }
         val lB = LocalTypeExternalChoice(
             a,
-            mapOf(
-                "1" to LocalTypeReceive(a, LongClass, LEnd),
-                "2" to LocalTypeReceive(a, IntClass, LEnd)
+            listOf(
+                LocalTypeReceive(a, LongClass, MsgLabel("1"), LEnd),
+                LocalTypeReceive(a, IntClass, MsgLabel("2"), LEnd)
             )
         )
         assertEquals(g.project(b), lB)
+    }
+
+    @Test
+    fun `external choice with input transitions`() {
+        globalProtocol("Simple") {
+            choice(a) {
+                branch {
+                    send<String>(b, a)
+                    send<Int>(a, c, "_201", "_201 > 0")
+                    send<Int>(a, c, "_200")
+                }
+                branch {
+                    send<Int>(a, c, "_250")
+                    send<String>(b, a)
+                }
+                branch {
+                    send<Int>(a, c, "Quit")
+                    send<String>(b, a)
+                }
+            }
+        }
     }
 }

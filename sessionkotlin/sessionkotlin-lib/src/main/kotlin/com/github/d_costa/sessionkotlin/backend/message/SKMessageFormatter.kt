@@ -1,11 +1,23 @@
 package com.github.d_costa.sessionkotlin.backend.message
 
+import java.nio.ByteBuffer
+import java.util.*
+
 /**
  * The message formatter.
- *
- * An implementation of this class is necessary to send messages in sockets.
+ **
  */
-internal interface SKMessageFormatter {
-    fun toBytes(msg: SKMessage): ByteArray
-    fun fromBytes(b: ByteArray): SKMessage
+public interface SKMessageFormatter {
+    public companion object {
+        public class SKInvalidMessage(msg: String) : RuntimeException(msg) {
+            public constructor() : this("")
+        }
+    }
+    public fun toBytes(msg: SKMessage): ByteArray
+
+    /**
+     * If the provided bytes are not enough to form a valid message,
+     * [Optional.empty()] should be thrown.
+     */
+    public fun fromBytes(b: ByteBuffer): Optional<SKMessage>
 }

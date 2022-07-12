@@ -1,0 +1,20 @@
+module adder.Adder;
+
+data <java> "java.lang.Integer" from "rt.jar" as int;
+
+global protocol Adder(role Client, role Server) {
+    rec X {
+
+        choice at Client
+        {
+            quit() from Client to Server;
+        }
+        or
+        {
+            v1(int) from Client to Server;
+            v2(int) from Client to Server;
+            sum(int) from Server to Client;
+            continue X;
+        }
+    }
+}

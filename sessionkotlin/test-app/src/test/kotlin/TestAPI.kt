@@ -1,131 +1,113 @@
 import com.github.d_costa.sessionkotlin.backend.SKBuffer
 import com.github.d_costa.sessionkotlin.backend.channel.SKChannel
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
-import simple.A
-import simple.B
-import simple.C
-import simple.callback.*
+import simple.Client
+import simple.Server
+import simple.callbacks.*
+
 import simple.fluent.*
 
 class TestAPI {
 
     @Test
     fun `test fluent`() {
-        val chanAB = SKChannel(A, B)
+        val c = Channel<Int>()
 
         runBlocking {
             launch {
-                // A
-                SKMPEndpoint().use {
-                    it.connect(B, chanAB)
-                    SimpleA1(it)
-                        .branch1()
-                        .sendToB(2)
-                        .branch2()
-                        .sendToB(0)
-                }
-            }
-            launch {
-                // B
-                SKMPEndpoint().use { e ->
-                    e.connect(A, chanAB)
-                    e.accept(C, 9999)
+                suspend fun handle201(initialState: SimpleClient3Interface) {
+                    var state = initialState
 
-                    var b1: SimpleB1_Interface = SimpleB1(e)
-                    do {
-                        when (val b2 = b1.branch()) {
-                            is SimpleB2_1 -> {
-                                val buf = SKBuffer<Int>()
-                                b1 = b2
-                                    .receiveFromA(buf)
-                                    .sendToC(buf.value * 2)
+                    while (true) {
+                        val b = state.receive_200FromServer(SKBuffer())
+                            .branch()
+                        when (b) {
+                            is SimpleClient4_Interface -> {
+                                b.receiveFromServer(SKBuffer())
+                                break
                             }
-                            is SimpleB5_2 -> {
-                                val buf = SKBuffer<Int>()
-                                b2
-                                    .receiveFromA(buf)
-                                    .sendToC(buf.value - 1)
+                            is SimpleClient4__201Interface -> state = b.receive_201FromServer(SKBuffer())
+                            is SimpleClient4__250Interface -> {
+                                b.receive_250FromServer(SKBuffer())
                                 break
                             }
                         }
-                    } while (true)
+                    }
                 }
+
+                // Client
+                SKMPEndpoint().use { e ->
+                    e.request(Server, "localhost", c.receive())
+                    SimpleClient1(e)
+                        .receiveInitialFromServer(SKBuffer())
+                        .branch()
+                        .let { s ->
+                            when (s) {
+                                is SimpleClient2_Interface -> s.receiveFromServer(SKBuffer())
+                                is SimpleClient2__201Interface -> handle201(s.receive_201FromServer(SKBuffer()))
+                                is SimpleClient2__250Interface -> s.receive_250FromServer(SKBuffer())
+                                is SimpleClient2__250HInterface -> s.receive_250HFromServer(SKBuffer())
+                            }
+                        }
+                }
+
+
             }
             launch {
-                // C
+                // Server
                 SKMPEndpoint().use { e ->
-                    e.request(B, "localhost", 9999)
-                    var b1: SimpleC1_Interface = SimpleC1(e)
-                    do {
-                        when (val b2 = b1.branch()) {
-                            is SimpleC2_1 -> {
-                                val bufInt = SKBuffer<Int>()
-                                b1 = b2.receiveFromB(bufInt)
-                                println("Received int: ${bufInt.value}")
-                            }
-                            is SimpleC4_2 -> {
-                                val bufString = SKBuffer<Int>()
-                                b2.receiveFromB(bufString)
-                                println("Received int 2: ${bufString.value}")
-                                break
-                            }
-                        }
-                    } while (true)
+                    val ss = SKMPEndpoint.bind()
+                    c.send(ss.port)
+                    e.accept(Client, ss)
+                    SimpleServer1(e)
+                        .sendInitialToClient(10)
+                        .send_201ToClient(1)
+                        .send_200ToClient(10)
+                        .sendToClient(11)
                 }
             }
+
         }
     }
 
+    @Test
     fun `test callbacks`() {
-        val chanAB = SKChannel(A, B)
+        val chanAB = SKChannel()
 
         runBlocking {
             launch {
                 // A
-                val callbacks = object : SimpleCallbacksA {
-                    var index = 0
-                    override fun onChoose1(): Choice1 =
-                        if (index++ < 1) Choice1.Choice1_1
-                        else Choice1.Choice1_2
-                    override fun onSendVal1ToB(): Int = 1
-                    override fun onSendVal3ToB(): Int = 3
+                val callbacks = object : SimpleClientCallbacks {
+                    override fun receiveInitialFromServer(v: Int) {}
+                    override fun receive_250HFromServer(v: Long) {}
+                    override fun receive_201FromServer(v: Int) {}
+                    override fun receive_250FromServer(v: Int) {}
+                    override fun receiveFromServer(v: Int) {}
+                    override fun receive_200FromServer(v: Int) {}
                 }
-                SimpleCallbackEndpointA(callbacks).use { e ->
-                    e.connect(B, chanAB)
+                SimpleClientCallbacksEndpoint(callbacks).use { e ->
+                    e.connect(Server, chanAB)
                     e.start()
                 }
             }
             launch {
                 // B
-                val callbacks = object : SimpleCallbacksB {
-                    var receivedInt = -1
-                    override fun onSendVal2ToC(): Int = receivedInt * 2
-                    override fun onReceiveVal1FromA(v: Int) {
-                        receivedInt = v
-                    }
-
-                    override fun onSendVal4ToC(): Int = receivedInt - 1
-                    override fun onReceiveVal3FromA(v: Int) {
-                        receivedInt = v
-                    }
+                val callbacks = object : SimpleServerCallbacks {
+                    override fun sendInitialToClient(): Int = 1
+                    override fun onChoice2(): Choice2 = Choice2.Choice2__201
+                    override fun send_250HToClient(): Long = 10L
+                    override fun send_201ToClient(): Int = 2
+                    override fun send_250ToClient(): Int = 1
+                    override fun sendToClient(): Int = 10
+                    override fun send_200ToClient(): Int = 10
+                    override fun onChoice4(): Choice4 = Choice4.Choice4__250
                 }
-                SimpleCallbackEndpointB(callbacks).use { e ->
-                    e.connect(A, chanAB)
-                    e.accept(C, 9999)
-                    e.start()
-                }
-            }
-            launch {
-                // C
-                val callbacks = object : SimpleCallbacksC {
-                    override fun onReceiveVal2FromB(v: Int) = println(v)
-                    override fun onReceiveVal4FromB(v: Int) = println(v)
-                }
-                SimpleCallbackEndpointC(callbacks).use { e ->
-                    e.request(B, "localhost", 9999)
+                SimpleServerCallbacksEndpoint(callbacks).use { e ->
+                    e.connect(Client, chanAB)
                     e.start()
                 }
             }

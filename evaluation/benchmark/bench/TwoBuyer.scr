@@ -1,0 +1,38 @@
+module twobuyer.TwoBuyer;
+
+data <java> "java.lang.Integer" from "rt.jar" as int;
+data <java> "java.lang.String" from "rt.jar" as String;
+data <java> "java.util.Date" from "rt.jar" as Date;
+
+global protocol TwoBuyer(role Seller, role A, role B) {
+    rec X {
+
+        choice at A
+        {
+            id(String) from A to Seller;
+            price(int) from Seller to A;
+            price(int) from Seller to B;
+
+            aShare(int) from A to B;
+
+            choice at B
+            {
+                address(String) from B to Seller;
+                date(Date) from Seller to B;
+                date(Date) from B to A;
+                continue X;
+            }
+            or
+            {
+                reject() from B to Seller;
+                reject() from B to A;
+                continue X;
+            }
+        }
+        or
+        {
+            Quit() from A to Seller;
+            Quit() from Seller to B;
+        }
+    }
+}

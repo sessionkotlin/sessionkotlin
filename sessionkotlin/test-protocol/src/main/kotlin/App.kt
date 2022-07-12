@@ -3,26 +3,33 @@ import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.globalProtocol
 
 fun main() {
-    val a = SKRole("A")
-    val b = SKRole("B")
-    val c = SKRole("C")
-
-    val subProtocol: GlobalProtocol = {
-        send<Int>(a, b, "val1")
-        send<Int>(b, c, "val2", "val2 > val1")
-    }
+    val s = SKRole("Server")
+    val c = SKRole("Client")
 
     globalProtocol("Simple", true) {
-        val t1 = mu()
-        choice(a) {
-            branch("1") {
-                subProtocol()
-                goto(t1)
+        send<Int>(s, c, "Initial", "Initial != 0")
+
+        choice(s) {
+            branch {
+                send<Long>(s, c, "_250H")
             }
-            branch("2") {
-                send<Int>(a, b, "val3")
-                send<Int>(b, c, "val4", "val4 < val3")
+            branch {
+                val t2 = mu()
+                choice(s) {
+                    branch {
+                        send<Int>(s, c, "_201", "_201 > 0")
+                        send<Int>(s, c, "_200")
+                        goto(t2)
+                    }
+                    branch {
+                        send<Int>(s, c, "_250")
+                    }
+                    branch {
+                        send<Int>(s, c)
+                    }
+                }
             }
         }
     }
 }
+

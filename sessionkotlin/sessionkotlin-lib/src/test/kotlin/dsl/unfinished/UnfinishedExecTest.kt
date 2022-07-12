@@ -5,11 +5,8 @@ import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.exception.UnfinishedRolesException
 import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
 import com.github.d_costa.sessionkotlin.dsl.types.LEnd
-import com.github.d_costa.sessionkotlin.dsl.types.LocalTypeReceive
 import com.github.d_costa.sessionkotlin.dsl.types.LocalTypeSend
-import dsl.util.IntClass
 import dsl.util.LongClass
-import dsl.util.StringClass
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -24,29 +21,24 @@ class UnfinishedExecTest {
 
     @Test
     fun `choice agnostic`() {
-        val aux: GlobalProtocol = {
-            send<String>(b, c)
-            send<Int>(a, b)
+        fun aux(label: String): GlobalProtocol = {
+            send<String>(a, c, label)
             send<Long>(b, c)
         }
         val g = globalProtocolInternal {
             choice(a) {
-                branch("1") {
-                    aux()
+                branch {
+                    aux("b1")()
                 }
-                branch("2") {
-                    aux()
+                branch {
+                    aux("b2")()
                 }
                 // branches mergeable for 'b', even without being activated for the first send
             }
         }
         val lB = LocalTypeSend(
-            c, StringClass,
-            LocalTypeReceive(
-                a, IntClass,
-                LocalTypeSend(c, LongClass, LEnd)
-            ),
-            "1"
+            c, LongClass,
+            LEnd
         )
         assertEquals(lB, g.project(b))
     }
@@ -63,10 +55,10 @@ class UnfinishedExecTest {
                 send<Int>(a, b)
                 send<Int>(a, c)
                 choice(a) {
-                    branch("1") {
+                    branch {
                         subProtocol(b, a)()
                     }
-                    branch("2") {
+                    branch {
                         subProtocol(a, b)()
                     }
                 }
@@ -84,10 +76,10 @@ class UnfinishedExecTest {
         assertFailsWith<UnfinishedRolesException> {
             globalProtocolInternal {
                 choice(a) {
-                    branch("1") {
+                    branch {
                         subProtocol(b)()
                     }
-                    branch("2") {
+                    branch {
                         subProtocol(c)()
                     }
                 }

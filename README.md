@@ -10,7 +10,7 @@ val b = SKRole("ClientB")
 val seller = SKRole("Seller")
 
 globalProtocol("Protocol") {
-    send<String>(a, seller)
+    send<String>(a, seller, "id")
 
     send<Int>(seller, a, "valA")
     send<Int>(seller, b, "valB", "valA == valB")
@@ -18,14 +18,14 @@ globalProtocol("Protocol") {
     send<Int>(a, b, "proposal", "proposal <= valA")
 
     choice(b) {
-        branch("Ok") {
-            send<Address>(b, seller)
+        branch {
+            send<Address>(b, seller, "buy")
             send<Date>(seller, b)
-            send<Date>(b, a)
+            send<Date>(b, a, "ok")
         }
-        branch("Quit") {
-            send<Unit>(b, seller)
-            send<Unit>(b, a)
+        branch {
+            send<Unit>(b, seller, "quit")
+            send<Unit>(b, a, "quit")
         }
     }
 }
@@ -49,7 +49,7 @@ https://github.com/d-costa/sessionkotlin-template-maven
 
 ## Features
 
-#### Reusable protocol definitions
+#### Reusable (and parametric) protocol definitions
 
 ```kotlin
 val a = SKRole("A")
@@ -60,14 +60,14 @@ fun subProtocol(x: SKRole, y: SKRole): GlobalProtocol = {
     send<Int>(y, x)
 }
 
-globalProtocol("Complex Protocol") {
+globalProtocol("ComplexProtocol") {
     choice(a) {
-        branch("Branch1") {
-            send<Int>(a, b)
+        branch {
+            send<Int>(a, b, "branch1")
             subProtocol(a, b)()  // Proceed with subProtocol
         }
-        branch("Branch2") {
-            send<Int>(a, b)
+        branch {
+            send<Int>(a, b, "branch2")
             subProtocol(b, a)()  // Proceed with subProtocol
         }
     }
@@ -82,7 +82,7 @@ Basic arithmetic and logical operations supported by the Z3 theorem prover.
 val a = SKRole("A")
 val b = SKRole("B")
 
-globalProtocol("Refined Protocol") {
+globalProtocol("RefinedProtocol") {
     send<Int>(a, b, "val1")
     send<Int>(b, a, "val2", "val2 >= val1")
 }

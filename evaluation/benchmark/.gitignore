@@ -1,0 +1,15 @@
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+build
+/.env
+/.idea/
+
+/scribble-java/src/main/java/*
+/bench.txt
+/plot.svg
+/sj/
+/scribble-dist/
+/bench/src/main/java/twobuyer/TwoBuyer/TwoBuyer/
+/bench/src/main/java/adder/Adder/Adder/

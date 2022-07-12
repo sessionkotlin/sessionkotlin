@@ -2,19 +2,31 @@ package com.github.d_costa.sessionkotlin.backend.message
 
 import java.io.Serializable
 
-/**
- * The basic message that will be transferred between endpoints.
- */
-public sealed interface SKMessage : Serializable
+public open class SKMessage(
+    public val label: String,
+    public val payload: Any
+) : Serializable {
 
-/**
- * A message that contains information about a branch.
- */
-public data class SKBranch(val label: String) : SKMessage
+    public companion object {
+        public const val DEFAULT_LABEL: String = "EMPTY_LABEL"
+        public const val DUMMY_MSG_PAYLOAD: String = "DUMMY_MSG_PAYLOAD"
+    }
 
-/**
- * A message that contains a [payload] of type [T]
- */
-public data class SKPayload<T>(val payload: T) : SKMessage
+    override fun toString(): String {
+        return "SKMessage[$label]($payload)"
+    }
+    override fun equals(other: Any?): Boolean {
+        if (other !is SKMessage)
+            return false
 
-public object SKEmptyMessage : SKMessage
+        return payload == other.payload && label == other.label
+    }
+
+    override fun hashCode(): Int {
+        var result = payload.hashCode()
+        result = 31 * result + label.hashCode()
+        return result
+    }
+}
+
+public class SKDummyMessage(label: String) : SKMessage(label, DUMMY_MSG_PAYLOAD)

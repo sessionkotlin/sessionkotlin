@@ -3,12 +3,11 @@ package com.github.d_costa.sessionkotlin.api
 import com.github.d_costa.sessionkotlin.api.exception.SKLinearException
 import com.github.d_costa.sessionkotlin.backend.SKBuffer
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
-import com.github.d_costa.sessionkotlin.backend.message.SKBranch
-import com.github.d_costa.sessionkotlin.backend.message.SKEmptyMessage
-import com.github.d_costa.sessionkotlin.backend.message.SKPayload
+import com.github.d_costa.sessionkotlin.backend.message.SKDummyMessage
+import com.github.d_costa.sessionkotlin.backend.message.SKMessage
 
 /**
- * Linear endpoint. Throws [SKLinearException] when [SKLinearEndpoint.use] is called twice.
+ * Linear endpoint. Throws [SKLinearException] when [SKLinearEndpoint.use] is called more than once.
  */
 public open class SKLinearEndpoint {
     private var used = false
@@ -23,24 +22,18 @@ public open class SKLinearEndpoint {
 /**
  * Abstract linear endpoint that corresponds to an output.
  */
-public abstract class SKOutputEndpoint(private val e: SKMPEndpoint) : SKLinearEndpoint() {
+public abstract class SKOutputEndpoint(private val e: SKMPEndpoint) : SKInputEndpoint(e) {
 
     /**
      * Sends a message with payload of type [T] to the target [role].
      *
-     * If [branch] is not null, an [SKBranch] message is sent
-     * before the [payload] message.
      */
-    protected suspend fun <T> send(role: SKGenRole, payload: T, branch: String? = null) {
+    protected suspend fun <T : Any> send(role: SKGenRole, payload: T, label: String) {
         use()
-        if (branch != null) {
-            e.send(role, SKBranch(branch))
-        }
-
         if (payload is Unit) {
-            e.send(role, SKEmptyMessage)
+            e.send(role, SKDummyMessage(label))
         } else {
-            e.send(role, SKPayload(payload))
+            e.send(role, SKMessage(label, payload))
         }
     }
 }
@@ -48,35 +41,27 @@ public abstract class SKOutputEndpoint(private val e: SKMPEndpoint) : SKLinearEn
 /**
  * Abstract linear endpoint that corresponds to an input.
  */
-@Suppress("unchecked_cast")
 public abstract class SKInputEndpoint(private val e: SKMPEndpoint) : SKLinearEndpoint() {
 
-    /**
-     * Receives a message with payload of type [T] from [role]
-     * and assigns its payload to [buf]'s value.
-     */
-    protected suspend fun <T : Any> receive(role: SKGenRole, buf: SKBuffer<T>) {
+    protected open suspend fun receive(role: SKGenRole): SKMessage {
         use()
-        val msg = e.receive(role)
-        if (msg is SKPayload<*>) {
-            buf.value = (msg as SKPayload<T>).payload
-        }
+        return e.receive(role)
+    }
+
+    /**
+     * Receive a message with payload of type [T] from [role]
+     * and assign its payload to [buf]'s value.
+     */
+    @Suppress("unchecked_cast")
+    protected suspend fun <T : Any> receive(role: SKGenRole, buf: SKBuffer<T>) {
+        val msg = receive(role)
+        buf.value = msg.payload as T
     }
 }
 
-/**
- * Abstract linear endpoint that corresponds to an external choice.
- */
-public abstract class SKExternalEndpoint(private val e: SKMPEndpoint) : SKLinearEndpoint() {
-
-    /**
-     * Receives a branch message from [role].
-     *
-     * @return the branch label
-     */
-    protected suspend fun receiveBranch(role: SKGenRole): String {
+public abstract class SKCaseEndpoint(e: SKMPEndpoint, private val msg: SKMessage) : SKInputEndpoint(e) {
+    protected override suspend fun receive(role: SKGenRole): SKMessage {
         use()
-        val msg = e.receive(role)
-        return (msg as SKBranch).label
+        return msg
     }
 }

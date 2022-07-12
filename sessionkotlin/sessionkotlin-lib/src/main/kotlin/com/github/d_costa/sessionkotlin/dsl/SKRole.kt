@@ -11,7 +11,7 @@ import com.github.d_costa.sessionkotlin.util.hasWhitespace
 public class SKRole(private val name: String) {
 
     init {
-        if (hasWhitespace(name)) {
+        if (name.hasWhitespace()) {
             throw RoleNameWhitespaceException(name)
         }
     }

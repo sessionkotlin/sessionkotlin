@@ -7,9 +7,23 @@ fun main() {
     val s = SKRole("Server")
     val c = SKRole("Client")
 
-    globalProtocol("Simple Server", true) {
-        send<Unit>(c, s, "dummy")
-        send<Int>(c, s, "request")
-        send<Int>(s, c, "response")
+    globalProtocol("Simple") {
+        choice(s) {
+            branch {
+                val t = mu()
+                choice(s) {
+                    branch {
+                        send<Long>(s, c, "250H")
+                        goto(t)
+                    }
+                    branch {
+                        send<Long>(s, c, "250")
+                    }
+                }
+            }
+            branch {
+                send<Int>(s, c, "Quit")
+            }
+        }
     }
 }
