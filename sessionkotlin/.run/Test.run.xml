@@ -10,6 +10,7 @@
       </option>
       <option name="taskNames">
         <list>
+          <option value="ktlintCheck" />
           <option value="test" />
         </list>
       </option>

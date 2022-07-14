@@ -257,12 +257,4 @@ class ArithmeticTest {
         assertEquals(Eq(Neg(Minus(Name("a"), cLong(2))), Neg(cLong(3))), ast)
         assert(ast.value(mapOf("a" to (5).toVal())))
     }
-
-    @Test
-    fun `test unary minus 333 3`() {
-        val ast = grammar.parseToEnd("a == 1")
-//        assertEquals(Eq(Neg(Minus(Name("a"), cLong(2))), Neg(cLong(3))), ast)
-        val b : Byte = 1
-        assert(ast.value(mapOf("a" to (b).toVal())))
-    }
 }
