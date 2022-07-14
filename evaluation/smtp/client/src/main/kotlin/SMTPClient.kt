@@ -6,6 +6,7 @@ import messages.*
 import smtp.Server
 import smtp.fluent.*
 import java.io.File
+import java.io.FileInputStream
 import java.math.BigInteger
 import java.security.MessageDigest
 import java.util.*
@@ -14,7 +15,7 @@ val props = Properties()
 val envFile = File("mail.env")
 
 @Suppress("unused")
-val d = props.load(java.io.FileInputStream(envFile))
+val d = props.load(FileInputStream(envFile))
 
 val host = props["host"] as String
 val port = (props["port"] as String).toInt()
@@ -78,7 +79,8 @@ suspend fun doEhlo(e: SKMPEndpoint, s: SMTPClient2Interface) {
 }
 
 suspend fun doTLS(e: SKMPEndpoint, s: SMTPClient4Interface) {
-    val s6 = s.sendStartTLSToServer(StartTLS())
+    val s6 = s
+        .sendStartTLSToServer(StartTLS())
         .receive220FromServer { }
 
     e.wrap(Server, TLSSocketWrapper(ConnectionEnd.Client, debug = true))

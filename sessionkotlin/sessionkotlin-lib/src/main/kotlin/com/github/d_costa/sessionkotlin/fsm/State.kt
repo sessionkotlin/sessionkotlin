@@ -6,7 +6,7 @@ import com.github.d_costa.sessionkotlin.dsl.types.MsgLabel
 internal typealias StateId = Int
 internal typealias StateTransitions = Map<StateId, List<SimpleTransition>>
 
-public open class SimpleState(public open val id: StateId) {
+internal open class SimpleState(open val id: StateId) {
     override fun toString(): String = "State[$id]"
 }
 internal object EndSimpleState : SimpleState(State.endStateIndex)
