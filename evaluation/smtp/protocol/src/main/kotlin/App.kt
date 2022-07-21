@@ -8,9 +8,7 @@ val client = SKRole("Client")
 val server = SKRole("Server")
 
 fun main() {
-    // RFC5321
     globalProtocol("SMTP") {
-        // TODO 421
         choice(server) {
             branch {
                 // Service ready
@@ -27,12 +25,10 @@ fun main() {
 
 
 private fun ehlo(continuation: GlobalProtocol): GlobalProtocol = {
-    lateinit var tEhlo: RecursionTag
-
     choice(client) {
         branch {
-            send<SMTPMessage>(client, server, Code.Ehlo)
-            tEhlo = mu()
+            send<Ehlo>(client, server, Code.Ehlo)
+            val tEhlo = mu()
 
             /*
              * EHLO has a multiline response.
