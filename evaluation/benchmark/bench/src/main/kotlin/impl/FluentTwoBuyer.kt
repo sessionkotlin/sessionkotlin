@@ -45,14 +45,14 @@ fun twoBuyerFluentChannels() {
     }
 }
 
-fun twoBuyerFluentSockets(serverSocket: SKServerSocket, clientBSocket: SKServerSocket) {
+fun twoBuyerFluentSockets(sellerSocket: SKServerSocket, clientBSocket: SKServerSocket) {
     runBlocking {
 
         launch {
             // Seller
             SKMPEndpoint().use { e ->
-                e.accept(ClientA, serverSocket)
-                e.accept(ClientB, serverSocket)
+                e.accept(ClientA, sellerSocket)
+                e.accept(ClientB, sellerSocket)
 
                 twoBuyerSeller(e)
             }
@@ -60,7 +60,7 @@ fun twoBuyerFluentSockets(serverSocket: SKServerSocket, clientBSocket: SKServerS
         launch {
             // Client A
             SKMPEndpoint().use { e ->
-                e.request(Seller, "localhost", serverSocket.port)
+                e.request(Seller, "localhost", sellerSocket.port)
                 e.request(ClientB, "localhost", clientBSocket.port)
 
                 twoBuyerClientA(e)
@@ -69,7 +69,7 @@ fun twoBuyerFluentSockets(serverSocket: SKServerSocket, clientBSocket: SKServerS
         launch {
             // Client B
             SKMPEndpoint().use { e ->
-                e.request(Seller, "localhost", serverSocket.port)
+                e.request(Seller, "localhost", sellerSocket.port)
                 e.accept(ClientA, clientBSocket)
 
                 twoBuyerClientB(e)

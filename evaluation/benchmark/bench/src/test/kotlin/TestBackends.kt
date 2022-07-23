@@ -1,24 +1,35 @@
-import impl.adderFluentSockets
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
-import impl.adderScribble
-import impl.newCustomServerSocket
-import impl.twoBuyerScribble
+import impl.*
+import io.ktor.network.selector.*
+import kotlinx.coroutines.Dispatchers
 import org.junit.jupiter.api.Test
 
 class TestBackends {
 
     @Test
-    fun testAdderScribble() {
-        adderScribble(newCustomServerSocket())
-    }
-
-    @Test
-    fun testTwoBuyerScribble() {
-        twoBuyerScribble(newCustomServerSocket(), newCustomServerSocket(), newCustomServerSocket())
-    }
-
-    @Test
-    fun testAdderSocketsFluent() {
+    fun testAdderFluentSockets() {
         adderFluentSockets(SKMPEndpoint.bind())
+    }
+
+    @Test
+    fun testAdderManualSockets() {
+        val selector = SelectorManager(Dispatchers.IO)
+        adderManualSockets(createSocket(selector), selector)
+    }
+
+    @Test
+    fun testAdderManualChannels() {
+        adderManualChannels()
+    }
+
+    @Test
+    fun testTwoBuyerManualSockets() {
+        val selector = SelectorManager(Dispatchers.IO)
+        twoBuyerManualSockets(createSocket(selector), createSocket(selector), createSocket(selector), selector)
+    }
+
+    @Test
+    fun testTwoBuyerManualChannels() {
+        twoBuyerManualChannels()
     }
 }

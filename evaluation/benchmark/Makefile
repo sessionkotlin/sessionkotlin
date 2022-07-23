@@ -39,7 +39,7 @@ protocols:
 	@$(G) protocols:run
 
 .PHONY: build
-build: protocols scribble
+build: protocols #scribble
 	@$(G) build
 
 bench: build

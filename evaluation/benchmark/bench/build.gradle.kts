@@ -6,14 +6,13 @@ plugins {
 }
 
 val kotlinxCoroutinesVersion: String by project
-val scribbleVersion: String by project
+val ktorVersion: String by project
 
 dependencies {
     implementation(project(":protocols"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
-    implementation("org.scribble:scribble-core:$scribbleVersion")
-    implementation("org.scribble:scribble-runtime:$scribbleVersion")
     testImplementation(kotlin("test"))
+    implementation("io.ktor:ktor-network:$ktorVersion")
 }
 
 tasks.test {
@@ -21,8 +20,9 @@ tasks.test {
 }
 
 jmh {
-    warmupIterations.set(2)
-    iterations.set(3)
+    warmupIterations.set(3)
+    iterations.set(5)
     fork.set(3)
+    jmhTimeout.set("60s")
     benchmarkMode.set(listOf("Throughput"))
 }
