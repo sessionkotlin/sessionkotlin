@@ -1,6 +1,7 @@
 package com.github.d_costa.sessionkotlin.dsl
 
 import com.github.d_costa.sessionkotlin.dsl.exception.SendingToSelfException
+import com.github.d_costa.sessionkotlin.parser.RefinementCondition
 import com.github.d_costa.sessionkotlin.util.printlnIndent
 
 internal sealed interface Instruction {
@@ -19,7 +20,7 @@ internal data class Send(
     internal val to: SKRole,
     internal val type: Class<*>,
     internal val msgLabel: String,
-    internal val condition: String,
+    internal val condition: RefinementCondition?,
 ) : Instruction {
 
     init {

@@ -91,9 +91,9 @@ public object False : BooleanExpression {
     override fun toString(): String = "False"
 }
 
-public data class Not(val cond: BooleanExpression) : BooleanExpression {
-    override fun value(bindings: Map<String, RefinedValue>): Boolean = !cond.value(bindings)
-    override fun names(): Set<String> = cond.names()
+public data class Not(val c: BooleanExpression) : BooleanExpression {
+    override fun value(bindings: Map<String, RefinedValue>): Boolean = !c.value(bindings)
+    override fun names(): Set<String> = c.names()
 }
 
 public data class Impl(val c1: BooleanExpression, val c2: BooleanExpression) : BooleanExpression {

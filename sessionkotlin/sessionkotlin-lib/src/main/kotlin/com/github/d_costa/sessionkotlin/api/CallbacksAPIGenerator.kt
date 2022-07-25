@@ -7,14 +7,13 @@ import com.github.d_costa.sessionkotlin.backend.message.SKMessage
 import com.github.d_costa.sessionkotlin.dsl.RootEnv
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.fsm.*
-import com.github.d_costa.sessionkotlin.parser.RefinementParser
 import com.squareup.kotlinpoet.*
 import java.util.*
 
 /**
  * pre: message labels are unique
  */
-internal class CallbacksAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEnv, "callbacks") {
+internal class CallbacksAPIGenerator(globalEnv: RootEnv) : AbstractAPIGenerator(globalEnv, "callbacks") {
     private val callbacksInterfacePostfix = "Callbacks"
     private val callbacksEndpointPostfix = "CallbacksEndpoint"
 
@@ -343,15 +342,8 @@ internal class CallbacksAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globa
                 toValFunction
             )
         }
-        if (action.condition.isNotBlank()) {
-            codeBlockBuilder.addStatement(
-                "%M(%S, %T.parseToEnd(%S).value(%L))",
-                assertFunction,
-                action.condition,
-                RefinementParser::class,
-                action.condition,
-                bindingsMapProperty.name
-            )
+        if (action.condition != null) {
+            addRefinementAssertion(codeBlockBuilder, action.condition)
         }
     }
 

@@ -6,6 +6,7 @@ import com.github.d_costa.sessionkotlin.backend.message.SKMessage
 import com.github.d_costa.sessionkotlin.dsl.exception.*
 import com.github.d_costa.sessionkotlin.dsl.types.*
 import com.github.d_costa.sessionkotlin.fsm.statesFromLocalType
+import com.github.d_costa.sessionkotlin.parser.RefinementCondition
 import com.github.d_costa.sessionkotlin.parser.RefinementParser
 import com.github.d_costa.sessionkotlin.util.hasWhitespace
 import com.github.d_costa.sessionkotlin.util.printlnIndent
@@ -91,15 +92,17 @@ public sealed class GlobalEnv(
         msgLabels.add(MsgExchange(MsgExchange.Action.Send, label, from, to))
         msgLabels.add(MsgExchange(MsgExchange.Action.Receive, label, from, to))
 
+        var refinementCondition: RefinementCondition? = null
+
         if (condition.isNotBlank()) {
-            RefinementParser.parseToEnd(condition)
+            refinementCondition = RefinementCondition(condition, RefinementParser.parseToEnd(condition))
         }
 
         if (label.hasWhitespace()) {
             throw BranchLabelWhitespaceException(label)
         }
 
-        val msg = Send(from, to, type, label, condition)
+        val msg = Send(from, to, type, label, refinementCondition)
         roles.add(from)
         roles.add(to)
 
@@ -215,8 +218,9 @@ public sealed class GlobalEnv(
 
         val satState = SatState(context)
 
-        if (!g.sat(satState)) {
-            throw UnsatisfiableRefinementsException()
+        val unsatExpressions = g.getUnsat(satState)
+        if (unsatExpressions.isNotEmpty()) {
+            throw UnsatisfiableRefinementsException(unsatExpressions)
         }
     }
 
