@@ -4,6 +4,10 @@ import com.github.d_costa.sessionkotlin.dsl.RecursionTag
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
 import com.github.d_costa.sessionkotlin.dsl.types.*
+import com.github.d_costa.sessionkotlin.parser.RefinementCondition
+import com.github.d_costa.sessionkotlin.parser.symbols.Eq
+import com.github.d_costa.sessionkotlin.parser.symbols.Name
+import com.github.d_costa.sessionkotlin.parser.symbols.Plus
 import dsl.util.IntClass
 import dsl.util.UnitClass
 import org.junit.jupiter.api.Test
@@ -55,7 +59,14 @@ class Adder {
                         c, IntClass, MsgLabel("v1", true),
                         LocalTypeReceive(
                             c, IntClass, MsgLabel("v2", true),
-                            LocalTypeSend(c, IntClass, MsgLabel("sum", true), "sum == v1 + v2", LocalTypeRecursion(t))
+                            LocalTypeSend(
+                                c, IntClass, MsgLabel("sum", true),
+                                RefinementCondition(
+                                    "sum == v1 + v2",
+                                    Eq(Name("sum"), Plus(Name("v1"), Name("v2")))
+                                ),
+                                LocalTypeRecursion(t)
+                            )
                         ),
                     ),
                     LocalTypeReceive(c, UnitClass, LEnd)

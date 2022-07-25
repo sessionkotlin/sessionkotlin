@@ -1,9 +1,9 @@
 package com.github.d_costa.sessionkotlin.dsl.types
 
 import com.github.d_costa.sessionkotlin.dsl.exception.InvalidRefinementValueException
-import com.github.d_costa.sessionkotlin.parser.RefinementParser
 import com.github.d_costa.sessionkotlin.parser.symbols.*
 import com.github.d_costa.sessionkotlin.parser.symbols.values.StringValue
+import org.sosy_lab.java_smt.api.BooleanFormula
 import org.sosy_lab.java_smt.api.FormulaManager
 import org.sosy_lab.java_smt.api.SolverContext
 
@@ -45,9 +45,8 @@ internal class SatState(
         unsupportedVariable.add(UnsupportedVariable(id, type))
     }
 
-    fun addCondition(condition: String) {
-        val ast = RefinementParser.parseToEnd(condition)
-        constraints.add(ast.toSMT())
+    fun addCondition(condition: BooleanExpression) {
+        constraints.add(condition.toSMT())
     }
 
     private fun BooleanExpression.toSMT(): String =
@@ -56,7 +55,7 @@ internal class SatState(
             False -> "FALSE"
 
             is Impl -> "(=> ${c1.toSMT()} ${c2.toSMT()})"
-            is Not -> "(not ${cond.toSMT()})"
+            is Not -> "(not ${c.toSMT()})"
             is And -> "(and ${c1.toSMT()} ${c2.toSMT()})"
             is Or -> "(or ${c1.toSMT()} ${c2.toSMT()})"
 
@@ -87,8 +86,8 @@ internal class SatState(
             is Plus -> "(+ ${t1.toSMT()} ${t2.toSMT()})"
         }
 
-    fun satisfiable(): Boolean {
-        ctx.newProverEnvironment().use { prover ->
+    fun satisfiable(): List<BooleanFormula> {
+        ctx.newProverEnvironment(SolverContext.ProverOptions.GENERATE_UNSAT_CORE).use { prover ->
             if (constraints.isNotEmpty()) {
                 val declaration = StringBuilder()
 
@@ -100,10 +99,11 @@ internal class SatState(
 
                 prover.addConstraint(formulaManager.parse(declaration.toString()))
 
-                return !prover.isUnsat
-            } else {
-                return true
+                if (prover.isUnsat) {
+                    return prover.unsatCore
+                }
             }
+            return emptyList()
         }
     }
 

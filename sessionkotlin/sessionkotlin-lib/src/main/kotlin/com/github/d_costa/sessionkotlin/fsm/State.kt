@@ -2,6 +2,7 @@ package com.github.d_costa.sessionkotlin.fsm
 
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.types.MsgLabel
+import com.github.d_costa.sessionkotlin.parser.RefinementCondition
 
 internal typealias StateId = Int
 internal typealias StateTransitions = Map<StateId, List<SimpleTransition>>
@@ -21,7 +22,7 @@ internal data class Epsilon(override val cont: Int) : NDTransition(cont)
 internal data class SimpleTransition(val action: Action, val cont: Int)
 
 internal sealed class Action(open val type: Class<*>, open val label: MsgLabel)
-internal data class SendAction(val to: SKRole, override val type: Class<*>, override val label: MsgLabel, val condition: String) : Action(type, label)
+internal data class SendAction(val to: SKRole, override val type: Class<*>, override val label: MsgLabel, val condition: RefinementCondition?) : Action(type, label)
 internal data class ReceiveAction(val from: SKRole, override val type: Class<*>, override val label: MsgLabel) : Action(type, label)
 
 internal sealed class Transition(open val action: Action, open val cont: Int)

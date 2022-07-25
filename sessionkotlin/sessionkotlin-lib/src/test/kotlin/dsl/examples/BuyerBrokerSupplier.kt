@@ -3,6 +3,9 @@ package dsl.examples
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
 import com.github.d_costa.sessionkotlin.dsl.types.*
+import com.github.d_costa.sessionkotlin.parser.RefinementCondition
+import com.github.d_costa.sessionkotlin.parser.symbols.LowerEq
+import com.github.d_costa.sessionkotlin.parser.symbols.Name
 import dsl.util.BoolClass
 import dsl.util.IntClass
 import dsl.util.UnitClass
@@ -76,7 +79,14 @@ class BuyerBrokerSupplier {
                 LocalTypeReceive(
                     portal,
                     IntClass, MsgLabel("askedAmount", true),
-                    LocalTypeSend(portal, IntClass, MsgLabel("approvedAmount", true), "approvedAmount <= askedAmount", LEnd),
+                    LocalTypeSend(
+                        portal, IntClass, MsgLabel("approvedAmount", true),
+                        RefinementCondition(
+                            "approvedAmount <= askedAmount",
+                            LowerEq(Name("approvedAmount"), Name("askedAmount"))
+                        ),
+                        LEnd
+                    ),
                 ),
                 LocalTypeReceive(portal, UnitClass, LEnd)
             )

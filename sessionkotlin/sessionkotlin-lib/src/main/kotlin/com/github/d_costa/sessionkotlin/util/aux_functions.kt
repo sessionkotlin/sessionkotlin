@@ -30,9 +30,9 @@ internal fun String.capitalized() =
 /**
  * Throws [RefinementException] if evaluation is false.
  */
-public fun assertRefinement(refinement: String, evaluation: Boolean) {
+public fun assertRefinement(plain: String, evaluation: Boolean) {
     if (!evaluation)
-        throw RefinementException(refinement)
+        throw RefinementException(plain)
 }
 
 internal fun String.hasWhitespace() = this.any { it.isWhitespace() }

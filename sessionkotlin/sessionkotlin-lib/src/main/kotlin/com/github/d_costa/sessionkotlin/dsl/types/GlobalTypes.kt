@@ -3,7 +3,8 @@ package com.github.d_costa.sessionkotlin.dsl.types
 import com.github.d_costa.sessionkotlin.dsl.RecursionTag
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.exception.*
-import com.github.d_costa.sessionkotlin.parser.RefinementParser
+import com.github.d_costa.sessionkotlin.parser.RefinementCondition
+import org.sosy_lab.java_smt.api.BooleanFormula
 
 internal sealed interface GlobalType {
     /**
@@ -14,9 +15,13 @@ internal sealed interface GlobalType {
     /**
      * Checks refinement satisfiability.
      *
-     * @return whether the refinements are satisfiable.
+     * @return a list of unsatisfiable formulas.
+     *
+     * Since it is more probable that a system is satisfiable,
+     * the solver should only be called at a terminal state,
+     * instead of verifying everytime a new condition is added.
      */
-    fun sat(state: SatState): Boolean
+    fun getUnsat(state: SatState): List<BooleanFormula>
 }
 
 internal class GlobalTypeSend(
@@ -24,7 +29,7 @@ internal class GlobalTypeSend(
     private val to: SKRole,
     private val type: Class<*>,
     private val msgLabel: String,
-    private val condition: String,
+    private val condition: RefinementCondition?,
     private val cont: GlobalType,
 ) : GlobalType {
     override fun project(role: SKRole, state: ProjectionState): LocalType =
@@ -35,8 +40,9 @@ internal class GlobalTypeSend(
                     state.sentWhileDisabled = true
                 }
                 state.names.add(msgLabel)
-                if (condition.isNotBlank()) {
-                    val mentionedNames = RefinementParser.parseToEnd(condition).names()
+
+                if (condition != null) {
+                    val mentionedNames = condition.expression.names()
                     val unknown = mentionedNames.minus(state.names)
                     if (unknown.isNotEmpty()) {
                         throw UnknownMessageLabelException(role, unknown)
@@ -52,9 +58,7 @@ internal class GlobalTypeSend(
 
                 val l = MsgLabel(msgLabel, state.usedNames.contains(msgLabel))
 
-                LocalTypeSend(
-                    to, type, msgLabel = l, condition = condition, projectedCont
-                )
+                LocalTypeSend(to, type, l, condition, projectedCont)
             }
             to -> {
                 state.emptyRecursions.removeAll { true }
@@ -64,9 +68,8 @@ internal class GlobalTypeSend(
                 }
                 state.names.add(msgLabel)
 
-                if (condition.isNotBlank()) {
-                    val mentionedNames = RefinementParser.parseToEnd(condition).names()
-                    state.usedNames.addAll(mentionedNames)
+                if (condition != null) {
+                    state.usedNames.addAll(condition.expression.names())
                 }
 
                 // Only the sender must enforce the condition
@@ -83,16 +86,16 @@ internal class GlobalTypeSend(
             }
         }
 
-    override fun sat(state: SatState): Boolean {
+    override fun getUnsat(state: SatState): List<BooleanFormula> {
         try {
             state.addVariable(msgLabel, type)
         } catch (e: InvalidRefinementValueException) {
             state.addUnsupportedVariableType(msgLabel, type)
         }
-        if (condition.isNotBlank()) {
-            state.addCondition(condition)
+        if (condition != null) {
+            state.addCondition(condition.expression)
         }
-        return cont.sat(state)
+        return cont.getUnsat(state)
     }
 }
 
@@ -174,12 +177,21 @@ internal class GlobalTypeChoice(
         }
     }
 
-    override fun sat(state: SatState): Boolean = branches.all { it.sat(state.clone()) }
+    override fun getUnsat(state: SatState): List<BooleanFormula> {
+        for (b in branches) {
+            val l = b.getUnsat(state.clone())
+            if (l.isNotEmpty()) {
+                // no need to check the other branches
+                return l
+            }
+        }
+        return emptyList()
+    }
 }
 
 internal object GlobalTypeEnd : GlobalType {
     override fun project(role: SKRole, state: ProjectionState) = LocalTypeEnd
-    override fun sat(state: SatState): Boolean = state.satisfiable()
+    override fun getUnsat(state: SatState): List<BooleanFormula> = state.satisfiable()
 }
 
 internal class GlobalTypeRecursionDefinition(
@@ -197,7 +209,7 @@ internal class GlobalTypeRecursionDefinition(
         }
     }
 
-    override fun sat(state: SatState) = cont.sat(state)
+    override fun getUnsat(state: SatState): List<BooleanFormula> = cont.getUnsat(state)
 }
 
 internal class GlobalTypeRecursion(
@@ -210,5 +222,5 @@ internal class GlobalTypeRecursion(
         return LocalTypeRecursion(tag)
     }
 
-    override fun sat(state: SatState) = state.satisfiable()
+    override fun getUnsat(state: SatState): List<BooleanFormula> = state.satisfiable()
 }

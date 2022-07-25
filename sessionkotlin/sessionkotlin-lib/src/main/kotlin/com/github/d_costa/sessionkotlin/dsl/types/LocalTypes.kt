@@ -3,6 +3,7 @@ package com.github.d_costa.sessionkotlin.dsl.types
 import com.github.d_costa.sessionkotlin.backend.message.SKMessage
 import com.github.d_costa.sessionkotlin.dsl.RecursionTag
 import com.github.d_costa.sessionkotlin.dsl.SKRole
+import com.github.d_costa.sessionkotlin.parser.RefinementCondition
 
 internal sealed class LocalType {
     /**
@@ -19,12 +20,12 @@ internal data class LocalTypeSend(
     val to: SKRole,
     val type: Class<*>,
     val msgLabel: MsgLabel,
-    val condition: String,
+    val condition: RefinementCondition?,
     val cont: LocalType
 ) : LocalType() {
     constructor(to: SKRole, type: Class<*>, cont: LocalType) : this(to, type, MsgLabel(), cont)
-    constructor(to: SKRole, type: Class<*>, msgLabel: MsgLabel, cont: LocalType) : this(to, type, msgLabel, "", cont)
-    constructor(to: SKRole, type: Class<*>, condition: String, cont: LocalType) : this(to, type, MsgLabel(), condition, cont)
+    constructor(to: SKRole, type: Class<*>, msgLabel: MsgLabel, cont: LocalType) : this(to, type, msgLabel, null, cont)
+    constructor(to: SKRole, type: Class<*>, condition: RefinementCondition, cont: LocalType) : this(to, type, MsgLabel(), condition, cont)
 
     override fun removeRecursions(tags: Set<RecursionTag>) =
         LocalTypeSend(to, type, msgLabel, condition, cont.removeRecursions(tags))

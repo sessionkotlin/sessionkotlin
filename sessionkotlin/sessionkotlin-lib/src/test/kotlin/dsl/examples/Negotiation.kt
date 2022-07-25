@@ -4,6 +4,10 @@ import com.github.d_costa.sessionkotlin.dsl.RecursionTag
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
 import com.github.d_costa.sessionkotlin.dsl.types.*
+import com.github.d_costa.sessionkotlin.parser.RefinementCondition
+import com.github.d_costa.sessionkotlin.parser.symbols.Greater
+import com.github.d_costa.sessionkotlin.parser.symbols.Lower
+import com.github.d_costa.sessionkotlin.parser.symbols.Name
 import dsl.util.IntClass
 import dsl.util.UnitClass
 import org.junit.jupiter.api.Test
@@ -65,7 +69,14 @@ class Negotiation {
                                         LocalTypeReceive(seller, UnitClass, LEnd)
                                     ),
                                     LocalTypeSend(seller, UnitClass, MsgLabel("Reject2"), LEnd),
-                                    LocalTypeSend(seller, IntClass, MsgLabel("proposal2", true), "proposal2 < counter", LocalTypeRecursion(t))
+                                    LocalTypeSend(
+                                        seller, IntClass, MsgLabel("proposal2", true),
+                                        RefinementCondition(
+                                            "proposal2 < counter",
+                                            Lower(Name("proposal2"), Name("counter"))
+                                        ),
+                                        LocalTypeRecursion(t)
+                                    )
                                 )
                             )
                         ),
@@ -82,7 +93,11 @@ class Negotiation {
                         LocalTypeSend(buyer, UnitClass, MsgLabel("Accept1"), LocalTypeReceive(buyer, UnitClass, LEnd)),
                         LocalTypeSend(buyer, UnitClass, MsgLabel("Reject1"), LEnd),
                         LocalTypeSend(
-                            buyer, IntClass, MsgLabel("counter", true), "counter > proposal",
+                            buyer, IntClass, MsgLabel("counter", true),
+                            RefinementCondition(
+                                "counter > proposal",
+                                Greater(Name("counter"), Name("proposal"))
+                            ),
                             LocalTypeExternalChoice(
                                 buyer,
                                 listOf(

@@ -5,11 +5,10 @@ import com.github.d_costa.sessionkotlin.backend.message.SKMessage
 import com.github.d_costa.sessionkotlin.dsl.RootEnv
 import com.github.d_costa.sessionkotlin.dsl.SKRole
 import com.github.d_costa.sessionkotlin.fsm.*
-import com.github.d_costa.sessionkotlin.parser.RefinementParser
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 
-internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEnv, "fluent") {
+internal class FluentAPIGenerator(globalEnv: RootEnv) : AbstractAPIGenerator(globalEnv, "fluent") {
 
     private val superInterfacePostFix = "Branch"
     private val stateInterfacePostFix = "Interface"
@@ -383,7 +382,7 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
         return codeBlock.build()
     }
 
-    fun addNextStateCall(codeBlockBuilder: CodeBlock.Builder, nextClassName: ClassName) =
+    private fun addNextStateCall(codeBlockBuilder: CodeBlock.Builder, nextClassName: ClassName) =
         codeBlockBuilder.addStatement("return %T(%N)", nextClassName, endpointParameter)
 
     private fun addRefinementAssert(action: SendAction, codeBlockBuilder: CodeBlock.Builder) {
@@ -396,15 +395,8 @@ internal class FluentAPIGenerator(globalEnv: RootEnv) : NewAPIGenerator(globalEn
                 toValFunction
             )
         }
-        if (action.condition.isNotBlank()) {
-            codeBlockBuilder.addStatement(
-                "%M(%S, %T.parseToEnd(%S).value(%L))",
-                assertFunction,
-                action.condition,
-                RefinementParser::class,
-                action.condition,
-                bindingsMapProperty.name
-            )
+        if (action.condition != null) {
+            addRefinementAssertion(codeBlockBuilder, action.condition)
         }
     }
 
