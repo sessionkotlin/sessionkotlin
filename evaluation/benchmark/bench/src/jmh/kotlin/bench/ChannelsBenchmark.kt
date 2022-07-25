@@ -6,19 +6,28 @@ import org.openjdk.jmh.annotations.Benchmark
 open class ChannelsBenchmark {
 
     @Benchmark
+    open fun benchAdderCallbacksChannels() {
+        adderCallbacksChannels()
+    }
+
+    @Benchmark
     open fun benchAdderFluentChannels() {
         adderFluentChannels()
     }
 
     @Benchmark
-    open fun benchAdderCallbacksChannels() {
-        adderCallbacksChannels()
+    open fun benchAdderManualChannels() {
+        adderManualChannels()
     }
 
+    @Benchmark
+    open fun benchAdderRefinedCallbacksChannels() {
+        adderRefinedCallbacksChannels()
+    }
 
     @Benchmark
-    open fun benchTwoBuyerFluentChannels() {
-        twoBuyerFluentChannels()
+    open fun benchAdderRefinedFluentChannels() {
+        adderRefinedFluentChannels()
     }
 
     @Benchmark
@@ -27,12 +36,12 @@ open class ChannelsBenchmark {
     }
 
     @Benchmark
-    open fun benchTwoBuyerManualChannels() {
-        twoBuyerManualChannels()
+    open fun benchTwoBuyerFluentChannels() {
+        twoBuyerFluentChannels()
     }
 
     @Benchmark
-    open fun benchAdderManualChannels() {
-        adderManualChannels()
+    open fun benchTwoBuyerManualChannels() {
+        twoBuyerManualChannels()
     }
 }

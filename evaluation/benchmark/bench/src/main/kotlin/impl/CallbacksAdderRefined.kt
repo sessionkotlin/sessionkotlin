@@ -1,29 +1,30 @@
 package impl
 
-import adder.Client
-import adder.Server
-import adder.callbacks.*
+import adderrefined.Client
+import adderrefined.Server
+import adderrefined.callbacks.*
+import adderrefined.callbacks.AdderRefinedClientCallbacks
 import com.github.d_costa.sessionkotlin.backend.channel.SKChannel
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKServerSocket
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 
-fun adderCallbacksChannels() {
+fun adderRefinedCallbacksChannels() {
     val chan = SKChannel(Server, Client)
 
     runBlocking {
 
         launch {
             // Client
-            AdderClientCallbacksEndpoint(adderClientCallbacks()).use { e ->
+            AdderRefinedClientCallbacksEndpoint(adderClientCallbacks()).use { e ->
                 e.connect(Server, chan)
                 e.start()
             }
         }
         launch {
             // Server
-            AdderServerCallbacksEndpoint(adderServerCallbacks()).use { e ->
+            AdderRefinedServerCallbacksEndpoint(adderServerCallbacks()).use { e ->
                 e.connect(Client, chan)
                 e.start()
             }
@@ -31,18 +32,18 @@ fun adderCallbacksChannels() {
     }
 }
 
-fun adderCallbacksSockets(serverSocket: SKServerSocket) {
+fun adderRefinedCallbacksSockets(serverSocket: SKServerSocket) {
     runBlocking {
         launch {
             // Client
-            AdderClientCallbacksEndpoint(adderClientCallbacks()).use { e ->
+            AdderRefinedClientCallbacksEndpoint(adderClientCallbacks()).use { e ->
                 e.request(Server, "localhost", serverSocket.port)
                 e.start()
             }
         }
         launch {
             // Server
-            AdderServerCallbacksEndpoint(adderServerCallbacks()).use { e ->
+            AdderRefinedServerCallbacksEndpoint(adderServerCallbacks()).use { e ->
                 e.accept(Client, serverSocket)
                 e.start()
             }
@@ -50,10 +51,10 @@ fun adderCallbacksSockets(serverSocket: SKServerSocket) {
     }
 }
 
-private fun adderClientCallbacks(): AdderClientCallbacks {
+private fun adderClientCallbacks(): AdderRefinedClientCallbacks {
     var index = 0
     var number = 0
-    return object : AdderClientCallbacks {
+    return object : AdderRefinedClientCallbacks {
         override fun onChoice1() = if (index++ < adderIterations) Choice1.Choice1_V1 else Choice1.Choice1_Quit
 
         override fun sendQuitToServer() {}
@@ -66,9 +67,9 @@ private fun adderClientCallbacks(): AdderClientCallbacks {
     }
 }
 
-private fun adderServerCallbacks(): AdderServerCallbacks {
+private fun adderServerCallbacks(): AdderRefinedServerCallbacks {
     var sum = 0
-    return object : AdderServerCallbacks {
+    return object : AdderRefinedServerCallbacks {
         override fun receiveQuitFromClient(v: Unit) {}
 
         override fun receiveV1FromClient(v: Int) {

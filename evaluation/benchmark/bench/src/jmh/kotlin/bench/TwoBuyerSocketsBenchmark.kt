@@ -29,12 +29,12 @@ open class TwoBuyerSocketsBenchmark {
     }
 
     @Benchmark
-    open fun benchTwoBuyerFluentSockets() {
-        twoBuyerFluentSockets(sellerSocket, clientBSocket)
+    open fun benchTwoBuyerCallbacksSockets() {
+        twoBuyerCallbacksSockets(sellerSocket, clientBSocket)
     }
 
     @Benchmark
-    open fun benchTwoBuyerCallbacksSockets() {
-        twoBuyerCallbacksSockets(sellerSocket, clientBSocket)
+    open fun benchTwoBuyerFluentSockets() {
+        twoBuyerFluentSockets(sellerSocket, clientBSocket)
     }
 }

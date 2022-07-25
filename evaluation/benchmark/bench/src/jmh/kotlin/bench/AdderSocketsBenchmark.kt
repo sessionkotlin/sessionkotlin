@@ -4,6 +4,8 @@ import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
 import com.github.d_costa.sessionkotlin.backend.endpoint.SKServerSocket
 import impl.adderCallbacksSockets
 import impl.adderFluentSockets
+import impl.adderRefinedCallbacksSockets
+import impl.adderRefinedFluentSockets
 import org.openjdk.jmh.annotations.Benchmark
 import org.openjdk.jmh.annotations.Scope
 import org.openjdk.jmh.annotations.Setup
@@ -26,12 +28,22 @@ open class AdderSocketsBenchmark {
     }
 
     @Benchmark
+    open fun benchAdderCallbacksSockets() {
+        adderCallbacksSockets(serverSocket)
+    }
+
+    @Benchmark
     open fun benchAdderFluentSockets() {
         adderFluentSockets(serverSocket)
     }
 
     @Benchmark
-    open fun benchAdderCallbacksSockets() {
-        adderCallbacksSockets(serverSocket)
+    open fun benchRefinedAdderCallbacksSockets() {
+        adderRefinedCallbacksSockets(serverSocket)
+    }
+
+    @Benchmark
+    open fun benchAdderRefinedFluentSockets() {
+        adderRefinedFluentSockets(serverSocket)
     }
 }

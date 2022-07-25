@@ -6,6 +6,7 @@ import java.util.*
 
 fun main() {
     adderServer()
+    adderServerRefined()
     twoBuyer()
 }
 
@@ -22,6 +23,25 @@ private fun adderServer() {
                 send<Int>(client, server, "V1")
                 send<Int>(client, server, "V2")
                 send<Int>(server, client, "Sum")
+                goto(t)
+            }
+        }
+    }
+}
+
+private fun adderServerRefined() {
+    val client = SKRole("Client")
+    val server = SKRole("Server")
+    globalProtocol("AdderRefined", true) {
+        val t = mu()
+        choice(client) {
+            branch {
+                send<Unit>(client, server, "Quit")
+            }
+            branch {
+                send<Int>(client, server, "V1")
+                send<Int>(client, server, "V2")
+                send<Int>(server, client, "Sum", "Sum == V1 + V2")
                 goto(t)
             }
         }
@@ -67,25 +87,3 @@ private fun twoBuyer() {
     }
 }
 
-//private fun dissemination() {
-//    val client = SKRole("Client")
-//    val relay = SKRole("Relay")
-//
-//    val serverA = SKRole("ServerA")
-//    val serverB = SKRole("ServerB")
-//
-//    globalProtocol("Dissemination") {
-//        send<String>(client, relay)
-//
-//        choice(relay) {
-//            branch {
-//                send<Unit>(client, server, "Quit")
-//            }
-//            branch {
-//                send<Int>(client, server, "V1")
-//                send<Int>(client, server, "V2")
-//                send<Int>(server, client, "Sum")
-//            }
-//        }
-//    }
-//}
