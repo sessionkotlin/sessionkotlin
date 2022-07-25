@@ -20,9 +20,9 @@ tasks.test {
 }
 
 jmh {
-    warmupIterations.set(3)
+    warmupIterations.set(5)
     iterations.set(5)
     fork.set(3)
-    jmhTimeout.set("60s")
+    jmhTimeout.set("30s")
     benchmarkMode.set(listOf("Throughput"))
 }
