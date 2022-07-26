@@ -31,13 +31,22 @@ globalProtocol("Protocol") {
 }
 ```
 
+## Table of Contents
+
+<!-- TOC -->
+* [Getting started](#getting-started)
+* [Features](#features)
+* [Plugin configuration](#plugin-configuration)
+* [Local development](#local-development)
+<!-- TOC -->
+
 ## Getting started
 
 ### Prerequisites
 
 - Java 11
 
-### Templates
+### Project Templates
 
 #### Gradle (recommended)
 
@@ -157,9 +166,9 @@ SKMPEndpoint().use { e ->
 }
 ```
 
-## Plugin
+## Plugin configuration
 
-To configure the plugin use the extension (the default values are shown):
+To configure the plugin use the extension (default values shown):
 
 ```kotlin
 sessionkotlin {
