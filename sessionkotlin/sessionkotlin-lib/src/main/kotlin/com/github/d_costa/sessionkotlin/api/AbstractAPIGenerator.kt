@@ -51,7 +51,7 @@ internal open class AbstractAPIGenerator(private val globalEnv: RootEnv, subPack
         "toVal"
     )
 
-    protected val assertFunction = MemberName(
+    private val assertFunction = MemberName(
         "com.github.d_costa.sessionkotlin.util",
         "assertRefinement"
     )

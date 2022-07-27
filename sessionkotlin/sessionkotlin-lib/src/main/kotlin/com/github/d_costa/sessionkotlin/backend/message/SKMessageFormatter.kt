@@ -8,11 +8,6 @@ import java.util.*
  **
  */
 public interface SKMessageFormatter {
-    public companion object {
-        public class SKInvalidMessage(msg: String) : RuntimeException(msg) {
-            public constructor() : this("")
-        }
-    }
     public fun toBytes(msg: SKMessage): ByteArray
 
     /**

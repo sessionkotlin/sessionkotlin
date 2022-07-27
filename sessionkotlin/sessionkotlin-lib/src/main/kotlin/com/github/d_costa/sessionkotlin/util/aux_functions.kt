@@ -1,7 +1,6 @@
 package com.github.d_costa.sessionkotlin.util
 
 import com.github.d_costa.sessionkotlin.api.exception.RefinementException
-import com.github.d_costa.sessionkotlin.dsl.SKRole
 import java.io.InputStream
 import java.security.KeyStore
 import javax.net.ssl.KeyManager
@@ -12,8 +11,6 @@ import javax.net.ssl.TrustManagerFactory
 internal fun printlnIndent(indent: Int, message: Any?) {
     println(" ".repeat(indent) + message)
 }
-
-internal fun Map<SKRole, SKRole>.getOrKey(key: SKRole): SKRole = this.getOrDefault(key, key)
 
 internal fun String.asClassname() =
     this.replace("\\s".toRegex(), "")
@@ -80,5 +77,3 @@ internal fun loadResource(filename: String): InputStream {
     val o = object : Any() {}
     return o.javaClass.classLoader.getResource(filename)?.openStream() ?: throw RuntimeException("Error reading $filename")
 }
-
-internal fun ByteArray.toHexString() = joinToString("") { "%02x".format(it) }
