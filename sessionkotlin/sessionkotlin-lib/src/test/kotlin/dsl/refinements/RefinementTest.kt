@@ -204,4 +204,20 @@ class RefinementTest {
             }
         }
     }
+
+    @Test
+    fun `boolean literal`() {
+        globalProtocolInternal {
+            send<Int>(b, a, "val2", "val2 > 0 || true")
+        }
+    }
+
+    @Test
+    fun `unsat boolean literal`() {
+        assertFailsWith<UnsatisfiableRefinementsException> {
+            globalProtocolInternal {
+                send<Int>(b, a, "val2", "val2 > 0 && false")
+            }
+        }
+    }
 }

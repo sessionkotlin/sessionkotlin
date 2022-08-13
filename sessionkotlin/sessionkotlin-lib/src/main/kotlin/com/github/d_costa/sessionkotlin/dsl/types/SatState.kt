@@ -51,8 +51,8 @@ internal class SatState(
 
     private fun BooleanExpression.toSMT(): String =
         when (this) {
-            True -> "TRUE"
-            False -> "FALSE"
+            True -> "true"
+            False -> "false"
 
             is Impl -> "(=> ${c1.toSMT()} ${c2.toSMT()})"
             is Not -> "(not ${c.toSMT()})"
