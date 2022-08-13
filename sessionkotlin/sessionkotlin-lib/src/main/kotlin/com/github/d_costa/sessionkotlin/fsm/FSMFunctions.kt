@@ -47,7 +47,7 @@ internal fun statesFromLocalType(localType: LocalType): List<State> {
             states.add(s)
 
             if (l.id() !in memo) {
-                // Save for future references
+                // Save for future references (recursion)
                 memo[l.id()] = s
             }
 
@@ -167,7 +167,7 @@ private fun removeRedundantStates(
 
     for ((_, ids) in entries) {
         if (ids.size > 1) {
-            // Keep smallest id
+            // Keep the smallest id
             val stateToKeep = ids.minByOrNull { it }!! // size > 1
             val redundantStates = ids.filter { it != stateToKeep }
 

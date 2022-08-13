@@ -16,10 +16,10 @@ class APIGenTest {
         globalProtocol("Test", callbacks = false) {
             send<Int>(A, B)
             choice(A) {
-                branch() {
+                branch {
                     send<Long>(A, B, "val1", "val1 > 0")
                 }
-                branch() {
+                branch {
                     send<Long>(A, B, "val2", "val2 <= 0")
                 }
             }
@@ -31,10 +31,10 @@ class APIGenTest {
         globalProtocol("Test", callbacks = true) {
             send<Int>(A, B, "val0")
             choice(A) {
-                branch() {
+                branch {
                     send<Long>(A, B, "val1", "val1 > 0")
                 }
-                branch() {
+                branch {
                     send<Long>(A, B, "val2", "val2 <= 0")
                 }
             }
@@ -47,10 +47,10 @@ class APIGenTest {
             send<Int>(A, B)
             val t = mu()
             choice(A) {
-                branch() {
+                branch {
                     send<Long>(A, B, "val1", "val1 > 0")
                 }
-                branch() {
+                branch {
                     send<Long>(A, B, "val2", "val2 <= 0")
                     goto(t)
                 }
@@ -64,10 +64,10 @@ class APIGenTest {
             send<Int>(A, B, "val0")
             val t = mu()
             choice(A) {
-                branch() {
+                branch {
                     send<Long>(A, B, "val1", "val1 > 0")
                 }
-                branch() {
+                branch {
                     send<Long>(A, B, "val2", "val2 <= 0")
                     goto(t)
                 }
@@ -97,10 +97,10 @@ class APIGenTest {
             val t = mu()
 
             choice(A) {
-                branch() {
+                branch {
                     p1()
                 }
-                branch() {
+                branch {
                     p2()
                     goto(t)
                 }

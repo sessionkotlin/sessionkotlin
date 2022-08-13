@@ -34,10 +34,10 @@ public class Samples {
 
         globalProtocol("ProtocolName") {
             choice(b) {
-                branch() {
+                branch {
                     send<String>(b, a, "ok")
                 }
-                branch() {
+                branch {
                     send<Long>(b, a, "quit")
                 }
             }
@@ -57,10 +57,10 @@ public class Samples {
 
         globalProtocol("ProtocolName") {
             choice(a) {
-                branch() {
+                branch {
                     case(b, "Case1")()
                 }
-                branch() {
+                branch {
                     case(c, "Case2")()
                 }
             }
@@ -75,11 +75,11 @@ public class Samples {
             val t = mu()
             choice(client) {
 
-                branch() {
+                branch {
                     send<Int>(client, server, "Add")
                     goto(t)
                 }
-                branch() {
+                branch {
                     send<String>(client, server, "Result")
                     send<Int>(server, client)
                 }

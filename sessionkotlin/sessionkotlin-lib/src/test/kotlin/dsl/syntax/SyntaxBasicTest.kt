@@ -6,12 +6,15 @@ import com.github.d_costa.sessionkotlin.dsl.exception.*
 import com.github.d_costa.sessionkotlin.dsl.globalProtocol
 import com.github.d_costa.sessionkotlin.dsl.globalProtocolInternal
 import com.github.d_costa.sessionkotlin.dsl.types.*
+import com.github.d_costa.sessionkotlin.fsm.statesFromLocalType
 import dsl.util.DoubleClass
 import dsl.util.IntClass
+import dsl.util.LongClass
 import dsl.util.StringClass
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNotSame
 
 class SyntaxBasicTest {
 
@@ -385,5 +388,55 @@ class SyntaxBasicTest {
         assertFailsWith<RoleNameWhitespaceException> {
             SKRole("before\nafter")
         }
+    }
+
+    @Test
+    fun `non deterministic internal`() {
+        // May be possible ...?
+        assertFailsWith<NonDeterministicStatesException> {
+            globalProtocolInternal {
+                choice(a) {
+                    branch {
+                        send<Int>(b, a)
+                        send<Int>(c, a)
+                    }
+                    branch {
+                        send<Int>(c, a)
+                        send<Int>(b, a)
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `test LocalType hash`() {
+        val l1 = LocalTypeSend(a, IntClass, LocalTypeReceive(b, LongClass, LocalTypeEnd))
+        val l2 = LocalTypeReceive(b, LongClass, LocalTypeSend(a, IntClass, LocalTypeEnd))
+        val l3 = LocalTypeSend(a, IntClass, LocalTypeSend(a, IntClass, LocalTypeEnd))
+
+        assertNotSame(l1.hashCode(), l2.hashCode())
+        assertNotSame(l2.hashCode(), l3.hashCode())
+        assertNotSame(l1.hashCode(), l3.hashCode())
+    }
+
+    @Test
+    fun `test LocalType hash 2`() {
+        val l1 = LocalTypeSend(a, IntClass, LocalTypeReceive(b, LongClass, LocalTypeEnd))
+        val l2 = LocalTypeReceive(b, LongClass, LocalTypeEnd)
+
+        assertNotSame(l1.hashCode(), LocalTypeEnd.hashCode())
+        assertNotSame(l2.hashCode(), LocalTypeEnd.hashCode())
+    }
+
+    @Test
+    fun `test missing states`() {
+        val g = globalProtocolInternal {
+            send<String>(a, b)
+            send<String>(a, b)
+        }
+
+        assert(statesFromLocalType(g.project(a)).isNotEmpty())
+        assert(statesFromLocalType(g.project(b)).isNotEmpty())
     }
 }

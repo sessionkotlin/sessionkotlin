@@ -29,24 +29,6 @@ internal data class LocalTypeSend(
 
     override fun removeRecursions(tags: Set<RecursionTag>) =
         LocalTypeSend(to, type, msgLabel, condition, cont.removeRecursions(tags))
-
-    override fun equals(other: Any?): Boolean {
-        if (other !is LocalTypeSend) return false
-        return to == other.to &&
-            type == other.type &&
-            cont == other.cont &&
-            msgLabel == other.msgLabel &&
-            condition == other.condition
-    }
-
-    override fun hashCode(): Int {
-        var result = to.hashCode()
-        result = 31 * result + type.hashCode()
-        result = 31 * result + cont.hashCode()
-        result = 31 * result + msgLabel.hashCode()
-        result = 31 * result + condition.hashCode()
-        return result
-    }
 }
 
 internal data class LocalTypeReceive(
@@ -136,8 +118,8 @@ internal fun LocalType.asString(): String = asString(0)
 
 internal fun LocalType.asString(i: Int = 0): String =
     when (this) {
-        is LocalTypeSend -> "$to!<${type.simpleName}> . ${cont.asString(i)}"
-        is LocalTypeReceive -> "$from?<${type.simpleName}> . ${cont.asString(i)}"
+        is LocalTypeSend -> "$to!${msgLabel.name}<${type.simpleName}> . ${cont.asString(i)}"
+        is LocalTypeReceive -> "$from?${msgLabel.name}<${type.simpleName}> . ${cont.asString(i)}"
         is LocalTypeExternalChoice -> "\n${tabs(i)}&$of \n${tabs(i)}${
         branches.joinToString("\n${tabs(i)}") { it.asString(i + 1) }
         }"
