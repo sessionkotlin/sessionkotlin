@@ -8,6 +8,7 @@ import org.gradle.api.tasks.Delete
 import org.gradle.api.tasks.bundling.Tar
 import org.gradle.api.tasks.bundling.Zip
 
+// https://github.com/sosy-lab/java-smt/blob/master/doc/Example-Gradle-Project-Kotlin/build.gradle.kts
 abstract class SessionKotlinPluginExtension {
     /**
      * If set, the 'cleanDownloadedDependencies' task will execute before 'copyDependencies'.
