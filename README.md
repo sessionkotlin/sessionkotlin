@@ -175,37 +175,3 @@ sessionkotlin {
     cleanBeforeCopying = false //  always clean the solver dependencies before copying
 }
 ```
-
-## Local development
-
-1. Build and publish the library:
-
-```
-cd sessionkotlin
-./gradlew clean build publishToMavenLocal
-cd ..
-```
-
-2. Run the demo:
-    1. Go to the demo folder:
-    ```
-    cd demo
-    ```
-
-    2. Clean:
-
-    ```
-    ./gradlew protocols:clean app:clean
-    ```
-
-    3. Generate the API
-
-    ```
-    ./gradlew protocols:run
-    ```
-
-    4. Run the main app:
-
-    ```
-    ./gradlew app:run
-    ```
