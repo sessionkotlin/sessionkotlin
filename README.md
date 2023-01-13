@@ -44,7 +44,7 @@ globalProtocol("Protocol") {
 
 ### Prerequisites
 
-- Java 11
+- JDK 11
 
 ### Project Templates
 
