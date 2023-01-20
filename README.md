@@ -2,7 +2,7 @@
 
 Multiparty Session Types in Kotlin
 
-![master](https://github.com/d-costa/session-kotlin/actions/workflows/test_master.yml/badge.svg) ![master coverage](../badges/jacoco.svg)
+![master](https://github.com/sessionkotlin/sessionkotlin/actions/workflows/test_master.yml/badge.svg) ![master coverage](../badges/jacoco.svg)
 
 ```kotlin
 val a = SKRole("ClientA")
@@ -50,11 +50,11 @@ globalProtocol("Protocol") {
 
 #### Gradle (recommended)
 
-https://github.com/d-costa/sessionkotlin-template-gradle
+https://github.com/sessionkotlin/sessionkotlin-template-gradle
 
 #### Maven
 
-https://github.com/d-costa/sessionkotlin-template-maven
+https://github.com/sessionkotlin/sessionkotlin-template-maven
 
 ## Features
 
