@@ -1,8 +1,8 @@
 import java.io.FileInputStream
 import java.util.*
 
-group = "com.github.d-costa"
-version = "2.0.3"
+group = "com.github.sessionkotlin"
+version = "3.0.3"
 
 if (JavaVersion.current() != JavaVersion.VERSION_11) {
     throw GradleException("This project requires Java 11, but it's running on ${JavaVersion.current()}")
@@ -15,7 +15,7 @@ plugins {
     id("org.jetbrains.dokka") // Documentation
     `maven-publish`
     jacoco
-    id("com.github.d-costa.sessionkotlin.plugin") version "2.0.1" apply false
+    id("com.github.sessionkotlin.plugin") version "3.0.2" apply false
 }
 
 allprojects {
@@ -31,7 +31,7 @@ allprojects {
                 props.load(FileInputStream(envFile))
             }
             name = githubPackagesRepo
-            url = uri("https://maven.pkg.github.com/d-costa/sessionkotlin")
+            url = uri("https://maven.pkg.github.com/sessionkotlin/sessionkotlin")
             credentials {
                 username = props.getProperty("USERNAME") ?: System.getenv("USERNAME")
                 password = props.getProperty("TOKEN") ?: System.getenv("TOKEN")

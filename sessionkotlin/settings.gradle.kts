@@ -23,7 +23,7 @@ pluginManagement {
                 props.load(java.io.FileInputStream(envFile))
 
             name = "GithubPackages"
-            url = uri("https://maven.pkg.github.com/d-costa/sessionkotlin")
+            url = uri("https://maven.pkg.github.com/sessionkotlin/sessionkotlin")
             credentials {
                 username = props.getProperty("USERNAME") ?: System.getenv("USERNAME")
                 password = props.getProperty("TOKEN") ?: System.getenv("TOKEN")
@@ -34,8 +34,8 @@ pluginManagement {
 
 rootProject.name = "sessionkotlin"
 
-include(":sessionkotlin-parser")
-include(":sessionkotlin-lib")
-include(":sessionkotlin-plugin")
+include(":parser")
+include(":lib")
+include(":plugin")
 include(":test-protocol")
 include(":test-app")

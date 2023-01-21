@@ -1,7 +1,7 @@
 plugins {
     kotlin("jvm")
     `java-library`
-    id("com.github.d-costa.sessionkotlin.plugin")
+    id("com.github.sessionkotlin.plugin")
 }
 
 val kotlinxCoroutinesVersion: String by project

@@ -1,6 +1,6 @@
-import com.github.d_costa.sessionkotlin.backend.SKBuffer
-import com.github.d_costa.sessionkotlin.backend.channel.SKChannel
-import com.github.d_costa.sessionkotlin.backend.endpoint.SKMPEndpoint
+import com.github.sessionkotlin.lib.backend.SKBuffer
+import com.github.sessionkotlin.lib.backend.channel.SKChannel
+import com.github.sessionkotlin.lib.backend.endpoint.SKMPEndpoint
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
