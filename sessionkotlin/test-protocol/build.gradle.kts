@@ -1,11 +1,11 @@
 plugins {
     kotlin("jvm")
     application
-    id("com.github.d-costa.sessionkotlin.plugin")
+    id("com.github.sessionkotlin.plugin")
 }
 
 dependencies {
-    api(project(":sessionkotlin-lib"))
+    api(project(":lib"))
 }
 
 application {
