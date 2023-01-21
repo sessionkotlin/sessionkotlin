@@ -3,7 +3,7 @@
 Multiparty Session Types in Kotlin
 
 
-![master](https://github.com/sessionkotlin/sessionkotlin/actions/workflows/test_master.yml/badge.svg) ![master coverage](../badges/jacoco.svg)
+![master](https://github.com/sessionkotlin/sessionkotlin/actions/workflows/test.yml/badge.svg) ![master coverage](../badges/jacoco.svg)
 
 ```kotlin
 val a = SKRole("ClientA")
