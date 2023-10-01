@@ -1,6 +1,6 @@
 # SessionKotlin
 
-Multiparty Session Types in Kotlin
+Multiparty Session Types in Kotlin: https://run.unl.pt/handle/10362/151147
 
 
 ![master](https://github.com/sessionkotlin/sessionkotlin/actions/workflows/test.yml/badge.svg) ![master coverage](../badges/jacoco.svg)
@@ -38,7 +38,7 @@ globalProtocol("Protocol") {
 * [Getting started](#getting-started)
 * [Features](#features)
 * [Plugin configuration](#plugin-configuration)
-* [Local development](#local-development)
+* [Reference](#reference)
 <!-- TOC -->
 
 ## Getting started
@@ -174,5 +174,14 @@ To configure the plugin use the extension (default values shown):
 ```kotlin
 sessionkotlin {
     cleanBeforeCopying = false //  always clean the solver dependencies before copying
+}
+```
+## Reference
+
+```bib
+@masterthesis { costa2022,
+ author	= "Costa, David Maria Almeida Amorim da",
+ title	= "Session Kotlin: A hybrid session type embedding in Kotlin",
+ year	= "2022"
 }
 ```
