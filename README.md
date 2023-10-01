@@ -1,6 +1,6 @@
 # SessionKotlin
 
-Multiparty Session Types in Kotlin: https://run.unl.pt/handle/10362/151147
+Multiparty Session Types in Kotlin: http://hdl.handle.net/10362/151147
 
 
 ![master](https://github.com/sessionkotlin/sessionkotlin/actions/workflows/test.yml/badge.svg) ![master coverage](../badges/jacoco.svg)
@@ -183,5 +183,6 @@ sessionkotlin {
  author	= "Costa, David Maria Almeida Amorim da",
  title	= "Session Kotlin: A hybrid session type embedding in Kotlin",
  year	= "2022"
+ url   = {http://hdl.handle.net/10362/151147}
 }
 ```
