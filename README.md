@@ -31,6 +31,8 @@ globalProtocol("Protocol") {
     }
 }
 ```
+> [!TIP]
+> If you'd like to see a more complex example, check our simplified [SMTP implementation](./evaluation/smtp) and the [MPST definition](evaluation/smtp/protocol/src/main/kotlin/App.kt).
 
 ## Table of Contents
 
